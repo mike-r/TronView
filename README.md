@@ -15,6 +15,7 @@ We are working on several new features.
 - More external sensors (Pressure, Voltage, GPS, etc)
 - Touch screen support (New Raspberry Pi Touchscreen v2)
 - Dual Screen support (Main + AR Glasses)
+- Working on fuel flow only screen (MCR)
 
 ## Features Include:
 - Build custom efis or hud screens or AR glasses screen. (or any kinda of screen you want)
