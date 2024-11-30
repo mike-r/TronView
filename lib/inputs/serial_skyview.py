@@ -13,6 +13,7 @@ import struct
 from lib import hud_text
 import time
 from lib.common.dataship.dataship import IMU
+import traceback
 from lib.common.dataship.dataship import EngineData
 
 
@@ -62,7 +63,7 @@ class serial_skyview(Input):
         self.EMS = EngineData()
         self.EMS.FuelFlow = 12
 
-    # close this data input 
+    # close this data input
     def closeInput(self,aircraft):
         if self.isPlaybackMode:
             self.ser.close()
@@ -209,6 +210,7 @@ class serial_skyview(Input):
             pass
         except serial.serialutil.SerialException:
             print("skyview serial exception")
+            traceback.print_exc()
             aircraft.errorFoundNeedToExit = True
 
 
