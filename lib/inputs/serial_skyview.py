@@ -3,7 +3,8 @@
 # Serial input source
 # Skyview
 # 1/23/2019  Topher
-# 11/6/2024  Added IMU data.
+# 11/6/2024  Added IMU data
+# 11/30/2024 Added EMS data   Rehberg
 
 from ._input import Input
 from lib import hud_utils
@@ -14,7 +15,6 @@ from lib import hud_text
 import time
 from lib.common.dataship.dataship import IMU
 import traceback
-from lib.common.dataship.dataship import EngineData
 
 
 class serial_skyview(Input):
@@ -59,10 +59,6 @@ class serial_skyview(Input):
         aircraft.imus[self.imu_index] = self.imuData
         self.last_read_time = time.time()
 
-        # create an empty EngineData object.
-        self.EMS = EngineData()
-        self.EMS.FuelFlow = 12
-
     # close this data input
     def closeInput(self,aircraft):
         if self.isPlaybackMode:
@@ -98,7 +94,7 @@ class serial_skyview(Input):
                 if dataType == b'1':  # AHRS message
                     msg = self.ser.read(71)
                     if(isinstance(msg,str)): msg = msg.encode() # if read from file then convert to bytes
-                    HH, MM, SS, FF, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel, AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
+                    HH, MM, SS, FF, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel,AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
                         "2s2s2s2s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg
                     )
                     #print(msg)
@@ -176,7 +172,7 @@ class serial_skyview(Input):
                     HH,MM,SS,FF,HBug,AltBug, AirBug,VSBug,Course,CDISrcType,CDISourePort,CDIScale,CDIDeflection,GS,APEng,APRollMode,Not1,APPitch,Not2,APRollF,APRollP,APRollSlip,APPitchF, APPitchP,APPitchSlip,APYawF,APYawP,APYawSlip,TransponderStatus,TransponderReply,TransponderIdent,TransponderCode,DynonUnused,Checksum,CRLF= struct.unpack(
                         "2s2s2s2s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg
                     )
-                    #print(msg)
+                    print(msg)
                     aircraft.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     self.time_stamp_string = aircraft.sys_time_string
                     self.time_stamp_min = int(MM)
@@ -186,19 +182,68 @@ class serial_skyview(Input):
                     aircraft.engine.msg_count += 1
                     msg = self.ser.read(222)
                     if(isinstance(msg,str)):msg = msg.encode() # if read from file then convert to bytes
-                    HH,MM,SS,FF,OilPres,OilTemp, RPM_L,RPM_R,MAP,FF1,FF2,FP,FL_L,FL_R,Frem,V1,V2,AMPs,Hobbs,Tach,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,TC10,TC11,TC12,TC13,TC14,Checksum,CRLF= struct.unpack(
+                    HH,MM,SS,FF,OilPress,OilTemp, RPM_L,RPM_R,MAP,FF1,FF2,FP,FL_L,FL_R,Frem,V1,V2,AMPs,Hobbs,Tach,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,TC10,TC11,TC12,TC13,TC14,GP1,GP2,GP3,GP4,GP5,GP6,GP7,GP8,GP9,GP10,GP11,GP12,GP13,Contacts,Pwr,EGTstate,Checksum,CRLF= struct.unpack(
                         "2s2s2s2s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
                     )
-                    #print(msg)
+                    print(msg)
                     aircraft.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     self.time_stamp_string = aircraft.sys_time_string
                     self.time_stamp_min = int(MM)
                     self.time_stamp_sec = int(SS)
-                    aircraft.FuelFlow = Input.cleanInt(self,FF1)
-                    self.EMS.FuelFlow = aircraft.FuelFlow
+
+                    print("Oil Pressure:"+str(OilPress))
+                    aircraft.engine.OilPress = Input.cleanInt(self,OilPress)
+
+                    print("Oil Temp:"+str(OilTemp))
+                    aircraft.engine.OilTemp = Input.cleanInt(self,OilTemp)
+
+                    print("RPM:"+str(RPM_L))
+                    aircraft.engine.RPM = Input.cleanInt(self,RPM_L)
+
+                    print("MAP:"+str(MAP))
+                    aircraft.engine.ManPress = Input.cleanInt(self,MAP) * 0.1
+
+                    aircraft.engine.FuelFlow = Input.cleanInt(self,FF1) / 10
+                    print("Fuel Flow:"+str(FF1))
+
+                    print("Fuel Pressure:"+str(FP))
+                    aircraft.engine.FuelPress = Input.cleanInt(self,FP) / 10
+
+                    print("Fuel Level Left: "+str(FL_L))
+                    print("Fuel Level Right:"+str(FL_R))
+                    fuel_level_left  = Input.cleanInt(self, FL_L) / 10
+                    fuel_level_right = Input.cleanInt(self, FL_R) / 10
+                    aircraft.engine.FuelLevels = [fuel_level_left, fuel_level_right, 0, 0]
+
+                    if TC1 == "XX": egt_1 = 0
+                    else: egt_1 = Input.cleanInt(self, TC1)
+                    if TC2 == "XX": egt_2 = 0
+                    else: egt_2 = Input.cleanInt(self, TC2)
+                    if TC3 == "XX": egt_3 = 0
+                    else: egt_3 = Input.cleanInt(self, TC3)
+                    if TC4 == "XX": egt_4 = 0
+                    else: egt_4 = Input.cleanInt(self, TC4)
+                    if TC5 == "XX": egt_5 = 0
+                    else: egt_5 = Input.cleanInt(self, TC5)
+                    if TC6 == "XX": egt_6 = 0
+                    else: egt_6 = Input.cleanInt(self, TC6)
+                    aircraft.engine.EGT = [egt_1, egt_2, egt_3, egt_4, egt_5, egt_6]
+
+                    if TC8 == "XX": cht_1 = 0
+                    else: cht_1 = Input.cleanInt(self, TC8)
+                    if TC9 == "XX": cht_2 = 0
+                    else: cht_2 = Input.cleanInt(self, TC9)
+                    if TC10 == "XX": cht_3 = 0
+                    else: cht_3 = Input.cleanInt(self, TC10)
+                    if TC11 == "XX": cht_4 = 0
+                    else: cht_4 = Input.cleanInt(self, TC11)
+                    if TC12 == "XX": cht_5 = 0
+                    else: cht_5 = Input.cleanInt(self, TC12)
+                    if TC13 == "XX": cht_6 = 0
+                    else: cht_6 = Input.cleanInt(self, TC13)
+                    aircraft.engine.CHT = [cht_1, cht_2, cht_3, cht_4, cht_5, cht_6]
                 else:
                     aircraft.msg_unknown += 1 # unknown message found.
-
             else:
                 aircraft.msg_bad += 1 # count this as a bad message
         except ValueError:
