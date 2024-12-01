@@ -93,11 +93,11 @@ class serial_skyview(Input):
                 #aircraft.msg_last = msg
                 if dataType == b'1':  # AHRS message
                     msg = self.ser.read(71)
-                    if(isinstance(msg,str)): msg = msg.encode() # if read from file then convert to bytes
+                    if isinstance(msg, str): msg = msg.encode() # if read from file then convert to bytes
                     HH, MM, SS, FF, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel,AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
                         "2s2s2s2s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg
                     )
-                    #print(msg)
+                    #print("AHRS Message !1:", msg)
                     aircraft.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     self.time_stamp_string = aircraft.sys_time_string
                     self.time_stamp_min = int(MM)
@@ -157,8 +157,6 @@ class serial_skyview(Input):
                         aircraft.wind_speed = 0
                         aircraft.norm_wind_dir = 0 #normalize the wind direction to the airplane heading
                         aircraft.gndspeed = 0
-
-
                     aircraft.msg_count += 1
 
                     if self.output_logFile != None:
@@ -168,52 +166,52 @@ class serial_skyview(Input):
                 elif dataType == b'2': #Dynon System message (nav,AP, etc)
                     aircraft.nav.msg_count += 1
                     msg = self.ser.read(90)
-                    if (isinstance(msg, str)): msg = msg.encode()  # if read from file then convert to bytes
+                    if isinstance(msg, str): msg = msg.encode()  # if read from file then convert to bytes
                     HH,MM,SS,FF,HBug,AltBug, AirBug,VSBug,Course,CDISrcType,CDISourePort,CDIScale,CDIDeflection,GS,APEng,APRollMode,Not1,APPitch,Not2,APRollF,APRollP,APRollSlip,APPitchF, APPitchP,APPitchSlip,APYawF,APYawP,APYawSlip,TransponderStatus,TransponderReply,TransponderIdent,TransponderCode,DynonUnused,Checksum,CRLF= struct.unpack(
                         "2s2s2s2s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg
                     )
-                    print(msg)
+                    #print("NAV & System Message !2:", msg)
                     aircraft.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     self.time_stamp_string = aircraft.sys_time_string
                     self.time_stamp_min = int(MM)
                     self.time_stamp_sec = int(SS)
 
-                elif dataType == b'3': #Engine data message
+                elif dataType == b'3': #Dynon EMS Engine data message
                     aircraft.engine.msg_count += 1
                     msg = self.ser.read(222)
-                    if(isinstance(msg,str)):msg = msg.encode() # if read from file then convert to bytes
+                    if isinstance(msg,str):msg = msg.encode() # if read from file then convert to bytes
                     HH,MM,SS,FF,OilPress,OilTemp, RPM_L,RPM_R,MAP,FF1,FF2,FP,FL_L,FL_R,Frem,V1,V2,AMPs,Hobbs,Tach,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,TC10,TC11,TC12,TC13,TC14,GP1,GP2,GP3,GP4,GP5,GP6,GP7,GP8,GP9,GP10,GP11,GP12,GP13,Contacts,Pwr,EGTstate,Checksum,CRLF= struct.unpack(
                         "2s2s2s2s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
                     )
-                    print(msg)
+                    #print("EMS Message !3:", msg)
                     aircraft.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     self.time_stamp_string = aircraft.sys_time_string
                     self.time_stamp_min = int(MM)
                     self.time_stamp_sec = int(SS)
 
-                    print("Oil Pressure:"+str(OilPress))
                     aircraft.engine.OilPress = Input.cleanInt(self,OilPress)
+                    #print("Oil Pressure:"+str(OilPress)+"  :",aircraft.engine.OilPress, " PSI")
 
-                    print("Oil Temp:"+str(OilTemp))
                     aircraft.engine.OilTemp = Input.cleanInt(self,OilTemp)
+                    #print("Oil Temp:"+str(OilTemp))
 
-                    print("RPM:"+str(RPM_L))
                     aircraft.engine.RPM = Input.cleanInt(self,RPM_L)
+                    #print("RPM:"+str(RPM_L)+"  :", aircraft.engine.RPM, " RPM")
 
-                    print("MAP:"+str(MAP))
                     aircraft.engine.ManPress = Input.cleanInt(self,MAP) * 0.1
+                    #print("MAP:"+str(MAP)+"   :", aircraft.engine.ManPress, " inHG")
 
                     aircraft.engine.FuelFlow = Input.cleanInt(self,FF1) / 10
-                    print("Fuel Flow:"+str(FF1))
+                    #print("Fuel Flow:"+str(FF1)+"  :", aircraft.engine.FuelFlow, " GPH")
 
-                    print("Fuel Pressure:"+str(FP))
                     aircraft.engine.FuelPress = Input.cleanInt(self,FP) / 10
+                    #print("Fuel Pressure:"+str(FP))
 
-                    print("Fuel Level Left: "+str(FL_L))
-                    print("Fuel Level Right:"+str(FL_R))
                     fuel_level_left  = Input.cleanInt(self, FL_L) / 10
                     fuel_level_right = Input.cleanInt(self, FL_R) / 10
                     aircraft.engine.FuelLevels = [fuel_level_left, fuel_level_right, 0, 0]
+                    #print("Fuel Level Left: "+str(FL_L)+"  :", aircraft.engine.FuelLevels[0], " Gallons Left Tank")
+                    #print("Fuel Level Right:"+str(FL_R)+"  :", aircraft.engine.FuelLevels[1], " Gallons Right Tank")
 
                     if TC1 == "XX": egt_1 = 0
                     else: egt_1 = Input.cleanInt(self, TC1)
@@ -258,13 +256,11 @@ class serial_skyview(Input):
             traceback.print_exc()
             aircraft.errorFoundNeedToExit = True
 
-
         if self.isPlaybackMode:  #if play back mode then add a delay.  Else reading a file is way to fast.
             time.sleep(.05)
         else:
             #pass
             self.ser.flushInput()  # flush the serial after every message else we see delays
-
 
         return aircraft
 

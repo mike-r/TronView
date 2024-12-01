@@ -232,7 +232,6 @@ if __name__ == "__main__":
         shared.Dataship.internal.OSVer = os.name + " " + platform.system() + " " + str(platform.release())
     shared.Dataship.internal.PythonVer = str(sys.version_info[0])+"."+str(sys.version_info[1])+"."+str(sys.version_info[2])
     shared.Dataship.internal.PyGameVer = pygame.version.ver
-    
 
     if(shared.Dataship.errorFoundNeedToExit==True): sys.exit()
     # check and load screen module. (if not starting in text mode)
