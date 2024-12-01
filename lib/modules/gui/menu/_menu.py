@@ -11,7 +11,7 @@ from lib import smartdisplay
 from lib.common.dataship import dataship
 import pygame
 import math
-##import pygame_menu
+import pygame_menu
 from typing import Tuple, Any
 
 class menu(Module):
@@ -27,13 +27,13 @@ class menu(Module):
         )  # call parent init screen.
         print(("Init Mod: %s %dx%d"%(self.name,self.width,self.height)))
 
-##        self.menu = pygame_menu.Menu(title, self.width, self.height,
-##                               theme=pygame_menu.themes.THEME_BLUE)
+        self.menu = pygame_menu.Menu(title, self.width, self.height,
+                               theme=pygame_menu.themes.THEME_BLUE)
 
         #self.menu.add.text_input('Name :', default='John Doe')
         #self.menu.add.selector('Difficulty :', [('Hard', 1), ('Easy', 2)], onchange=self.set_difficulty)
         self.menu.add.button('Back', self.stop)
-##        self.menu.add.button('Quit', pygame_menu.events.EXIT)
+        self.menu.add.button('Quit', pygame_menu.events.EXIT)
 
 
     def set_difficulty(self, selected: Tuple, value: Any) -> None:
