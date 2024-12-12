@@ -218,22 +218,23 @@ def readSkyviewMessage():
             if len(t) != 0:
                 x = ord(t)
 
-        msg = ser.read(73)
-        if len(msg) == 73:
-            sinceLastGoodMessage = 0
-            msg = (msg[:73]) if len(msg) > 73 else msg
-            dataType, DataVer, SysTime, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel, AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
-                "cc8s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg
-            )
-            # dataType,DataVer,SysTime = struct.unpack("cc8s", msg)
+        dataType = ser.read(1)
+        if dataType.decode() == "1":        # ADHARS Data Message
+            goodmessageheaderCount += 1
+            msg = ser.read(72)
+            if len(msg) == 72:
+                sinceLastGoodMessage = 0
+                msg = (msg[:72]) if len(msg) > 72 else msg
+                DataVer, SysTime, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel, AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
+                    "c8s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg
+                )
+            # DataVer,SysTime = struct.unpack("c8s", msg)
 
-            if (CRLF[0]) == 13 or (CRLF[0]) == "\r":
-                intCheckSum = int("0x%s" % (Checksum.decode()), 0)
-                print_xy(4, 0, msg.decode())
-                calcChecksum = 33 + (sum(map(ord, msg[:69].decode())) % 256)
-                calcChecksumHex = "0x{:02x}".format(calcChecksum)
-                if dataType.decode() == "1":
-                    goodmessageheaderCount += 1
+                if (CRLF[0]) == 13 or (CRLF[0]) == "\r":
+                    intCheckSum = int("0x%s" % (Checksum.decode()), 0)
+                    print_xy(4, 0, msg.decode())
+                    calcChecksum = 33 + (sum(map(ord, msg[:68].decode())) % 256)
+                    calcChecksumHex = "0x{:02x}".format(calcChecksum)
                     print_xy(5, 0, bcolors.OKGREEN + "ADHRS(1)" + bcolors.ENDC)
                     print_xy(6, 0, "DataType:   %s" % (dataType.decode()))
                     print_xy(7, 0, "Ver:        %s" % (DataVer.decode()))
@@ -265,14 +266,89 @@ def readSkyviewMessage():
             else:
                 badmessageheaderCount += 1
             ser.flushInput()
-
+        elif  dataType.decode() == "2":        # Dynon NAV, AP, etc Data Message:
+            goodmessageheaderCount += 1
+            msg = ser.read(91)
+            if len(msg) == 91:
+                sinceLastGoodMessage = 0
+                msg = (msg[:91]) if len(msg) > 91 else msg
+                DataVer, SysTime, HBug, AltBug, AirBug, VSBug, Course, CDISrcType, CDISourePort, CDIScale, CDIDeflection, GS, APEng, APRollMode, Not1, APPitch, Not2, APRollF, APRollP, APRollSlip, APPitchF, APPitchP, APPitchSlip, APYawF, APYawP, APYawSlip, TransponderStatus, TransponderReply, TransponderIdent, TransponderCode, DynonUnused, Checksum, CRLF = struct.unpack(
+                    "c8s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg
+                )
+                if (CRLF[0]) == 13 or (CRLF[0]) == "\r":
+                    intCheckSum = int("0x%s" % (Checksum.decode()), 0)
+                    print_xy(4, 0, msg.decode())
+                    calcChecksum = 33 + (sum(map(ord, msg[:87].decode())) % 256)
+                    calcChecksumHex = "0x{:02x}".format(calcChecksum)
+                    print_xy(5, 0, bcolors.OKGREEN + "NAV, AP, Misc (2)" + bcolors.ENDC)
+                    print_xy(6, 0, "DataType:   %s" % (dataType.decode()))
+                    print_xy(7, 0, "Ver:        %s" % (DataVer.decode()))
+                    print_xy(8, 0, "SysTime:    %s" % (SysTime.decode()))
+                    print_xy(9, 0, "Heading Bug: %s" % (HBug.decode()))
+                    print_xy(10, 0, "Alt Bug:      %s" % (AltBug.decode()))
+                    print_xy(11, 0, "AS Bug:       %s" % (AirBug.decode()))
+                    print_xy(12, 0, "VS Bug:       %s" % (VSBug.decode()))
+                    print_xy(13, 0, "Course:       %s" % (Course.decode()))
+                    print_xy(14, 0, "CDI Type:     %s" % (CDISrcType.decode()))
+                    print_xy(15, 0, "CDI Port:     %s" % (CDISourePort.decode()))
+                    print_xy(16, 0, "CDI Scale:    %s" % (CDIScale.decode()))
+                    print_xy(17, 0, "CDI Deflect   %s" % (CDIDeflection.decode()))
+                    print_xy(18, 0, "VertSpd:      %s" % (GS.decode()))
+                    print_xy(19, 0, "AP Engaged:   %s" % (APEng.decode()))
+                    print_xy(20, 0, "AP Roll Mode: %s" % (APRollMode.decode()))
+                    print_xy(21, 0, "AP Pitch Mode:%s" % (APPitch.decode()))
+                    print_xy(22, 0, "Not-1:        %s" % (Not1.decode()))
+                    print_xy(23, 0, "Not-2:        %s" % (Not2.decode()))
+                    print_xy(24, 0, "Squawk Code:  %s" % (TransponderCode.decode()))
+                    print_xy(25, 0, "ChkSum:     0x%s   int:%d " % (Checksum.decode(), intCheckSum))
+                    print_xy(26, 0, "CalChkSum:    %s   int:%d " % (calcChecksumHex, calcChecksum))
+                    nextByte = ser.read(1)
+                    print_xy(27, 0, "endbyte:    %s " % (repr(CRLF[0])))
+        elif  dataType.decode() == "3":        # Engine Data Message
+            goodmessageheaderCount += 1
+            msg = ser.read(223)
+            if len(msg) == 223:
+                sinceLastGoodMessage = 0
+                msg = (msg[:223]) if len(msg) > 223 else msg
+                DataVer, SysTime, OilPress, OilTemp, RPM_L, RPM_R, MAP, FF1, FF2, FP, FL_L, FL_R, Frem, V1, V2, AMPs, Hobbs, Tach, TC1, TC2, TC3, TC4, TC5, TC6, TC7, TC8, TC9, TC10, TC11, TC12, TC13, TC14, GP1, GP2, GP3, GP4, GP5, GP6, GP7, GP8, GP9, GP10, GP11, GP12, GP13, Contacts, Pwr, EGTstate, Checksum, CRLF = struct.unpack(
+                    "c8s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
+                )
+                # print("EMS Message !3:", msg)
+                if (CRLF[0]) == 13 or (CRLF[0]) == "\r":
+                    intCheckSum = int("0x%s" % (Checksum.decode()), 0)
+                    print_xy(4, 0, msg.decode())
+                    calcChecksum = 33 + (sum(map(ord, msg[:219].decode())) % 256)
+                    calcChecksumHex = "0x{:02x}".format(calcChecksum)
+                    print_xy(5, 0, bcolors.OKGREEN + "Engine (3)" + bcolors.ENDC)
+                    print_xy(6, 0,  "DataType:     %s" % (dataType.decode()))
+                    print_xy(7, 0,  "Ver:          %s" % (DataVer.decode()))
+                    print_xy(8, 0,  "SysTime:      %s" % (SysTime.decode()))
+                    print_xy(9, 0,  "Oil Pressure: %s" % (OilPress.decode()))
+                    print_xy(10, 0, "Oil Temp:     %s" % (OilTemp.decode()))
+                    print_xy(11, 0, "RPM:          %s" % (RPM_L.decode()))
+                    print_xy(12, 0, "MAP:          %s" % (MAP.decode()))
+                    print_xy(13, 0, "Fuel Flow:    %s" % (FF1.decode()))
+                    print_xy(14, 0, "Fuel Pressre: %s" % (FP.decode()))
+                    print_xy(15, 0, "Fuel Left:    %s" % (FL_L.decode()))
+                    print_xy(16, 0, "Fuel Right:   %s" % (FL_R.decode()))
+                    print_xy(17, 0, "Fuel Rem      %s" % (Frem.decode()))
+                    print_xy(18, 0, "Voltage-1:    %s" % (V1.decode()))
+                    print_xy(19, 0, "Voltage-2:    %s" % (V2.decode()))
+                    print_xy(20, 0, "AMPs:         %s" % (AMPs.decode()))
+                    print_xy(21, 0, "Hobbs:        %s" % (Hobbs.decode()))
+                    print_xy(22, 0, "EGT-1:        %s" % (TC1.decode()))
+                    print_xy(23, 0, "CHT-1:        %s" % (TC8.decode()))
+                    print_xy(24, 0, "Eng Power:    %s" % (Pwr.decode()))
+                    print_xy(25, 0, "ChkSum:      0x%s   int:%d " % (Checksum.decode(), intCheckSum))
+                    print_xy(26, 0, "CalChkSum:     %s   int:%d " % (calcChecksumHex, calcChecksum))
+                    nextByte = ser.read(1)
+                    print_xy(27, 0, "endbyte:       %s " % (repr(CRLF[0])))
         else:
             badmessageheaderCount += 1
             ser.flushInput()
             return
     except serial.serialutil.SerialException:
         print("exception")
-  
 
 def readG3XMessage():
     global ser
