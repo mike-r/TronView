@@ -235,7 +235,7 @@ def readSkyviewMessage():
                     #print_xy(4, 0, msg.decode())
                     calcChecksum = 33 + (sum(map(ord, msg[:68].decode())) % 256)
                     calcChecksumHex = "0x{:02x}".format(calcChecksum)
-                    print_xy(3, 0, bcolors.OKGREEN + "ADHRS(1)" + bcolors.ENDC)
+                    print_xy(3, 0, bcolors.OKGREEN + "ADHRS(" + (dataType.decode()) + ")" + bcolors.ENDC)
                     print_xy(4, 0, "DataType:   %s" % (dataType.decode()))
                     print_xy(5, 0, "Ver:        %s" % (DataVer.decode()))
                     print_xy(6, 0, "SysTime:    %s" % (SysTime.decode()))
@@ -280,7 +280,7 @@ def readSkyviewMessage():
                     #print_xy(4, 0, msg.decode())
                     calcChecksum = 33 + (sum(map(ord, msg[:87].decode())) % 256)
                     calcChecksumHex = "0x{:02x}".format(calcChecksum)
-                    print_xy(3, 30, bcolors.OKGREEN + "NAV, AP, Misc (2)" + bcolors.ENDC)
+                    print_xy(3, 30, bcolors.OKGREEN + "NAV, AP, Misc (" + (dataType.decode()) + ")" + bcolors.ENDC)
                     print_xy(4, 30, "DataType:   %s" % (dataType.decode()))
                     print_xy(5, 30, "Ver:        %s" % (DataVer.decode()))
                     print_xy(6, 30, "SysTime:    %s" % (SysTime.decode()))
@@ -319,7 +319,7 @@ def readSkyviewMessage():
                     #print_xy(4, 0, msg.decode())
                     calcChecksum = 33 + (sum(map(ord, msg[:219].decode())) % 256)
                     calcChecksumHex = "0x{:02x}".format(calcChecksum)
-                    print_xy(3, 60, bcolors.OKGREEN + "Engine (3)" + bcolors.ENDC)
+                    print_xy(3, 60, bcolors.OKGREEN + "Engine (" + (dataType.decode()) + ")" + bcolors.ENDC)
                     print_xy(4, 60,  "DataType:     %s" % (dataType.decode()))
                     print_xy(5, 60,  "Ver:          %s" % (DataVer.decode()))
                     print_xy(6, 60,  "SysTime:      %s" % (SysTime.decode()))
@@ -336,8 +336,8 @@ def readSkyviewMessage():
                     print_xy(17, 60, "Voltage-2:    %s" % (V2.decode()))
                     print_xy(18, 60, "AMPs:         %s" % (AMPs.decode()))
                     print_xy(19, 60, "Hobbs:        %s" % (Hobbs.decode()))
-                    print_xy(20, 60, "EGT-1:        %s" % (TC1.decode()))
-                    print_xy(21, 60, "CHT-1:        %s" % (TC8.decode()))
+                    print_xy(20, 60, "EGT: %s" % (TC1.decode()) + " " + (TC2.decode()) + " " +  (TC3.decode()) + " " +  (TC4.decode()))
+                    print_xy(21, 60, "CHT: %s" % (TC8.decode()) + " " +  (TC9.decode()) + " " +  (TC10.decode()) + " " +  (TC11.decode()))
                     print_xy(22, 60, "Eng Power:    %s" % (Pwr.decode()))
                     #print_xy(23, 60, "ChkSum:      0x%s   int:%d " % (Checksum.decode(), intCheckSum))
                     #print_xy(24, 60, "CalChkSum:     %s   int:%d " % (calcChecksumHex, calcChecksum))
@@ -548,7 +548,7 @@ except:
 print_xy(1,0,f"Opened port: {port} @115200 baud (cntrl-c to quit)")
 
 if readType == "skyview":
-    print_xy(1, 60, "Data format: " + bcolors.OKBLUE + "Dynon Skyview" + bcolors.ENDC)
+    print_xy(1, 65, "Data format: " + bcolors.OKBLUE + "Dynon Skyview" + bcolors.ENDC)
     print_xy(2, 0, "                                        ")  # clear line 2
     print_xy(3, 0, "                                        ")  # clear line 3
     while 1:
