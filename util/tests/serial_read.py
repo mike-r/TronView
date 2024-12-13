@@ -222,6 +222,7 @@ def readSkyviewMessage():
         if dataType.decode() == "1":        # ADHARS Data Message
             goodmessageheaderCount += 1
             msg = ser.read(72)
+            skyview_data.write(msg)
             if len(msg) == 72:
                 sinceLastGoodMessage = 0
                 msg = (msg[:72]) if len(msg) > 72 else msg
@@ -269,6 +270,7 @@ def readSkyviewMessage():
         elif  dataType.decode() == "2":        # Dynon NAV, AP, etc Data Message:
             goodmessageheaderCount += 1
             msg = ser.read(91)
+            skyview_data.write(msg)
             if len(msg) == 91:
                 sinceLastGoodMessage = 0
                 msg = (msg[:91]) if len(msg) > 91 else msg
@@ -307,6 +309,7 @@ def readSkyviewMessage():
         elif  dataType.decode() == "3":        # Engine Data Message
             goodmessageheaderCount += 1
             msg = ser.read(223)
+            skyview_data.write(msg)
             if len(msg) == 223:
                 sinceLastGoodMessage = 0
                 msg = (msg[:223]) if len(msg) > 223 else msg
@@ -443,6 +446,7 @@ def readG3XMessage():
             return
     except serial.serialutil.SerialException:
         print("exception")
+        skyview_data.close()
 
 
 
@@ -551,8 +555,10 @@ if readType == "skyview":
     print_xy(1, 65, "Data format: " + bcolors.OKBLUE + "Dynon Skyview" + bcolors.ENDC)
     print_xy(2, 0, "                                        ")  # clear line 2
     print_xy(3, 0, "                                        ")  # clear line 3
+    skyview_data = open('skyview_data_1tm.txt','a')
     while 1:
         readSkyviewMessage()
+    skyview_data.close()
 elif readType == "mgl":
     print_xy(2, 0, "Data format: " + bcolors.OKBLUE + "MGL" + bcolors.ENDC)
     while 1:
