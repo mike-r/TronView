@@ -210,10 +210,10 @@ def readSkyviewMessage():
         while x != 33:  # 33(!) is start of dynon skyview.
             t = ser.read(1)
             sinceLastGoodMessage += 1
-            print_xy(3, 0, "SinceGood: %d" % (sinceLastGoodMessage))
-            print_xy(3, 24, "Bad msgHead: %d" % (badmessageheaderCount))
-            print_xy(3, 49, "Good msgHead: %d " % (goodmessageheaderCount))
-            print_xy(3, 74, "Unknown Msg: %d " % (unknownMsgCount))
+            print_xy(2, 0,  "SinceGood: %d" % (sinceLastGoodMessage))
+            print_xy(2, 24, "Bad msgHead: %d" % (badmessageheaderCount))
+            print_xy(2, 49, "Good msgHead: %d " % (goodmessageheaderCount))
+            print_xy(2, 74, "Unknown Msg: %d " % (unknownMsgCount))
 
             if len(t) != 0:
                 x = ord(t)
@@ -548,7 +548,7 @@ except:
 print_xy(1,0,f"Opened port: {port} @115200 baud (cntrl-c to quit)")
 
 if readType == "skyview":
-    print_xy(2, 0, "Data format: " + bcolors.OKBLUE + "Dynon Skyview" + bcolors.ENDC)
+    print_xy(1, 60, "Data format: " + bcolors.OKBLUE + "Dynon Skyview" + bcolors.ENDC)
     while 1:
         readSkyviewMessage()
 elif readType == "mgl":
