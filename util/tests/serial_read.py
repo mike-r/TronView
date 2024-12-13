@@ -256,7 +256,7 @@ def readSkyviewMessage():
                     baro_diff = converted_Baro - 29.921
                     converted_alt = int(int(PresAlt) + ((baro_diff) / 0.00108))
                      #0.00108 of inches of mercury change per foot.
-                    print_xy(21, 0, "Baro:       %0.2f  Alt:  %d ft   " % (converted_Baro, converted_alt))
+                    print_xy(21, 0, "Baro:       %0.2f  Alt: %d ft" % (converted_Baro, converted_alt))
                     print_xy(22, 0, "DensitAlt:  %s" % (DA.decode()))
                     print_xy(23, 0, "WndDir:     %s" % (WD.decode()))
                     print_xy(24, 0, "WndSpd:     %s" % (WS.decode()))
