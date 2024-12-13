@@ -545,7 +545,7 @@ except:
         list_serial_ports(True)
         sys.exit()
 
-print(f"Opened port: {port} @115200 baud (cntrl-c to quit)")
+print_xy(1,0,f"Opened port: {port} @115200 baud (cntrl-c to quit)")
 
 if readType == "skyview":
     print_xy(2, 0, "Data format: " + bcolors.OKBLUE + "Dynon Skyview" + bcolors.ENDC)
