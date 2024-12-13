@@ -205,8 +205,6 @@ def readMGLMessage():
 def readSkyviewMessage():
     global ser
     global badmessageheaderCount, sinceLastGoodMessage, goodmessageheaderCount, unknownMsgCount
-    print_xy(2, 0, "                                        ")  # clear line 2
-    print_xy(3, 0, "                                        ")  # clear line 3
     try:
         x = 0
         while x != 33:  # 33(!) is start of dynon skyview.
@@ -302,7 +300,7 @@ def readSkyviewMessage():
                     #print_xy(20, 30, "Not-1:        %s" % (Not1.decode()))
                     #print_xy(21, 30, "Not-2:        %s" % (Not2.decode()))
                     print_xy(20, 30, "Squawk Code:  %s" % (TransponderCode.decode()))
-                    print_xy(21, 30, "ChkSum:     0x%s   int:%d " % (Checksum.decode(), intCheckSum))
+                    print_xy(21, 30, "ChkSum:       0x%s   int:%d " % (Checksum.decode(), intCheckSum))
                     print_xy(22, 30, "CalChkSum:    %s   int:%d " % (calcChecksumHex, calcChecksum))
                     nextByte = ser.read(1)
                     print_xy(23, 30, "endbyte:    %s " % (repr(CRLF[0])))
@@ -551,6 +549,8 @@ print_xy(1,0,f"Opened port: {port} @115200 baud (cntrl-c to quit)")
 
 if readType == "skyview":
     print_xy(1, 60, "Data format: " + bcolors.OKBLUE + "Dynon Skyview" + bcolors.ENDC)
+    print_xy(2, 0, "                                        ")  # clear line 2
+    print_xy(3, 0, "                                        ")  # clear line 3
     while 1:
         readSkyviewMessage()
 elif readType == "mgl":
