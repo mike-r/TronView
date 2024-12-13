@@ -176,6 +176,10 @@ class serial_skyview(Input):
                     self.time_stamp_min = int(MM)
                     self.time_stamp_sec = int(SS)
 
+                    if self.output_logFile != None:
+                        Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
+                        Input.addToLog(self,self.output_logFile,msg)
+
                 elif dataType == b'3': #Dynon EMS Engine data message
                     aircraft.engine.msg_count += 1
                     msg = self.ser.read(222)
@@ -240,6 +244,11 @@ class serial_skyview(Input):
                     if TC13 == "XX": cht_6 = 0
                     else: cht_6 = Input.cleanInt(self, TC13)
                     aircraft.engine.CHT = [cht_1, cht_2, cht_3, cht_4, cht_5, cht_6]
+
+                    if self.output_logFile != None:
+                        Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
+                        Input.addToLog(self,self.output_logFile,msg)
+
                 else:
                     aircraft.msg_unknown += 1 # unknown message found.
             else:
