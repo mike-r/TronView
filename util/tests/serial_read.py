@@ -222,7 +222,7 @@ def readSkyviewMessage():
         if dataType.decode() == "1":        # ADHARS Data Message
             goodmessageheaderCount += 1
             msg = ser.read(72)
-            skyview_data.write(msg)
+            skyview_data.write(msg.decode())
             if len(msg) == 72:
                 sinceLastGoodMessage = 0
                 msg = (msg[:72]) if len(msg) > 72 else msg
@@ -270,7 +270,7 @@ def readSkyviewMessage():
         elif  dataType.decode() == "2":        # Dynon NAV, AP, etc Data Message:
             goodmessageheaderCount += 1
             msg = ser.read(91)
-            skyview_data.write(msg)
+            skyview_data.write(msg.decode())
             if len(msg) == 91:
                 sinceLastGoodMessage = 0
                 msg = (msg[:91]) if len(msg) > 91 else msg
@@ -309,7 +309,7 @@ def readSkyviewMessage():
         elif  dataType.decode() == "3":        # Engine Data Message
             goodmessageheaderCount += 1
             msg = ser.read(223)
-            skyview_data.write(msg)
+            skyview_data.write(msg.decode())
             if len(msg) == 223:
                 sinceLastGoodMessage = 0
                 msg = (msg[:223]) if len(msg) > 223 else msg
