@@ -205,6 +205,7 @@ def readMGLMessage():
 def readSkyviewMessage():
     global ser
     global badmessageheaderCount, sinceLastGoodMessage, goodmessageheaderCount, unknownMsgCount
+    print_xy(2, 0, "                                        ")  # clear line 2
     try:
         x = 0
         while x != 33:  # 33(!) is start of dynon skyview.
@@ -232,7 +233,7 @@ def readSkyviewMessage():
 
                 if (CRLF[0]) == 13 or (CRLF[0]) == "\r":
                     intCheckSum = int("0x%s" % (Checksum.decode()), 0)
-                    print_xy(4, 0, msg.decode())
+                    #print_xy(4, 0, msg.decode())
                     calcChecksum = 33 + (sum(map(ord, msg[:68].decode())) % 256)
                     calcChecksumHex = "0x{:02x}".format(calcChecksum)
                     print_xy(5, 0, bcolors.OKGREEN + "ADHRS(1)" + bcolors.ENDC)
@@ -277,7 +278,7 @@ def readSkyviewMessage():
                 )
                 if (CRLF[0]) == 13 or (CRLF[0]) == "\r":
                     intCheckSum = int("0x%s" % (Checksum.decode()), 0)
-                    print_xy(4, 0, msg.decode())
+                    #print_xy(4, 0, msg.decode())
                     calcChecksum = 33 + (sum(map(ord, msg[:87].decode())) % 256)
                     calcChecksumHex = "0x{:02x}".format(calcChecksum)
                     print_xy(5, 30, bcolors.OKGREEN + "NAV, AP, Misc (2)" + bcolors.ENDC)
@@ -316,7 +317,7 @@ def readSkyviewMessage():
                 # print("EMS Message !3:", msg)
                 if (CRLF[0]) == 13 or (CRLF[0]) == "\r":
                     intCheckSum = int("0x%s" % (Checksum.decode()), 0)
-                    print_xy(4, 0, msg.decode())
+                    #print_xy(4, 0, msg.decode())
                     calcChecksum = 33 + (sum(map(ord, msg[:219].decode())) % 256)
                     calcChecksumHex = "0x{:02x}".format(calcChecksum)
                     print_xy(5, 60, bcolors.OKGREEN + "Engine (3)" + bcolors.ENDC)
