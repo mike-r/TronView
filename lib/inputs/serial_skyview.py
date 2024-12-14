@@ -217,38 +217,37 @@ class serial_skyview(Input):
                     #print("Fuel Level Left: "+str(FL_L)+"  :", aircraft.engine.FuelLevels[0], " Gallons Left Tank")
                     #print("Fuel Level Right:"+str(FL_R)+"  :", aircraft.engine.FuelLevels[1], " Gallons Right Tank")
 
-                    if TC1 == "XX": egt_1 = 0
-                    else: egt_1 = Input.cleanInt(self, TC1)
-                    if TC2 == "XX": egt_2 = 0
-                    else: egt_2 = Input.cleanInt(self, TC2)
-                    if TC3 == "XX": egt_3 = 0
-                    else: egt_3 = Input.cleanInt(self, TC3)
-                    if TC4 == "XX": egt_4 = 0
-                    else: egt_4 = Input.cleanInt(self, TC4)
-                    if TC5 == "XX": egt_5 = 0
-                    else: egt_5 = Input.cleanInt(self, TC5)
-                    if TC6 == "XX": egt_6 = 0
-                    else: egt_6 = Input.cleanInt(self, TC6)
+                    if TC12 == "XX": egt_1 = 0
+                    else: egt_1 = Input.cleanInt(self, TC12)
+                    if TC10 == "XX": egt_2 = 0
+                    else: egt_2 = Input.cleanInt(self, TC10)
+                    if TC8 == "XX": egt_3 = 0
+                    else: egt_3 = Input.cleanInt(self, TC8)
+                    if TC6 == "XX": egt_4 = 0
+                    else: egt_4 = Input.cleanInt(self, TC6)
+                    if TC4 == "XX": egt_5 = 0
+                    else: egt_5 = Input.cleanInt(self, TC4)
+                    if TC2 == "XX": egt_6 = 0
+                    else: egt_6 = Input.cleanInt(self, TC2)
                     aircraft.engine.EGT = [egt_1, egt_2, egt_3, egt_4, egt_5, egt_6]
 
-                    if TC8 == "XX": cht_1 = 0
-                    else: cht_1 = Input.cleanInt(self, TC8)
+                    if TC11 == "XX": cht_1 = 0
+                    else: cht_1 = Input.cleanInt(self, TC11)
                     if TC9 == "XX": cht_2 = 0
                     else: cht_2 = Input.cleanInt(self, TC9)
-                    if TC10 == "XX": cht_3 = 0
-                    else: cht_3 = Input.cleanInt(self, TC10)
-                    if TC11 == "XX": cht_4 = 0
-                    else: cht_4 = Input.cleanInt(self, TC11)
-                    if TC12 == "XX": cht_5 = 0
-                    else: cht_5 = Input.cleanInt(self, TC12)
-                    if TC13 == "XX": cht_6 = 0
-                    else: cht_6 = Input.cleanInt(self, TC13)
+                    if TC7 == "XX": cht_3 = 0
+                    else: cht_3 = Input.cleanInt(self, TC7)
+                    if TC5 == "XX": cht_4 = 0
+                    else: cht_4 = Input.cleanInt(self, TC5)
+                    if TC3 == "XX": cht_5 = 0
+                    else: cht_5 = Input.cleanInt(self, TC3)
+                    if TC1 == "XX": cht_6 = 0
+                    else: cht_6 = Input.cleanInt(self, TC1)
                     aircraft.engine.CHT = [cht_1, cht_2, cht_3, cht_4, cht_5, cht_6]
 
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
-
                 else:
                     aircraft.msg_unknown += 1 # unknown message found.
             else:
