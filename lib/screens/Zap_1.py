@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 #################################################
-# N221TM_FF screen
+# Zap_1 screen
 # Small screen to display only the engine Fuel Flow data.
 # Used to test AR Glasses
-# 11/7/2024 Rehberg.
+# 12/15/2024 Zap
 # Copied from: 7/9/2021 Topher.
 
 from ._screen import Screen
@@ -19,11 +19,11 @@ from lib.modules.hud.slipskid import slipskid
 from lib.modules.gui.menu import _menu
 from lib.modules.efis.trafficscope import trafficscope
 
-class N221TM_FF(Screen):
+class Zap_1(Screen):
     # called only when object is first created.
     def __init__(self):
         Screen.__init__(self)
-        self.name = "N221TM_FuelFlow"  # set name for this screen
+        self.name = "Zap_1"  # set name for this screen
         self.show_hud = False
         self.MainColor = (0, 255, 0)  # main color of hud graphics
         self.flyOnSpeedMode = False
