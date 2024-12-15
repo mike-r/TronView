@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Expanded Dynon Skyview test   Zap 12/15/2024
 
 
 import time
@@ -352,6 +353,7 @@ def readSkyviewMessage():
             return
     except serial.serialutil.SerialException:
         print("exception")
+        skyview_data.close()
 
 def readG3XMessage():
     global ser
@@ -446,9 +448,6 @@ def readG3XMessage():
             return
     except serial.serialutil.SerialException:
         print("exception")
-        skyview_data.close()
-
-
 
 def showArgs():
     print("TronView Serial monitor tool. Version: %s" % (version))
@@ -555,7 +554,7 @@ if readType == "skyview":
     print_xy(1, 65, "Data format: " + bcolors.OKBLUE + "Dynon Skyview" + bcolors.ENDC)
     print_xy(2, 0, "                                        ")  # clear line 2
     print_xy(3, 0, "                                        ")  # clear line 3
-    skyview_data = open('skyview_data_1tm.txt','a')
+    skyview_data = open('skyview_data_x.txt','a')
     while 1:
         readSkyviewMessage()
     skyview_data.close()
