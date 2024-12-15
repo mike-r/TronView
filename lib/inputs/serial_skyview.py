@@ -4,7 +4,7 @@
 # Skyview
 # 1/23/2019  Topher
 # 11/6/2024  Added IMU data
-# 11/30/2024 Added EMS data   Rehberg
+# 11/30/2024 Added NAV, Autopilot and EMS data   Rehberg
 
 from ._input import Input
 from lib import hud_utils
@@ -217,33 +217,42 @@ class serial_skyview(Input):
                     #print("Fuel Level Left: "+str(FL_L)+"  :", aircraft.engine.FuelLevels[0], " Gallons Left Tank")
                     #print("Fuel Level Right:"+str(FL_R)+"  :", aircraft.engine.FuelLevels[1], " Gallons Right Tank")
 
-                    if TC12 == "XX": egt_1 = 0
-                    else: egt_1 = Input.cleanInt(self, TC12)
-                    if TC10 == "XX": egt_2 = 0
-                    else: egt_2 = Input.cleanInt(self, TC10)
-                    if TC8 == "XX": egt_3 = 0
-                    else: egt_3 = Input.cleanInt(self, TC8)
-                    if TC6 == "XX": egt_4 = 0
-                    else: egt_4 = Input.cleanInt(self, TC6)
-                    if TC4 == "XX": egt_5 = 0
-                    else: egt_5 = Input.cleanInt(self, TC4)
-                    if TC2 == "XX": egt_6 = 0
-                    else: egt_6 = Input.cleanInt(self, TC2)
-                    aircraft.engine.EGT = [egt_1, egt_2, egt_3, egt_4, egt_5, egt_6]
+                    egt_1 = Input.cleanInt(self, TC12)
+                    aircraft.engine.EGT[0] = round((egt_1 * 1.8) + 32)  # convert from C to F
+                    cht_1 = Input.cleanInt(self, TC11)
+                    aircraft.engine.CHT[1] = round((cht_1 * 1.8) + 32)  # convert from C to F
 
-                    if TC11 == "XX": cht_1 = 0
-                    else: cht_1 = Input.cleanInt(self, TC11)
-                    if TC9 == "XX": cht_2 = 0
-                    else: cht_2 = Input.cleanInt(self, TC9)
-                    if TC7 == "XX": cht_3 = 0
-                    else: cht_3 = Input.cleanInt(self, TC7)
-                    if TC5 == "XX": cht_4 = 0
-                    else: cht_4 = Input.cleanInt(self, TC5)
-                    if TC3 == "XX": cht_5 = 0
-                    else: cht_5 = Input.cleanInt(self, TC3)
-                    if TC1 == "XX": cht_6 = 0
-                    else: cht_6 = Input.cleanInt(self, TC1)
-                    aircraft.engine.CHT = [cht_1, cht_2, cht_3, cht_4, cht_5, cht_6]
+                    egt_2 = Input.cleanInt(self, TC10)
+                    aircraft.engine.EGT[1] = round((egt_2 * 1.8) + 32)  # convert from C to F
+                    cht_2 = Input.cleanInt(self, TC9)
+                    aircraft.engine.CHT[1] = round((cht_2 * 1.8) + 32)  # convert from C to F
+
+                    egt_3 = Input.cleanInt(self, TC8)
+                    aircraft.engine.EGT[2] = round((egt_3 * 1.8) + 32)  # convert from C to F
+
+                    egt_4 = Input.cleanInt(self, TC6)
+                    aircraft.engine.EGT[3] = round((egt_4 * 1.8) + 32)  # convert from C to F
+
+                    #egt_5 = Input.cleanInt(self, TC4)
+                    #aircraft.engine.EGT[4] = round((egt_5 * 1.8) + 32)  # convert from C to F
+
+                    #egt_6 = Input.cleanInt(self, TC2)
+                    #aircraft.engine.EGT[5] = round((egt_6 * 1.8) + 32)  # convert from C to F
+
+                    cht_1 = Input.cleanInt(self, TC11)
+                    aircraft.engine.CHT[0] = round((cht_1 * 1.8) + 32)  # convert from C to F
+
+                    cht_2 = Input.cleanInt(self, TC9)
+                    aircraft.engine.CHT[1] = round((cht_2 * 1.8) + 32)  # convert from C to F
+
+                    cht_3 = Input.cleanInt(self, TC7)
+                    aircraft.engine.CHT[2] = round((cht_3 * 1.8) + 32)  # convert from C to F
+
+                    cht_4 = Input.cleanInt(self, TC5)
+                    aircraft.engine.CHT[3] = round((cht_4 * 1.8) + 32)  # convert from C to F
+
+                    #cht_5 = Input.cleanInt(self, TC3)
+                    #cht_6 = Input.cleanInt(self, TC1)
 
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
