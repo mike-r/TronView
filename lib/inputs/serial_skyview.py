@@ -130,8 +130,8 @@ class serial_skyview(Input):
                     aircraft.oat = (Input.cleanInt(self,OAT) * 1.8) + 32 # c to f
                     #print("TAS:"+str(TAS))
                     aircraft.tas = Input.cleanInt(self,TAS) * 0.1
-                    #print("AOA:"+str(AOA))
-                    if AOA == "XX":
+                    #print(AOA:"+str(AOA))
+                    if AOA == b'XX':
                         aircraft.aoa = 0
                     else:
                         aircraft.aoa = Input.cleanInt(self,AOA)
