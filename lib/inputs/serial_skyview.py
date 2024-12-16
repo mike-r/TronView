@@ -167,7 +167,7 @@ class serial_skyview(Input):
                     aircraft.nav.msg_count += 1
                     msg = self.ser.read(90)
                     if isinstance(msg, str): msg = msg.encode()  # if read from file then convert to bytes
-                    HH,MM,SS,FF,HBug,AltBug, AirBug,VSBug,Course,CDISrcType,CDISourePort,CDIScale,CDIDeflection,GS,APEng,APRollMode,Not1,APPitch,Not2,APRollF,APRollP,APRollSlip,APPitchF, APPitchP,APPitchSlip,APYawF,APYawP,APYawSlip,TransponderStatus,TransponderReply,TransponderIdent,TransponderCode,DynonUnused,Checksum,CRLF= struct.unpack(
+                    HH,MM,SS,FF,HBug,AltBug, ASIBug,VSBug,Course,CDISrcType,CDISourePort,CDIScale,CDIDeflection,GS,APEng,APRollMode,Not1,APPitch,Not2,APRollF,APRollP,APRollSlip,APPitchF, APPitchP,APPitchSlip,APYawF,APYawP,APYawSlip,TransponderStatus,TransponderReply,TransponderIdent,TransponderCode,DynonUnused,Checksum,CRLF= struct.unpack(
                         "2s2s2s2s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg
                     )
                     #print("NAV & System Message !2:", msg)
@@ -175,6 +175,18 @@ class serial_skyview(Input):
                     self.time_stamp_string = aircraft.sys_time_string
                     self.time_stamp_min = int(MM)
                     self.time_stamp_sec = int(SS)
+
+                    if HBug != b'XXX': aircraft.nav.HeadBug = Input.cleanInt(self, HBug)
+                    if AltBug != b'XXXXX': aircraft.nav.AltBug = Input.cleanInt(self,AltBug) * 10
+                    if ASIBug != b'XXXX': aircraft.nav.ASIBug = Input.cleanInt(self,ASIBug) / 10
+                    if VSBug != b'XXXX': aircraft.nav.VSBug = Input.cleanInt(self,VSBug) / 10
+                    if CDIDeflection != b'XXX': aircraft.nav.ILSDev = Input.cleanInt(self,CDIDeflection)
+                    if GS != b'XXX': aircraft.nav.GSDev = Input.cleanInt(self,GS)
+                    aircraft.nav.HSISource = Input.cleanInt(self,CDISourePort)
+                    if CDISrcType == b'0': navSourceType = 'GPS'
+                    if CDISrcType == b'1': navSourceType = 'NAV'
+                    if CDISrcType == b'2': navSourceType = 'LOC'
+                    aircraft.nav.SourceDesc = navSourceType + str(Input.cleanInt(self,CDISourePort))
 
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
