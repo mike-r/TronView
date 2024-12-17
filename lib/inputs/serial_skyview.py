@@ -187,6 +187,7 @@ class serial_skyview(Input):
                     if CDISrcType == b'1': navSourceType = 'NAV'
                     if CDISrcType == b'2': navSourceType = 'LOC'
                     aircraft.nav.SourceDesc = navSourceType + str(Input.cleanInt(self,CDISourePort))
+                    aircraft.nav.GLSHoriz = Input.cleanInt(self,CDIScale) / 10
 
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
@@ -208,7 +209,7 @@ class serial_skyview(Input):
                     aircraft.engine.OilPress = Input.cleanInt(self,OilPress)
                     aircraft.engine.OilTemp = Input.cleanInt(self,OilTemp)
                     aircraft.engine.RPM = Input.cleanInt(self,RPM_L)
-                    aircraft.engine.ManPress = Input.cleanInt(self,MAP) * 0.1
+                    aircraft.engine.ManPress = Input.cleanInt(self,MAP) / 10
                     aircraft.engine.FuelFlow = Input.cleanInt(self,FF1) / 10
                     aircraft.engine.FuelPress = Input.cleanInt(self,FP) / 10
                     fuel_level_left  = Input.cleanInt(self, FL_L) / 10
@@ -235,8 +236,6 @@ class serial_skyview(Input):
                         Input.addToLog(self,self.output_logFile,msg)
                 else:
                     aircraft.msg_unknown += 1 # unknown message found.
-            else:
-                aircraft.msg_bad += 1 # count this as a bad message
         except ValueError:
             aircraft.msg_bad += 1
             #print("bad:"+str(msg))

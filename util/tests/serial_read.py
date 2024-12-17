@@ -275,7 +275,7 @@ def readSkyviewMessage():
             if len(msg) == 91:
                 sinceLastGoodMessage = 0
                 msg = (msg[:91]) if len(msg) > 91 else msg
-                DataVer, SysTime, HBug, AltBug, AirBug, VSBug, Course, CDISrcType, CDISourePort, CDIScale, CDIDeflection, GS, APEng, APRollMode, Not1, APPitch, Not2, APRollF, APRollP, APRollSlip, APPitchF, APPitchP, APPitchSlip, APYawF, APYawP, APYawSlip, TransponderStatus, TransponderReply, TransponderIdent, TransponderCode, DynonUnused, Checksum, CRLF = struct.unpack(
+                (DataVer, SysTime, HBug, AltBug, AirBug, VSBug, Course, CDISrcType, CDISourePort, CDIScale, CDIDeflection, GS, APEng, APRollMode, UnUsed1, APPitch, UnUsed2, APRollF, APRollP, APRollSlip, APPitchF, APPitchP, APPitchSlip, APYawF, APYawP, APYawSlip, TransponderStatus, TransponderReply, TransponderIdent, TransponderCode, UnUsed3, Checksum, CRLF) = struct.unpack(
                     "c8s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg
                 )
                 if (CRLF[0]) == 13 or (CRLF[0]) == "\r":
@@ -300,13 +300,14 @@ def readSkyviewMessage():
                     print_xy(16, 30, "AP Engaged:   %s" % (APEng.decode()))
                     print_xy(17, 30, "AP Roll Mode: %s" % (APRollMode.decode()))
                     print_xy(18, 30, "AP Pitch Mode:%s" % (APPitch.decode()))
-                    print_xy(19, 30, "Not-1:        %s" % (Not1.decode()))
-                    print_xy(20, 30, "Not-2:        %s" % (Not2.decode()))
-                    print_xy(21, 30, "Squawk Code:  %s" % (TransponderCode.decode()))
-                    #print_xy(21, 30, "ChkSum:       0x%s   int:%d " % (Checksum.decode(), intCheckSum))
-                    #print_xy(22, 30, "CalChkSum:    %s   int:%d " % (calcChecksumHex, calcChecksum))
+                    print_xy(19, 30, "AP Roll Slip: %s" % (APRollSlip.decode()))
+                    print_xy(20, 30, "APPitchSlip:  %s" % (APPitchSlip.decode()))
+                    print_xy(21, 30, "Xpnder Status:%s" % (TransponderStatus.decode()))
+                    print_xy(22, 30, "Squawk Code:  %s" % (TransponderCode.decode()))
+                    print_xy(23, 30, "ChkSum:       0x%s   int:%d " % (Checksum.decode(), intCheckSum))
+                    print_xy(24, 30, "CalChkSum:    %s   int:%d " % (calcChecksumHex, calcChecksum))
                     nextByte = ser.read(1)
-                    print_xy(23, 30, "endbyte:      %s " % (repr(CRLF[0])))
+                    print_xy(25, 30, "endbyte:      %s " % (repr(CRLF[0])))
         elif  dataType.decode() == "3":        # Engine Data Message
             goodmessageheaderCount += 1
             msg = ser.read(223)
@@ -328,11 +329,11 @@ def readSkyviewMessage():
                     print_xy(4, 60,  "Ver:          %s" % (DataVer.decode()))
                     print_xy(5, 60,  "SysTime:      %s" % (SysTime.decode()))
                     print_xy(6, 60,  "Oil Pressure: %s" % (OilPress.decode()))
-                    print_xy(7, 60, "Oil Temp:     %s" % (OilTemp.decode()))
-                    print_xy(8, 60, "RPM:          %s" % (RPM_L.decode()))
-                    print_xy(9, 60, "MAP:          %s" % (MAP.decode()))
+                    print_xy(7, 60,  "Oil Temp:     %s" % (OilTemp.decode()))
+                    print_xy(8, 60,  "RPM Left:     %s" % (RPM_L.decode()))
+                    print_xy(9, 60,  "MAP:          %s" % (MAP.decode()))
                     print_xy(10, 60, "Fuel Flow:    %s" % (FF1.decode()))
-                    print_xy(11, 60, "Fuel Pressre: %s" % (FP.decode()))
+                    print_xy(11, 60, "Fuel Pres:    %s" % (FP.decode()))
                     print_xy(12, 60, "Fuel Left:    %s" % (FL_L.decode()))
                     print_xy(13, 60, "Fuel Right:   %s" % (FL_R.decode()))
                     print_xy(14, 60, "Fuel Rem      %s" % (Frem.decode()))
@@ -340,13 +341,16 @@ def readSkyviewMessage():
                     print_xy(16, 60, "Voltage-2:    %s" % (V2.decode()))
                     print_xy(17, 60, "AMPs:         %s" % (AMPs.decode()))
                     print_xy(18, 60, "Hobbs:        %s" % (Hobbs.decode()))
+                    print_xy(24, 60, "Eng Power:    %s" % (Pwr.decode()))
                     print_xy(19, 60, "EGT1-4: %s" % (TC12.decode()) + " " + (TC10.decode()) + " " +  (TC8.decode()) + " " +  (TC6.decode()))
                     print_xy(20, 60, "CHT1-4: %s" % (TC11.decode()) + " " + (TC9.decode()) + " "  +  (TC7.decode()) + " " +  (TC5.decode()))
-                    print_xy(21, 60, "Eng Power:    %s" % (Pwr.decode()))
-                    #print_xy(23, 60, "ChkSum:      0x%s   int:%d " % (Checksum.decode(), intCheckSum))
-                    #print_xy(24, 60, "CalChkSum:     %s   int:%d " % (calcChecksumHex, calcChecksum))
+                    print_xy(21, 60, "GP1-4:  %s" % (GP1.decode()) + " " + (GP2.decode()) + " "  +  (GP3.decode()) + " " +  (GP4.decode()))
+                    print_xy(22, 60, "GP5-8:  %s" % (GP5.decode()) + " " + (GP6.decode()) + " "  +  (GP7.decode()) + " " +  (GP8.decode()))
+                    print_xy(23, 60, "GP9-13: %s" % (GP9.decode()) + " " + (GP10.decode()) + " "  +  (GP11.decode()) + " " +  (GP12.decode()) + " " +  (GP13.decode()))
+                    print_xy(25, 60, "ChkSum:      0x%s   int:%d " % (Checksum.decode(), intCheckSum))
+                    print_xy(26, 60, "CalChkSum:     %s   int:%d " % (calcChecksumHex, calcChecksum))
                     nextByte = ser.read(1)
-                    print_xy(23, 60, "endbyte:      %s " % (repr(CRLF[0])))
+                    print_xy(27, 60, "endbyte:      %s " % (repr(CRLF[0])))
         else:
             badmessageheaderCount += 1
             ser.flushInput()
