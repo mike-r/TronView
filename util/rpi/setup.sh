@@ -83,7 +83,8 @@ if [ $(cat /etc/os-release | grep "Debian GNU/Linux 12" | wc -l) -eq 1 ]; then
 	sudo apt install libsdl2-ttf-2.0-0 
 	sudo pip3 install Adafruit_ADS1x15 --break-system-packages
 	sudo pip3 install numpy --break-system-packages
-	sudo pip3 install pygame_gui --break-system-packages 
+	sudo pip3 install pygame_gui --break-system-packages
+	sudo pip3 install pygame_menu --break-system-packages
 	pip_args="--break-system-packages"
 
 fi
@@ -104,6 +105,7 @@ if [ $(cat /etc/os-release | grep "GNU/Linux 11" | wc -l) -eq 1 ]; then
 	sudo pip3 install Adafruit_ADS1x15
 	sudo pip3 install numpy
 	sudo pip3 install pygame_gui
+	sudo pip3 install pygame_menu
 
 	# check if python 3.9.2 is installed
 	if [ $(python3 --version | grep "3.9.2" | wc -l) -eq 1 ]; then
