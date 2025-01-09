@@ -95,6 +95,26 @@ class serial_skyview(Input):
                     msg = self.ser.read(71)
                     if(isinstance(msg,str)): msg = msg.encode() # if read from file then convert to bytes
                     HH, MM, SS, FF, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel, AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
+                         # Format string breakdown:
+                         # 8s - System time (8 bytes)
+                         # 4s - Pitch (4 bytes)
+                         # 5s - Roll bug (5 bytes)
+                         # 3s - Heading bug (3 bytes)
+                         # 4s - IAS (4 bytes)
+                         # 6s - Pres Alt (6 bytes)
+                         # 4s - Turn Rate (4 bytes)
+                         # 3s - Lat Accel (3 bytes)
+                         # 3s - Vert Accel (3 bytes)
+                         # 2s - AOA (2 bytes)
+                         # 4s - Vertical Speed (4 bytes)
+                         # 3s - OAT (3 bytes)
+                         # 4s - TAS (4 bytes)
+                         # 3s - Baro Setting (3 bytes)
+                         # 6s - Density Altitude (6 bytes)
+                         # 3s - Wind Direction (3 bytes)
+                         # 2s - Wind Speed (2 bytes)
+                         # 2s - Checksum (2 bytes)
+                         # 2s - CRLF (2 bytes)                            
                         "2s2s2s2s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg
                     ) 
                     #print(msg)
@@ -104,11 +124,8 @@ class serial_skyview(Input):
                     self.time_stamp_sec = int(SS)
                     
                     #print("time: "+aircraft.sys_time_string)
-                    #print("pitch:"+str(pitch))
                     dataship.pitch = Input.cleanInt(self,pitch) / 10
-                    #print("roll:"+str(roll))
                     dataship.roll = Input.cleanInt(self,roll) / 10
-                    #print("HeadingMAG:"+str(HeadingMAG))
                     dataship.mag_head = Input.cleanInt(self,HeadingMAG)
 
                     # Update IMU data
@@ -121,21 +138,14 @@ class serial_skyview(Input):
                     self.imuData.updatePos(dataship.pitch, dataship.roll, dataship.mag_head)
                     dataship.imus[self.imu_index] = self.imuData
 
-                    #print("IAS:"+str(IAS))
                     dataship.ias = Input.cleanInt(self,IAS) * 0.1
-                    #print("PALT:"+str(PresAlt))
                     dataship.PALT = Input.cleanInt(self,PresAlt)
-                    #print("TurnRate:"+str(TurnRate))
-                    #print("OAT:"+str(OAT))
                     dataship.oat = (Input.cleanInt(self,OAT) * 1.8) + 32 # c to f
-                    #print("TAS:"+str(TAS))
                     dataship.tas = Input.cleanInt(self,TAS) * 0.1
-                    #print("AOA:"+str(AOA))
                     if AOA == b'XX':
                         dataship.aoa = 0
                     else:
                         dataship.aoa = Input.cleanInt(self,AOA)
-                    #print("baro:"+str(Baro))
                     dataship.baro = (Input.cleanInt(self,Baro) + 2750.0) / 100
                     dataship.baro_diff = dataship.baro - 29.921
                     dataship.DA = Input.cleanInt(self,DA)
@@ -218,12 +228,37 @@ class serial_skyview(Input):
                     if CDIDeflection != b'XXX': dataship.nav.ILSDev = Input.cleanInt(self,CDIDeflection)
                     if GS != b'XXX': dataship.nav.GSDev = Input.cleanInt(self,GS)
                     dataship.nav.HSISource = Input.cleanInt(self,CDISourePort)
-                    if CDISrcType == b'0': navSourceType = 'GPS'
-                    if CDISrcType == b'1': navSourceType = 'NAV'
-                    if CDISrcType == b'2': navSourceType = 'LOC'
+                    if CDISrcType == b'0':
+                        navSourceType = 'GPS'
+                    elif CDISrcType == b'1':
+                        navSourceType = 'NAV'
+                    elif CDISrcType == b'2':
+                        navSourceType = 'LOC'
                     dataship.nav.SourceDesc = navSourceType + str(Input.cleanInt(self,CDISourePort))
                     dataship.nav.GLSHoriz = Input.cleanInt(self,CDIScale) / 10
-
+                    if APEng == b'0': dataship.nav.APeng = 0
+                    if APEng == b'1' or APEng == b'2' or APEng == b'3' or APEng == b'4' or APEng == b'5' or APEng == b'6' or APEng == b'7': dataship.nav.APeng = 1
+                    dataship.nav.AP_RollForce = Input.cleanInt(self,APRollF)
+                    dataship.nav.AP_RollPos = Input.cleanInt(self,APRollP)
+                    dataship.nav.AP_RollSlip = Input.cleanInt(self,APRollSlip)
+                    dataship.nav.AP_PitchForce = Input.cleanInt(self,APPitchF)
+                    dataship.nav.AP_PitchPos = Input.cleanInt(self,APPitchP)
+                    dataship.nav.AP_PitchSlip = Input.cleanInt(self,APPitchSlip)
+                    dataship.nav.AP_YawForce = Input.cleanInt(self,APYawF)
+                    dataship.nav.AP_YawPos = Input.cleanInt(self,APYawP)
+                    dataship.nav.AP_YawSlip = Input.cleanInt(self,APYawSlip)
+                    if TransponderStatus == b'0':
+                        dataship.nav.XPDR_Status = 'SBY'
+                    elif TransponderStatus == b'1':
+                        dataship.nav.XPDR_Status = 'GND'
+                    elif TransponderStatus == b'2':
+                        dataship.nav.XPDR_Status = 'ON'
+                    elif TransponderStatus == b'3':
+                        dataship.nav.XPDR_Status = 'ALT'
+                    dataship.nav.XPDR_Reply = Input.cleanInt(self,TransponderReply)
+                    dataship.nav.XPDR_Ident = Input.cleanInt(self,TransponderIdent)
+                    dataship.nav.XPDR_Code = Input.cleanInt(self,TransponderCode)
+                    
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
@@ -293,14 +328,20 @@ class serial_skyview(Input):
 
                     dataship.engine.OilPress = Input.cleanInt(self,OilPress)
                     dataship.engine.OilTemp = Input.cleanInt(self,OilTemp)
-                    dataship.engine.RPM = Input.cleanInt(self,RPM_L)
+                    dataship.engine.RPM = max(Input.cleanInt(self,RPM_L), Input.cleanInt(self,RPM_R))
                     dataship.engine.ManPress = Input.cleanInt(self,MAP) / 10
                     dataship.engine.FuelFlow = Input.cleanInt(self,FF1) / 10
+                    dataship.engine.FuelFlow2 = Input.cleanInt(self,FF2) / 10
                     dataship.engine.FuelPress = Input.cleanInt(self,FP) / 10
                     fuel_level_left  = Input.cleanInt(self, FL_L) / 10
                     fuel_level_right = Input.cleanInt(self, FL_R) / 10
-                    dataship.engine.FuelLevels = [fuel_level_left, fuel_level_right, 0, 0]
                     dataship.fuel.FuelLevels = [fuel_level_left, fuel_level_right, 0, 0]
+                    dataship.fuel.FuelRemain = Input.cleanInt(self,Frem) / 10
+                    dataship.engine.volts1 = Input.cleanInt(self,V1) / 10
+                    dataship.engine.volts2 = Input.cleanInt(self,V2) / 10
+                    dataship.engine.amps = Input.cleanInt(self,AMPs) / 10
+                    dataship.engine.hobbs = Input.cleanInt(self,Hobbs) / 10
+                    dataship.engine.tach = Input.cleanInt(self,Tach) / 10
 
                     if TC12 != b'XXXX': dataship.engine.EGT[0] = round(((Input.cleanInt(self, TC12)) * 1.8) + 32)  # convert from C to F
                     if TC10 != b'XXXX': dataship.engine.EGT[1] = round(((Input.cleanInt(self, TC10)) * 1.8) + 32)  # convert from C to F
