@@ -339,9 +339,9 @@ class serial_skyview(Input):
                     dataship.fuel.FuelRemain = Input.cleanInt(self,Frem) / 10
                     dataship.engine.volts1 = Input.cleanInt(self,V1) / 10
                     dataship.engine.volts2 = Input.cleanInt(self,V2) / 10
-                    dataship.engine.amps = Input.cleanInt(self,AMPs) / 10
-                    dataship.engine.hobbs = Input.cleanInt(self,Hobbs) / 10
-                    dataship.engine.tach = Input.cleanInt(self,Tach) / 10
+                    if AMPs != b'XXXX': dataship.engine.amps = Input.cleanInt(self,AMPs) / 10
+                    dataship.engine.hobbs_time = Input.cleanInt(self,Hobbs) / 10
+                    dataship.engine.tach_time = Input.cleanInt(self,Tach) / 10
 
                     if TC12 != b'XXXX': dataship.engine.EGT[0] = round(((Input.cleanInt(self, TC12)) * 1.8) + 32)  # convert from C to F
                     if TC10 != b'XXXX': dataship.engine.EGT[1] = round(((Input.cleanInt(self, TC10)) * 1.8) + 32)  # convert from C to F
