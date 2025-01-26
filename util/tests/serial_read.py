@@ -362,12 +362,15 @@ def readSkyviewMessage():
 def readSkyviewAdsbMessage():
     global ser
     global badmessageheaderCount, sinceLastGoodMessage, goodmessageheaderCount, unknownMsgCount
-    try:
-        msg = ser.readline()
-        skyview_adsb_data.write(msg.decode())
-    except serial.serialutil.SerialException:
-        print("exception")
-        skyview_adsb_data.close()
+    for lines in range (0, 3):
+        try:
+            msg = ser.readline()
+            print ("Skyview ADS-B: " + msg.decode())
+            skyview_adsb_data.write(msg.decode())
+        except serial.serialutil.SerialException:
+            print("exception")
+            skyview_adsb_data.close()
+    print ("End of Skyview ADS-B data")
 
 def readG3XMessage():
     global ser
@@ -499,7 +502,7 @@ def list_serial_ports(printthem):
 argv = sys.argv[1:]
 readType = "none"
 try:
-    opts, args = getopt.getopt(argv, "hsmgli:", [""])
+    opts, args = getopt.getopt(argv, "hsamgli:", [""])
 except getopt.GetoptError:
     showArgs()
 for opt, arg in opts:

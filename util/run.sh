@@ -525,7 +525,7 @@ while $RUN_MENU_AGAIN; do
                                       "7" "I2C Test (Pi only)" \
                                       "8" "3D Sphere" \
                                       "9" "bno085 calibration (Pi only)" \
-                                      "10" "Read Serial Dynon ADS-B" \
+                                      "0" "Read Serial Dynon ADS-B" \
                                       2>&1 1>&3)
                     exit_status=$?
                     exec 3>&-
@@ -541,7 +541,7 @@ while $RUN_MENU_AGAIN; do
                             7) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/i2c_test.py" ;;
                             8) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/3d/sphere.py" ;;
                             9) FULL_COMMAND="python3 $TRONVIEW_DIR/util/rpi/i2c/calibrate_bno085.py" ;;
-                            10) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/serial_read.py -a" ;;
+                            0) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/serial_read.py -a" ;;
                         esac
                         echo "Running: $FULL_COMMAND"
                         #exit 0
