@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# Expanded Dynon Skyview test   Zap 12/28/2024
-
+# Expanded Dynon Skyview  NAV, EMS   Zap 12/28/2024
+# Expanded Dynon Skyview ADS-B       Zap 01/--/2025
 
 import time
 import serial
@@ -358,6 +358,16 @@ def readSkyviewMessage():
     except serial.serialutil.SerialException:
         print("exception")
         #skyview_data.close()
+        
+def readSkyviewAdsbMessage():
+    global ser
+    global badmessageheaderCount, sinceLastGoodMessage, goodmessageheaderCount, unknownMsgCount
+    try:
+        msg = ser.readline()
+        skyview_adsb_data.write(msg.decode())
+    except serial.serialutil.SerialException:
+        print("exception")
+        skyview_adsb_data.close()
 
 def readG3XMessage():
     global ser
@@ -461,6 +471,7 @@ def showArgs():
     print(" -g (Garmin G3X)")
     print(" -l (list available serial ports on RaspberryPi/unix)")
     print(" -i (select input serial port. Default: /dev/ttyS0 )")
+    print(" -a (Dynon Skyview ADSB)")
     sys.exit()
 
 
@@ -496,6 +507,8 @@ for opt, arg in opts:
         showArgs()
     elif opt == "-s":
         readType = "skyview"
+    elif opt == "-a":
+        readType = "skyview-adsb"
     elif opt == "-m":
         readType = "mgl"
     elif opt == "-g":
@@ -562,6 +575,14 @@ if readType == "skyview":
     while 1:
         readSkyviewMessage()
     #skyview_data.close()
+elif readType == "skyview-adsb":
+    print_xy(1, 65, "Data format: " + bcolors.OKBLUE + "Dynon Skyview ADS-B" + bcolors.ENDC)
+    print_xy(2, 0, "                                        ")  # clear line 2
+    print_xy(3, 0, "                                        ")  # clear line 3
+    skyview_adsb_data = open('skyview_adsb_data_x.txt','a')
+    while 1:
+        readSkyviewAdsbMessage()
+    skyview_adsb_data.close()
 elif readType == "mgl":
     print_xy(2, 0, "Data format: " + bcolors.OKBLUE + "MGL" + bcolors.ENDC)
     while 1:
