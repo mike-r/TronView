@@ -379,10 +379,6 @@ def readSkyviewAdsbMessage():
         except serial.serialutil.SerialException:
             print("exception")
             skyview_adsb_data.close()
-        except:
-            print("Unknown exception")
-            skyview_adsb_data.close()
-            sinceLastGoodMessage += 1
             print_xy(2, 0,  "SinceGood: %d" % (sinceLastGoodMessage))
             print_xy(2, 24, "Bad msgHead: %d" % (badmessageheaderCount))
             print_xy(2, 49, "Good msgHead: %d " % (goodmessageheaderCount))
