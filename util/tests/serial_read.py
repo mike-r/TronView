@@ -513,7 +513,7 @@ for opt, arg in opts:
         showArgs()
     elif opt == "-s":
         readType = "skyview"
-    elif opt == "-sa":
+    elif opt == "-a":
         readType = "skyview-adsb"
     elif opt == "-m":
         readType = "mgl"
