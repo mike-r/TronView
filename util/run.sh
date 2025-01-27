@@ -541,7 +541,7 @@ while $RUN_MENU_AGAIN; do
                             7) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/i2c_test.py" ;;
                             8) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/3d/sphere.py" ;;
                             9) FULL_COMMAND="python3 $TRONVIEW_DIR/util/rpi/i2c/calibrate_bno085.py" ;;
-                            0) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/serial_read.py -a" ;;
+                            0) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/serial_read.py -sa" ;;
                         esac
                         echo "Running: $FULL_COMMAND"
                         #exit 0

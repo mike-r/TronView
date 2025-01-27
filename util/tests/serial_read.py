@@ -365,8 +365,11 @@ def readSkyviewAdsbMessage():
     for lines in range (0, 3):
         try:
             msg = ser.readline()
-            print ("Skyview ADS-B: " + msg.decode())
-            skyview_adsb_data.write(msg.decode())
+            if len(msg) != 0:
+                print ("Skyview ADS-B: " + msg.decode())
+                goodmessageheaderCount += 1
+                sinceLastGoodMessage = 0
+                skyview_adsb_data.write(msg.decode())
         except serial.serialutil.SerialException:
             print("exception")
             skyview_adsb_data.close()
@@ -510,7 +513,7 @@ for opt, arg in opts:
         showArgs()
     elif opt == "-s":
         readType = "skyview"
-    elif opt == "-a":
+    elif opt == "-sa":
         readType = "skyview-adsb"
     elif opt == "-m":
         readType = "mgl"
