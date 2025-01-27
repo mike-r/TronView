@@ -366,7 +366,7 @@ def readSkyviewAdsbMessage():
         try:
             msg = ser.readline()
             if len(msg) != 0:
-                print_xy(10, 0, "Skyview ADS-B: %d" % (msg.decode()))
+                print_xy(4, 0, "Skyview ADS-B: %s" % (msg.decode()))
                 goodmessageheaderCount += 1
                 sinceLastGoodMessage = 0
                 skyview_adsb_data.write(msg.decode())
@@ -594,7 +594,7 @@ elif readType == "skyview-adsb":
     print_xy(1, 65, "Data format: " + bcolors.OKBLUE + "Dynon Skyview ADS-B" + bcolors.ENDC)
     print_xy(2, 0, "                                        ")  # clear line 2
     print_xy(3, 0, "                                        ")  # clear line 3
-    skyview_adsb_data = open('skyview_adsb_data_x.txt','a')
+    skyview_adsb_data = open('data/skyview_adsb_data_x.txt','a')
     while 1:
         readSkyviewAdsbMessage()
     skyview_adsb_data.close()
