@@ -366,14 +366,27 @@ def readSkyviewAdsbMessage():
         try:
             msg = ser.readline()
             if len(msg) != 0:
-                print ("Skyview ADS-B: " + msg.decode())
+                print_xy(10, 0, "Skyview ADS-B: %d" % (msg.decode()))
                 goodmessageheaderCount += 1
                 sinceLastGoodMessage = 0
                 skyview_adsb_data.write(msg.decode())
+            else:
+                sinceLastGoodMessage += 1
+                print_xy(2, 0,  "SinceGood: %d" % (sinceLastGoodMessage))
+                print_xy(2, 24, "Bad msgHead: %d" % (badmessageheaderCount))
+                print_xy(2, 49, "Good msgHead: %d " % (goodmessageheaderCount))
+                print_xy(2, 74, "Unknown Msg: %d " % (unknownMsgCount))
         except serial.serialutil.SerialException:
             print("exception")
             skyview_adsb_data.close()
-    print ("End of Skyview ADS-B data")
+        except:
+            print("Unknown exception")
+            skyview_adsb_data.close()
+            sinceLastGoodMessage += 1
+            print_xy(2, 0,  "SinceGood: %d" % (sinceLastGoodMessage))
+            print_xy(2, 24, "Bad msgHead: %d" % (badmessageheaderCount))
+            print_xy(2, 49, "Good msgHead: %d " % (goodmessageheaderCount))
+            print_xy(2, 74, "Unknown Msg: %d " % (unknownMsgCount))
 
 def readG3XMessage():
     global ser
