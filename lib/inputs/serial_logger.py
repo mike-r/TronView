@@ -43,7 +43,7 @@ class serial_logger(Input):
             )
 
             self.textMode_whatToShow = 1 # default to only showing basic air info.
-            self.textMode_showRaw = true
+            self.textMode_showRaw = True
 
     def closeInput(self,aircraft):
         if self.isPlaybackMode == True:

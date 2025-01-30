@@ -204,7 +204,7 @@ class serial_mgl(Input):
                             aircraft.traffic.TrafficMode = TrafficMode
                             aircraft.traffic.TrafficCount = NumOfTraffic
                             aircraft.traffic.NumMsg = NumMsg
-                            aircraft.traffic.MsgNum = ThisMsgNum
+                            aircraft.traffic.MsgNum = MsgNum
 
                         aircraft.traffic.msg_count += 1
                         if(self.textMode_showRaw==True): aircraft.traffic.msg_last = binascii.hexlify(Message) # save last message.

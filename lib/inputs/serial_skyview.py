@@ -118,10 +118,11 @@ class serial_skyview(Input):
                         "2s2s2s2s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg
                     ) 
                     #print(msg)
-                    dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
-                    self.time_stamp_string = dataship.sys_time_string
-                    self.time_stamp_min = int(MM)
-                    self.time_stamp_sec = int(SS)
+                    if HH != b'--' and MM != b'--' and SS != b'--':
+                        dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
+                        self.time_stamp_string = dataship.sys_time_string
+                        self.time_stamp_min = int(MM)
+                        self.time_stamp_sec = int(SS)
                     
                     #print("time: "+aircraft.sys_time_string)
                     dataship.pitch = Input.cleanInt(self,pitch) / 10
@@ -140,15 +141,15 @@ class serial_skyview(Input):
 
                     dataship.ias = Input.cleanInt(self,IAS) * 0.1
                     dataship.PALT = Input.cleanInt(self,PresAlt)
-                    dataship.oat = (Input.cleanInt(self,OAT) * 1.8) + 32 # c to f
-                    dataship.tas = Input.cleanInt(self,TAS) * 0.1
+                    if OAT != b'XXX': dataship.oat = (Input.cleanInt(self,OAT) * 1.8) + 32 # c to f
+                    if TAS != b'XXXX': dataship.tas = Input.cleanInt(self,TAS) * 0.1
                     if AOA == b'XX':
                         dataship.aoa = 0
                     else:
                         dataship.aoa = Input.cleanInt(self,AOA)
                     dataship.baro = (Input.cleanInt(self,Baro) + 2750.0) / 100
                     dataship.baro_diff = dataship.baro - 29.921
-                    dataship.DA = Input.cleanInt(self,DA)
+                    if DA != b'XXXXXX': dataship.DA = Input.cleanInt(self,DA)
                     dataship.alt = int( Input.cleanInt(self,PresAlt) + (dataship.baro_diff / 0.00108) )  # 0.00108 of inches of mercury change per foot.
                     dataship.BALT = dataship.alt
                     dataship.turn_rate = Input.cleanInt(self,TurnRate) * 0.1
@@ -216,10 +217,11 @@ class serial_skyview(Input):
                         "2s2s2s2s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg
                     )
                     #print("NAV & System Message !2:", msg)
-                    dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
-                    self.time_stamp_string = dataship.sys_time_string
-                    self.time_stamp_min = int(MM)
-                    self.time_stamp_sec = int(SS)
+                    if HH != b'--' and MM != b'--' and SS != b'--':
+                        dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
+                        self.time_stamp_string = dataship.sys_time_string
+                        self.time_stamp_min = int(MM)
+                        self.time_stamp_sec = int(SS)
 
                     if HBug != b'XXX': dataship.nav.HeadBug = Input.cleanInt(self, HBug)
                     if AltBug != b'XXXXX': dataship.nav.AltBug = Input.cleanInt(self,AltBug) * 10
@@ -235,18 +237,20 @@ class serial_skyview(Input):
                     elif CDISrcType == b'2':
                         navSourceType = 'LOC'
                     dataship.nav.SourceDesc = navSourceType + str(Input.cleanInt(self,CDISourePort))
-                    dataship.nav.GLSHoriz = Input.cleanInt(self,CDIScale) / 10
+                    if CDIScale != b'XX': dataship.nav.GLSHoriz = Input.cleanInt(self,CDIScale) / 10
                     if APEng == b'0': dataship.nav.APeng = 0
                     if APEng == b'1' or APEng == b'2' or APEng == b'3' or APEng == b'4' or APEng == b'5' or APEng == b'6' or APEng == b'7': dataship.nav.APeng = 1
-                    dataship.nav.AP_RollForce = Input.cleanInt(self,APRollF)
-                    dataship.nav.AP_RollPos = Input.cleanInt(self,APRollP)
-                    dataship.nav.AP_RollSlip = Input.cleanInt(self,APRollSlip)
-                    dataship.nav.AP_PitchForce = Input.cleanInt(self,APPitchF)
-                    dataship.nav.AP_PitchPos = Input.cleanInt(self,APPitchP)
-                    dataship.nav.AP_PitchSlip = Input.cleanInt(self,APPitchSlip)
-                    dataship.nav.AP_YawForce = Input.cleanInt(self,APYawF)
-                    dataship.nav.AP_YawPos = Input.cleanInt(self,APYawP)
-                    dataship.nav.AP_YawSlip = Input.cleanInt(self,APYawSlip)
+                    if APRollF != b'XXX': dataship.nav.AP_RollForce = Input.cleanInt(self,APRollF)
+                    if APRollP != 'XXXXX': dataship.nav.AP_RollPos = Input.cleanInt(self,APRollP)
+                    if APRollSlip != b'X': dataship.nav.AP_RollSlip = Input.cleanInt(self,APRollSlip)
+                    if APPitchF != b'XXX': dataship.nav.AP_PitchForce = Input.cleanInt(self,APPitchF)
+                    if APPitchP != b'XXXXX': dataship.nav.AP_PitchPos = Input.cleanInt(self,APPitchP)
+                    if APPitchSlip != b'X': dataship.nav.AP_PitchSlip = Input.cleanInt(self,APPitchSlip)
+                    if APYawF != b'XXX': dataship.nav.AP_YawForce = Input.cleanInt(self,APYawF)
+                    if APYawP != b'XXXXX': dataship.nav.AP_YawPos = Input.cleanInt(self,APYawP)
+                    if APYawSlip 1= b'X': dataship.nav.AP_YawSlip = Input.cleanInt(self,APYawSlip)
+                    if TransponderStatus == b'X':
+                        dataship.nav.XPDR_Status = 'OFF'
                     if TransponderStatus == b'0':
                         dataship.nav.XPDR_Status = 'SBY'
                     elif TransponderStatus == b'1':
@@ -255,9 +259,9 @@ class serial_skyview(Input):
                         dataship.nav.XPDR_Status = 'ON'
                     elif TransponderStatus == b'3':
                         dataship.nav.XPDR_Status = 'ALT'
-                    dataship.nav.XPDR_Reply = Input.cleanInt(self,TransponderReply)
-                    dataship.nav.XPDR_Ident = Input.cleanInt(self,TransponderIdent)
-                    dataship.nav.XPDR_Code = Input.cleanInt(self,TransponderCode)
+                    if TransponderIdent != b'X': dataship.nav.XPDR_Reply = Input.cleanInt(self,TransponderReply)
+                    if TransponderCode != b'X': dataship.nav.XPDR_Ident = Input.cleanInt(self,TransponderIdent)
+                    if TransponderCode != b'XXXX': dataship.nav.XPDR_Code = Input.cleanInt(self,TransponderCode)
                     
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
@@ -321,18 +325,19 @@ class serial_skyview(Input):
                          "2s2s2s2s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
                     )
                     #print("EMS Message !3:", msg)
-                    dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
-                    self.time_stamp_string = dataship.sys_time_string
-                    self.time_stamp_min = int(MM)
-                    self.time_stamp_sec = int(SS)
+                    if HH != b'--' and MM != b'--' and SS != b'--':
+                        dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
+                        self.time_stamp_string = dataship.sys_time_string
+                        self.time_stamp_min = int(MM)
+                        self.time_stamp_sec = int(SS)
 
-                    dataship.engine.OilPress = Input.cleanInt(self,OilPress)
-                    dataship.engine.OilTemp = Input.cleanInt(self,OilTemp)
+                    if OilPress != b'XXX': dataship.engine.OilPress = Input.cleanInt(self,OilPress)
+                    if OilTemp != b'XXXX': dataship.engine.OilTemp = Input.cleanInt(self,OilTemp)
                     dataship.engine.RPM = max(Input.cleanInt(self,RPM_L), Input.cleanInt(self,RPM_R))
-                    dataship.engine.ManPress = Input.cleanInt(self,MAP) / 10
+                    if MAP != b'XXX': dataship.engine.ManPress = Input.cleanInt(self,MAP) / 10
                     dataship.engine.FuelFlow = Input.cleanInt(self,FF1) / 10
                     dataship.engine.FuelFlow2 = Input.cleanInt(self,FF2) / 10
-                    dataship.engine.FuelPress = Input.cleanInt(self,FP) / 10
+                    if FP != b'XXX': dataship.engine.FuelPress = Input.cleanInt(self,FP) / 10
                     fuel_level_left  = Input.cleanInt(self, FL_L) / 10
                     fuel_level_right = Input.cleanInt(self, FL_R) / 10
                     dataship.fuel.FuelLevels = [fuel_level_left, fuel_level_right, 0, 0]
