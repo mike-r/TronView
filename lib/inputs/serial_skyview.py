@@ -123,8 +123,8 @@ class serial_skyview(Input):
                         self.time_stamp_string = dataship.sys_time_string
                         self.time_stamp_min = int(MM)
                         self.time_stamp_sec = int(SS)
-                    
-                    #print("time: "+aircraft.sys_time_string)
+                        #print("time: "+aircraft.sys_time_string)
+                        
                     dataship.pitch = Input.cleanInt(self,pitch) / 10
                     dataship.roll = Input.cleanInt(self,roll) / 10
                     dataship.mag_head = Input.cleanInt(self,HeadingMAG)
@@ -168,15 +168,13 @@ class serial_skyview(Input):
                         dataship.wind_speed = 0
                         dataship.norm_wind_dir = 0 #normalize the wind direction to the airplane heading
                         dataship.gndspeed = 0
-
-
                     dataship.msg_count += 1
 
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
 
-                elif dataType == b'2': #Dynon System message (nav,AP, etc)
+                elif dataType == b'4': #Dynon System message (nav,AP, etc)
                     dataship.nav.msg_count += 1
                     msg = self.ser.read(90)
                     if isinstance(msg, str): msg = msg.encode()  # if read from file then convert to bytes
@@ -248,7 +246,7 @@ class serial_skyview(Input):
                     if APPitchSlip != b'X': dataship.nav.AP_PitchSlip = Input.cleanInt(self,APPitchSlip)
                     if APYawF != b'XXX': dataship.nav.AP_YawForce = Input.cleanInt(self,APYawF)
                     if APYawP != b'XXXXX': dataship.nav.AP_YawPos = Input.cleanInt(self,APYawP)
-                    if APYawSlip 1= b'X': dataship.nav.AP_YawSlip = Input.cleanInt(self,APYawSlip)
+                    if APYawSlip != b'X': dataship.nav.AP_YawSlip = Input.cleanInt(self,APYawSlip)
                     if TransponderStatus == b'X':
                         dataship.nav.XPDR_Status = 'OFF'
                     if TransponderStatus == b'0':
@@ -267,7 +265,7 @@ class serial_skyview(Input):
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
 
-                elif dataType == b'3': #Dynon EMS Engine data message
+                elif dataType == b'5': #Dynon EMS Engine data message
                     dataship.engine.msg_count += 1
                     msg = self.ser.read(222)
                     if isinstance(msg,str):msg = msg.encode() # if read from file then convert to bytes
