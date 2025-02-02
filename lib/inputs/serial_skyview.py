@@ -239,7 +239,9 @@ class serial_skyview(Input):
                     elif CDISrcType == b'2':
                         navSourceType = 'LOC'
                     dataship.nav.SourceDesc = navSourceType + str(Input.cleanInt(self,CDISourePort))
+                    print(CDI Scale: ", CDIScale)
                     if CDIScale != b'XX': dataship.nav.GLSHoriz = Input.cleanInt(self,CDIScale) / 10
+                    print("AP Engaged: ", APEng)
                     if APEng == b'0': dataship.nav.APeng = 0
                     if APEng == b'1' or APEng == b'2' or APEng == b'3' or APEng == b'4' or APEng == b'5' or APEng == b'6' or APEng == b'7': dataship.nav.APeng = 1
                     if APRollF != b'XXX': dataship.nav.AP_RollForce = Input.cleanInt(self,APRollF)
