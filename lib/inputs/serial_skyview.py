@@ -264,8 +264,8 @@ class serial_skyview(Input):
                         dataship.nav.XPDR_Status = 'ALT'
                     print("Trnsponder Ident", TransponderIdent)
                     print("Transponder Reply: ", TransponderReply)
-                    if TransponderIdent != b'X': dataship.nav.XPDR_Reply = Input.cleanInt(self,TransponderReply)
-                    if TransponderCode != b'X': dataship.nav.XPDR_Ident = Input.cleanInt(self,TransponderIdent)
+                    if TransponderReply != b'X': dataship.nav.XPDR_Reply = Input.cleanInt(self,TransponderReply)
+                    if TransponderIdent != b'X': dataship.nav.XPDR_Ident = Input.cleanInt(self,TransponderIdent)
                     print("Transponder Code: ", TransponderCode)
                     if TransponderCode != b'XXXX': dataship.nav.XPDR_Code = Input.cleanInt(self,TransponderCode)
                     if self.output_logFile != None:
