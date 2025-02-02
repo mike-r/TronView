@@ -242,17 +242,20 @@ class serial_skyview(Input):
                     print("CDI Scale: ", CDIScale)
                     if CDIScale != b'XX': dataship.nav.GLSHoriz = Input.cleanInt(self,CDIScale) / 10
                     print("AP Engaged: ", APEng)
-                    if APEng == b'0': dataship.nav.APeng = 0
-                    if APEng == b'1' or APEng == b'2' or APEng == b'3' or APEng == b'4' or APEng == b'5' or APEng == b'6' or APEng == b'7': dataship.nav.APeng = 1
-                    if APRollF != b'XXX': dataship.nav.AP_RollForce = Input.cleanInt(self,APRollF)
-                    if APRollP != 'XXXXX': dataship.nav.AP_RollPos = Input.cleanInt(self,APRollP)
-                    if APRollSlip != b'X': dataship.nav.AP_RollSlip = Input.cleanInt(self,APRollSlip)
-                    if APPitchF != b'XXX': dataship.nav.AP_PitchForce = Input.cleanInt(self,APPitchF)
-                    if APPitchP != b'XXXXX': dataship.nav.AP_PitchPos = Input.cleanInt(self,APPitchP)
-                    if APPitchSlip != b'X': dataship.nav.AP_PitchSlip = Input.cleanInt(self,APPitchSlip)
-                    if APYawF != b'XXX': dataship.nav.AP_YawForce = Input.cleanInt(self,APYawF)
-                    if APYawP != b'XXXXX': dataship.nav.AP_YawPos = Input.cleanInt(self,APYawP)
-                    if APYawSlip != b'X': dataship.nav.AP_YawSlip = Input.cleanInt(self,APYawSlip)
+                    if APEng == b'0': 
+                        dataship.nav.APeng = 0
+                        print("AP Junk:", APRollF, APRollP, APRollSlip, APPitchF, APPitchP, APPitchSlip, APYawF, APYawP, APYawSlip)
+                    elif APEng == b'1' or APEng == b'2' or APEng == b'3' or APEng == b'4' or APEng == b'5' or APEng == b'6' or APEng == b'7':
+                        dataship.nav.APeng = 1
+                        if APRollF != b'XXX': dataship.nav.AP_RollForce = Input.cleanInt(self,APRollF)
+                        if APRollP != 'XXXXX': dataship.nav.AP_RollPos = Input.cleanInt(self,APRollP)
+                        if APRollSlip != b'X': dataship.nav.AP_RollSlip = Input.cleanInt(self,APRollSlip)
+                        if APPitchF != b'XXX': dataship.nav.AP_PitchForce = Input.cleanInt(self,APPitchF)
+                        if APPitchP != b'XXXXX': dataship.nav.AP_PitchPos = Input.cleanInt(self,APPitchP)
+                        if APPitchSlip != b'X': dataship.nav.AP_PitchSlip = Input.cleanInt(self,APPitchSlip)
+                        if APYawF != b'XXX': dataship.nav.AP_YawForce = Input.cleanInt(self,APYawF)
+                        if APYawP != b'XXXXX': dataship.nav.AP_YawPos = Input.cleanInt(self,APYawP)
+                        if APYawSlip != b'X': dataship.nav.AP_YawSlip = Input.cleanInt(self,APYawSlip)
                     print("TransponderStatus: ", TransponderStatus)
                     if TransponderStatus == b'X':
                         dataship.nav.XPDR_Status = 'OFF'
