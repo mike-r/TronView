@@ -124,13 +124,11 @@ class serial_skyview(Input):
                         self.time_stamp_min = int(MM)
                         self.time_stamp_sec = int(SS)
                         #print("time: "+aircraft.sys_time_string)
-                    else:
-                        print("Bad time",HH,MM,SS)    
                     dataship.pitch = Input.cleanInt(self,pitch) / 10
-                    print(dataship.pitch)
+                    print("Pitch: ", dataship.pitch)
                     dataship.roll = Input.cleanInt(self,roll) / 10
                     dataship.mag_head = Input.cleanInt(self,HeadingMAG)
-                    print(dataship.mag_head)
+                    print("Magnetic Headding: ", dataship.mag_head)
 
                     # Update IMU data
                     self.imuData.heading = dataship.mag_head
@@ -172,6 +170,7 @@ class serial_skyview(Input):
                         dataship.norm_wind_dir = 0 #normalize the wind direction to the airplane heading
                         dataship.gndspeed = 0
                     dataship.msg_count += 1
+                    print("Made it to the end of ADHRS message")
 
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
@@ -217,7 +216,7 @@ class serial_skyview(Input):
                          # 2s - CRLF (2 bytes)
                         "2s2s2s2s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg
                     )
-                    print("NAV & System Message !2:", msg)
+                    print("NAV & System Message !2:")
                     if HH != b'--' and MM != b'--' and SS != b'--':
                         dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                         self.time_stamp_string = dataship.sys_time_string
@@ -230,7 +229,9 @@ class serial_skyview(Input):
                     if VSBug != b'XXXX': dataship.nav.VSBug = Input.cleanInt(self,VSBug) / 10
                     if CDIDeflection != b'XXX': dataship.nav.ILSDev = Input.cleanInt(self,CDIDeflection)
                     if GS != b'XXX': dataship.nav.GSDev = Input.cleanInt(self,GS)
+                    print("CDI Source Port: ", CDISourePort)
                     dataship.nav.HSISource = Input.cleanInt(self,CDISourePort)
+                    print("CDI Source Type: ", CDISrcType)
                     if CDISrcType == b'0':
                         navSourceType = 'GPS'
                     elif CDISrcType == b'1':
@@ -250,6 +251,7 @@ class serial_skyview(Input):
                     if APYawF != b'XXX': dataship.nav.AP_YawForce = Input.cleanInt(self,APYawF)
                     if APYawP != b'XXXXX': dataship.nav.AP_YawPos = Input.cleanInt(self,APYawP)
                     if APYawSlip != b'X': dataship.nav.AP_YawSlip = Input.cleanInt(self,APYawSlip)
+                    print("TransponderStatus: ", TransponderStatus)
                     if TransponderStatus == b'X':
                         dataship.nav.XPDR_Status = 'OFF'
                     if TransponderStatus == b'0':
