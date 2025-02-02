@@ -117,14 +117,15 @@ class serial_skyview(Input):
                          # 2s - CRLF (2 bytes)                            
                         "2s2s2s2s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg
                     ) 
-                    print(msg)
+                    print("ADHRS Message")
                     if HH != b'--' and MM != b'--' and SS != b'--':
                         dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                         self.time_stamp_string = dataship.sys_time_string
                         self.time_stamp_min = int(MM)
                         self.time_stamp_sec = int(SS)
                         #print("time: "+aircraft.sys_time_string)
-                        
+                    else:
+                        print("Bad time",HH,MM,SS)    
                     dataship.pitch = Input.cleanInt(self,pitch) / 10
                     print(dataship.pitch)
                     dataship.roll = Input.cleanInt(self,roll) / 10
