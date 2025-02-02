@@ -125,10 +125,8 @@ class serial_skyview(Input):
                         self.time_stamp_sec = int(SS)
                         #print("time: "+aircraft.sys_time_string)
                     dataship.pitch = Input.cleanInt(self,pitch) / 10
-                    print("Pitch: ", dataship.pitch)
                     dataship.roll = Input.cleanInt(self,roll) / 10
                     dataship.mag_head = Input.cleanInt(self,HeadingMAG)
-                    print("Magnetic Headding: ", dataship.mag_head)
 
                     # Update IMU data
                     self.imuData.heading = dataship.mag_head
@@ -170,7 +168,6 @@ class serial_skyview(Input):
                         dataship.norm_wind_dir = 0 #normalize the wind direction to the airplane heading
                         dataship.gndspeed = 0
                     dataship.msg_count += 1
-                    print("Made it to the end of ADHRS message")
 
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
@@ -216,7 +213,6 @@ class serial_skyview(Input):
                          # 2s - CRLF (2 bytes)
                         "2s2s2s2s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg
                     )
-                    print("NAV & System Message !2:")
                     if HH != b'--' and MM != b'--' and SS != b'--':
                         dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                         self.time_stamp_string = dataship.sys_time_string
@@ -251,7 +247,6 @@ class serial_skyview(Input):
                         dataship.nav.AP_YawForce = Input.cleanInt(self,APYawF)
                         if APYawP != b'XXXXX': dataship.nav.AP_YawPos = Input.cleanInt(self,APYawP)
                         dataship.nav.AP_YawSlip = Input.cleanInt(self,APYawSlip)
-                    print("Transponder Status: ", TransponderStatus)
                     if TransponderStatus == b'X':
                         dataship.nav.XPDR_Status = 'OFF'
                     elif TransponderStatus == b'0':
@@ -262,16 +257,12 @@ class serial_skyview(Input):
                         dataship.nav.XPDR_Status = 'ON'
                     elif TransponderStatus == b'3':
                         dataship.nav.XPDR_Status = 'ALT'
-                    print("Trnsponder Ident", TransponderIdent)
-                    print("Transponder Reply: ", TransponderReply)
                     if TransponderReply != b'X': dataship.nav.XPDR_Reply = Input.cleanInt(self,TransponderReply)
                     if TransponderIdent != b'X': dataship.nav.XPDR_Ident = Input.cleanInt(self,TransponderIdent)
-                    print("Transponder Code: ", TransponderCode)
                     if TransponderCode != b'XXXX': dataship.nav.XPDR_Code = Input.cleanInt(self,TransponderCode)
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
-                    print("Made it to the end of NAV message")
 
                 elif dataType == b'3': #Dynon EMS Engine data message
                     dataship.engine.msg_count += 1
@@ -330,7 +321,6 @@ class serial_skyview(Input):
                          # 2s - Checksum (2 bytes)
                          "2s2s2s2s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
                     )
-                    print("EMS Message !3:", msg)
                     if HH != b'--' and MM != b'--' and SS != b'--':
                         dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                         self.time_stamp_string = dataship.sys_time_string
@@ -344,7 +334,6 @@ class serial_skyview(Input):
                     dataship.engine.FuelFlow = Input.cleanInt(self,FF1) / 10
                     dataship.engine.FuelFlow2 = Input.cleanInt(self,FF2) / 10
                     if FP != b'XXX': dataship.engine.FuelPress = Input.cleanInt(self,FP) / 10
-                    print("Fuel Levels: ", FL_L, FL_R)
                     fuel_level_left  = Input.cleanInt(self, FL_L) / 10
                     fuel_level_right = Input.cleanInt(self, FL_R) / 10
                     dataship.fuel.FuelLevels = [fuel_level_left, fuel_level_right, 0, 0]
@@ -372,7 +361,6 @@ class serial_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
-                    print("Made it to the end of EMS message")
                 else:
                     dataship.msg_unknown += 1 # unknown message found.
         except ValueError:
