@@ -251,9 +251,10 @@ class serial_skyview(Input):
                         dataship.nav.AP_YawForce = Input.cleanInt(self,APYawF)
                         if APYawP != b'XXXXX': dataship.nav.AP_YawPos = Input.cleanInt(self,APYawP)
                         dataship.nav.AP_YawSlip = Input.cleanInt(self,APYawSlip)
+                    print("Transponder Status: ", TransponderStatus)
                     if TransponderStatus == b'X':
                         dataship.nav.XPDR_Status = 'OFF'
-                    if TransponderStatus == b'0':
+                    elif TransponderStatus == b'0':
                         dataship.nav.XPDR_Status = 'SBY'
                     elif TransponderStatus == b'1':
                         dataship.nav.XPDR_Status = 'GND'
@@ -261,6 +262,8 @@ class serial_skyview(Input):
                         dataship.nav.XPDR_Status = 'ON'
                     elif TransponderStatus == b'3':
                         dataship.nav.XPDR_Status = 'ALT'
+                    print("Trnsponder Ident", TransponderIdent)
+                    print("Transponder Reply: ", TransponderReply)
                     if TransponderIdent != b'X': dataship.nav.XPDR_Reply = Input.cleanInt(self,TransponderReply)
                     if TransponderCode != b'X': dataship.nav.XPDR_Ident = Input.cleanInt(self,TransponderIdent)
                     print("Transponder Code: ", TransponderCode)
