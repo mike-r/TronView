@@ -126,8 +126,10 @@ class serial_skyview(Input):
                         #print("time: "+aircraft.sys_time_string)
                         
                     dataship.pitch = Input.cleanInt(self,pitch) / 10
+                    print(dataship.pitch)
                     dataship.roll = Input.cleanInt(self,roll) / 10
                     dataship.mag_head = Input.cleanInt(self,HeadingMAG)
+                    print(dataship.mag_head)
 
                     # Update IMU data
                     self.imuData.heading = dataship.mag_head
@@ -174,7 +176,7 @@ class serial_skyview(Input):
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
 
-                elif dataType == b'4': #Dynon System message (nav,AP, etc)
+                elif dataType == b'2': #Dynon System message (nav,AP, etc)
                     dataship.nav.msg_count += 1
                     msg = self.ser.read(90)
                     if isinstance(msg, str): msg = msg.encode()  # if read from file then convert to bytes
@@ -214,7 +216,7 @@ class serial_skyview(Input):
                          # 2s - CRLF (2 bytes)
                         "2s2s2s2s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg
                     )
-                    #print("NAV & System Message !2:", msg)
+                    print("NAV & System Message !2:", msg)
                     if HH != b'--' and MM != b'--' and SS != b'--':
                         dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                         self.time_stamp_string = dataship.sys_time_string
@@ -265,7 +267,7 @@ class serial_skyview(Input):
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
 
-                elif dataType == b'5': #Dynon EMS Engine data message
+                elif dataType == b'3': #Dynon EMS Engine data message
                     dataship.engine.msg_count += 1
                     msg = self.ser.read(222)
                     if isinstance(msg,str):msg = msg.encode() # if read from file then convert to bytes
@@ -322,7 +324,7 @@ class serial_skyview(Input):
                          # 2s - Checksum (2 bytes)
                          "2s2s2s2s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
                     )
-                    #print("EMS Message !3:", msg)
+                    print("EMS Message !3:", msg)
                     if HH != b'--' and MM != b'--' and SS != b'--':
                         dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                         self.time_stamp_string = dataship.sys_time_string
