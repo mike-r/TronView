@@ -24,26 +24,27 @@ class serial_logger(Input):
         Input.initInput( self,num, aircraft )  # call parent init Input.
         if(self.PlayFile!=None):
             print("serial_logger can not play back files. Only used to record data.")
-            aircraft.errorFoundNeedToExit = True
-        else:
-            self.efis_data_port = hud_utils.readConfig("DataInput", "port", "/dev/ttyS0")
-            self.efis_data_baudrate = hud_utils.readConfigInt(
-                "DataInput", "baudrate", 115200
-            )
-            self.read_in_size = hud_utils.readConfigInt( "DataInput", "read_in_size", 100)
+            print("But will run anyway.")
+#            aircraft.errorFoundNeedToExit = True
+#        else:
+        self.efis_data_port = hud_utils.readConfig("DataInput", "port", "/dev/ttyS0")
+        self.efis_data_baudrate = hud_utils.readConfigInt(
+            "DataInput", "baudrate", 115200
+         )
+        self.read_in_size = hud_utils.readConfigInt( "DataInput", "read_in_size", 100)
 
-            # open serial connection.
-            self.ser = serial.Serial(
-                port=self.efis_data_port,
-                baudrate=self.efis_data_baudrate,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                bytesize=serial.EIGHTBITS,
-                timeout=1,
-            )
+        # open serial connection.
+        self.ser = serial.Serial(
+            port=self.efis_data_port,
+            baudrate=self.efis_data_baudrate,
+            parity=serial.PARITY_NONE,
+            stopbits=serial.STOPBITS_ONE,
+            bytesize=serial.EIGHTBITS,
+            timeout=1,
+        )
 
-            self.textMode_whatToShow = 1 # default to only showing basic air info.
-            self.textMode_showRaw = true
+        self.textMode_whatToShow = 1 # default to only showing basic air info.
+        self.textMode_showRaw = True
 
     def closeInput(self,aircraft):
         if self.isPlaybackMode == True:
