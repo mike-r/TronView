@@ -27,6 +27,7 @@ class serial_logger(Input):
             print("But will run anyway.")
 #            aircraft.errorFoundNeedToExit = True
 #        else:
+        print("serial_logger initInput")
         self.efis_data_port = hud_utils.readConfig("DataInput", "port", "/dev/ttyS0")
         self.efis_data_baudrate = hud_utils.readConfigInt(
             "DataInput", "baudrate", 115200
