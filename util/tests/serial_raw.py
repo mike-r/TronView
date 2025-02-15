@@ -59,7 +59,7 @@ argv = sys.argv[1:]
 showBin = 0
 port = "/dev/ttyS0"  # default serial port
 backup_port = "/dev/ttyUSB0"
-baudrate = 115200   # default baud rate
+baudrate = "115200"   # default baud rate
 logging = False
 
 try:
