@@ -587,7 +587,7 @@ if readType == "skyview":
     #skyview_data.close()
 elif readType == "skyview_adsb":
     print("Data format: Dynon Skyview ADSB")
-    skyview_adsb_data = open('skyview_adsb_data.txt','ab')
+    skyview_adsb_data = open('skyview_adsb_data.bin','ab')
     while 1:
         readSkyviewADSBMessage()
     skyview_adsb_data.close()

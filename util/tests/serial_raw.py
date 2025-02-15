@@ -63,7 +63,7 @@ baudrate = 115200   # default baud rate
 logging = False
 
 try:
-    opts, args = getopt.getopt(argv, "hbi:l", ["bin="])
+    opts, args = getopt.getopt(argv, "hbisw:l", ["bin="])
 except getopt.GetoptError:
     print("raw_serial.py -b")
     sys.exit(2)
@@ -84,7 +84,7 @@ for opt, arg in opts:
         baudrate=arg
     if opt == "-w":
         logging = True
-        raw_log = open("raw_log.bin", "a")
+        raw_log = open("raw_log.bin", "ab")
     
 
 try:
