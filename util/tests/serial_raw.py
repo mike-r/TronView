@@ -84,7 +84,7 @@ for opt, arg in opts:
         baudrate=arg
     if opt == "-w":
         logging = True
-        raw_log = open("raw_log.bin", "ab")
+        raw_log = open("raw_log.bin", "a")
     
 
 try:

@@ -478,6 +478,7 @@ def showArgs():
     print("read_serial.py <options>")
     print(" -m (MGL iEFIS)")
     print(" -s (Dynon Skyview)")
+    print(" -a (Dynon Skyview ADSB)")
     print(" -g (Garmin G3X)")
     print(" -l (list available serial ports on RaspberryPi/unix)")
     print(" -i (select input serial port. Default: /dev/ttyS0 )")
@@ -516,7 +517,7 @@ for opt, arg in opts:
         showArgs()
     elif opt == "-s":
         readType = "skyview"
-    elif opt == "-sa":
+    elif opt == "-a":
         readType = "skyview_adsb"
     elif opt == "-m":
         readType = "mgl"
