@@ -358,6 +358,26 @@ def readSkyviewMessage():
     except serial.serialutil.SerialException:
         print("exception")
         #skyview_data.close()
+        
+def readSkyviewADSBMessage():
+    global ser
+    global badmessageheaderCount, sinceLastGoodMessage, goodmessageheaderCount, unknownMsgCount
+    try:
+        x = 0
+        while 1:  
+            sinceLastGoodMessage += 1
+            print_xy(2, 0,  "SinceGood: %d" % (sinceLastGoodMessage))
+            print_xy(2, 24, "Bad msgHead: %d" % (badmessageheaderCount))
+            print_xy(2, 49, "Good msgHead: %d " % (goodmessageheaderCount))
+            print_xy(2, 74, "Unknown Msg: %d " % (unknownMsgCount))
+            
+            t = ser.read(1)
+            if len(t) != 0:
+                x = ord(t)
+            skyview_adsb_data.write(t)
+    except serial.serialutil.SerialException:
+        print("exception")
+    skyview_adsb_data.close()
 
 def readG3XMessage():
     global ser
@@ -496,6 +516,8 @@ for opt, arg in opts:
         showArgs()
     elif opt == "-s":
         readType = "skyview"
+    elif opt == "-sa":
+        readType = "skyview_adsb"
     elif opt == "-m":
         readType = "mgl"
     elif opt == "-g":
@@ -562,6 +584,12 @@ if readType == "skyview":
     while 1:
         readSkyviewMessage()
     #skyview_data.close()
+elif readType == "skyview_adsb":
+    print("Data format: Dynon Skyview ADSB")
+    skyview_adsb_data = open('skyview_adsb_data.txt','a')
+    while 1:
+        readSkyviewADSBMessage()
+    skyview_adsb_data.close()
 elif readType == "mgl":
     print_xy(2, 0, "Data format: " + bcolors.OKBLUE + "MGL" + bcolors.ENDC)
     while 1:

@@ -12,6 +12,7 @@ version = "0.1"
 ser = None
 counter = 0
 
+
 def list_serial_ports(printthem):
 
     # List all the Serial COM Ports on Raspberry Pi
@@ -44,9 +45,9 @@ def readMessage():
                 x = str(t)
             else:
                 x = t
-
             print(x, end=" ")
-
+        if logging:
+            raw_log.write(t)
     except serial.serialutil.SerialException:
         print("exception")
 
@@ -58,6 +59,9 @@ argv = sys.argv[1:]
 showBin = 0
 port = "/dev/ttyS0"  # default serial port
 backup_port = "/dev/ttyUSB0"
+baudrate = 115200   # default baud rate
+logging = False
+
 try:
     opts, args = getopt.getopt(argv, "hbi:l", ["bin="])
 except getopt.GetoptError:
@@ -68,17 +72,25 @@ for opt, arg in opts:
         print("raw_serial.py [-i <serial port>] -l")
         print(" -l (list serial ports found)")
         print(" -i select input serial port")
+        print(" -s select input serial port baud rate")
+        print(" -w write to raw_log.bin")
         sys.exit()
     if opt == "-i":
         port=arg
     if opt == "-l":
         list_serial_ports(True)
         sys.exit()
+    if opt == "-s":
+        baudrate=arg
+    if opt == "-w":
+        logging = True
+        raw_log = open("raw_log.bin", "ab")
+    
 
 try:
     ser=serial.Serial(
         port=port,
-        baudrate=115200,
+        baudrate=baudrate,
         parity=serial.PARITY_NONE,
         stopbits=serial.STOPBITS_ONE,
         bytesize=serial.EIGHTBITS,
@@ -91,7 +103,7 @@ except:
     try:
         ser = serial.Serial(
             port=backup_port,
-            baudrate=115200,
+            baudrate=baudrate,
             parity=serial.PARITY_NONE,
             stopbits=serial.STOPBITS_ONE,
             bytesize=serial.EIGHTBITS,
@@ -106,7 +118,9 @@ except:
         list_serial_ports(True)
         sys.exit()
 
-print(f"Opened port: {port} @115200 baud (cntrl-c to quit)")
+print(f"Opened port: {port} @{baudrate} baud (cntrl-c to quit)")
 while 1:
     readMessage()
+raw_log.close()
+
 
