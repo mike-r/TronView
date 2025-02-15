@@ -509,7 +509,7 @@ def list_serial_ports(printthem):
 argv = sys.argv[1:]
 readType = "none"
 try:
-    opts, args = getopt.getopt(argv, "hsmgli:", [""])
+    opts, args = getopt.getopt(argv, "hsamgli:", [""])
 except getopt.GetoptError:
     showArgs()
 for opt, arg in opts:
