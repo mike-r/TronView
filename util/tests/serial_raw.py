@@ -89,7 +89,7 @@ for opt, arg in opts:
         filename = arg
         print("Logging to: "+filename)
         try:
-            rqw_log = open(filename, "ab")
+            raw_log = open(filename, "ab")
         except:
             raw_log = open("raw_log.bin", "ab")
             print("Unable to open file: "+filename)
