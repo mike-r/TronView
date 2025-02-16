@@ -46,7 +46,11 @@ def readMessage():
                 x = str(t)
             else:
                 x = t
-            print(x, end=" ")
+            # print(x, end=" ")
+            readcount += 1
+            if readcount > 15:
+                print("15 lines read from serial port")
+                readcount = 0
 
     except serial.serialutil.SerialException:
         print("exception")
