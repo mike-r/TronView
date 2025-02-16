@@ -41,13 +41,13 @@ def readMessage():
     try:
         t = ser.read(1)
         if(len(t)>0):
+            if logging: raw_log.write(t)
             if int(t[0]) < 32:  # if its binary then convert it to string first.
                 x = str(t)
             else:
                 x = t
             print(x, end=" ")
-        if logging:
-            raw_log.write(t)
+
     except serial.serialutil.SerialException:
         print("exception")
 
@@ -63,17 +63,18 @@ baudrate = "115200"   # default baud rate
 logging = False
 
 try:
-    opts, args = getopt.getopt(argv, "hbisw:l", ["bin="])
+    opts, args = getopt.getopt(argv, "hb:i:s:l", ["bin="])
 except getopt.GetoptError:
     print("raw_serial.py -b")
     sys.exit(2)
 for opt, arg in opts:
     if opt == "-h":
         print("raw_serial.py [-i <serial port>] -l")
+        print(" -h help")
+        print(" -b or --bin select binary file to log to")
         print(" -l (list serial ports found)")
         print(" -i select input serial port")
         print(" -s select input serial port baud rate")
-        print(" -w write to raw_log.bin")
         sys.exit()
     if opt == "-i":
         port=arg
@@ -82,11 +83,15 @@ for opt, arg in opts:
         sys.exit()
     if opt == "-s":
         baudrate=arg
-    if opt == "-w":
+    if opt == "-b" or opt == "--bin":
         logging = True
-        raw_log = open("raw_log.bin", "ab")
-    
-
+        filename = arg
+        try:
+            rqw_log = open(filename, "ab")
+        except:
+            raw_log = open("raw_log.bin", "ab")
+            print("Unable to open file: "+filename)
+            print("Using default file: raw_log.bin")
 try:
     ser=serial.Serial(
         port=port,
