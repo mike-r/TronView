@@ -11,6 +11,7 @@ version = "0.1"
 
 ser = None
 counter = 0
+readcount = 0
 
 
 def list_serial_ports(printthem):
