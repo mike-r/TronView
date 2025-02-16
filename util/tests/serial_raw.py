@@ -47,7 +47,7 @@ def readMessage():
             else:
                 x = t
             # print(x, end=" ")
-            readcount += 1
+            readcount = readcount + 1
             if readcount > 15:
                 print("15 lines read from serial port")
                 readcount = 0
