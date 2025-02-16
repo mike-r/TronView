@@ -12,6 +12,7 @@ version = "0.1"
 ser = None
 counter = 0
 readcount = 0
+total_lines = 0
 
 
 def list_serial_ports(printthem):
@@ -38,7 +39,7 @@ def print_xy(x, y, text):
 
 
 def readMessage():
-    global ser, readcount
+    global ser, readcount, total_lines
     try:
         t = ser.read(1)
         if(len(t)>0):
@@ -49,9 +50,10 @@ def readMessage():
                 x = t
             # print(x, end=" ")
             readcount = readcount + 1
-            if readcount > 15:
-                print("15 lines read from serial port")
+            if readcount > 50:
+                print(total_lines, " lines read from serial port")
                 readcount = 0
+                total_lines = total_lines + 50
 
     except serial.serialutil.SerialException:
         print("exception")
