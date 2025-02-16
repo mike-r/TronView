@@ -38,7 +38,7 @@ def print_xy(x, y, text):
 
 
 def readMessage():
-    global ser
+    global ser, readcount
     try:
         t = ser.read(1)
         if(len(t)>0):
