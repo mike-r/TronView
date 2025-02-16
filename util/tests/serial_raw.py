@@ -54,7 +54,8 @@ def readMessage():
 if sys.platform.startswith('win'):
     os.system('cls')  # on windows
 else:
-    os.system("clear")  # on Linux / os X
+    # os.system("clear")  # on Linux / os X
+    pass
 argv = sys.argv[1:]
 showBin = 0
 port = "/dev/ttyS0"  # default serial port
@@ -86,6 +87,7 @@ for opt, arg in opts:
     if opt == "-b" or opt == "--bin":
         logging = True
         filename = arg
+        print("Logging to: "+filename)
         try:
             rqw_log = open(filename, "ab")
         except:
