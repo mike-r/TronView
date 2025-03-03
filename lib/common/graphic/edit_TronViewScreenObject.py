@@ -7,7 +7,7 @@ from lib.common.graphic.edit_find_module import find_module
 from lib.common import shared
 class TronViewScreenObject:
     def __init__(self, pgscreen, type, title, module=None, x=0, y=0, width=100, height=100, id=None):
-        self.pygamescreen = pgscreen
+        self.pygamescreen = shared.pygamescreen
         self.type = type
         self.title = title
         self.x = x
@@ -273,7 +273,11 @@ class TronViewScreenObject:
                 # Call post-change functions once after all options are set
                 for func in post_change_functions:
                     try:
-                        func()
+                        #check if function can take a argument
+                        if hasattr(func, '__call__'):
+                            func()
+                        else:
+                            func("on_load")  # tell the function we are loading the module from a json file
                     except Exception as e:
                         print(f"NOTICE: error calling post_change_function: {str(e)}")
 

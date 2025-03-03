@@ -8,10 +8,8 @@ from lib.modules._module import Module
 import pygame
 import math
 from lib.common import shared
-from lib.common.dataship.dataship import Dataship
 from lib.common.dataship.dataship_imu import IMUData
-
-
+from lib.common.dataship.dataship import Dataship
 
 class artificalhorz(Module):
     def __init__(self):
@@ -27,7 +25,6 @@ class artificalhorz(Module):
         self.height = 500  # default height
         self.font_size = 20
         self.bank_angle_radius = None
-
         self.imuData = IMUData()
 
     def initMod(self, pygamescreen, width=None, height=None):
@@ -66,6 +63,11 @@ class artificalhorz(Module):
         if len(shared.Dataship.imuData) > 0:
             self.imuData = shared.Dataship.imuData[0]
 
+        self.imuData = IMUData()
+        if len(shared.Dataship.imuData) > 0:
+            self.imuData = shared.Dataship.imuData[0]
+
+
     def create_gradient(self, color1, color2, height):
         gradient = pygame.Surface((1, height))
         for i in range(height):
@@ -75,7 +77,7 @@ class artificalhorz(Module):
             gradient.set_at((0, i), (r, g, b))
         return gradient
 
-    def draw(self, dataship: Dataship, smartdisplay, pos=(None, None)):
+    def draw(self, dataship:Dataship, smartdisplay, pos=(None, None)):
         if pos[0] is None or pos[1] is None:
             x, y = 0, 0
         else:
@@ -97,6 +99,7 @@ class artificalhorz(Module):
 
         # Calculate horizon line position
         horizon_y = int(larger_height / 2 + (self.imuData.pitch * self.pixels_per_deg))
+        horizon_y = int(larger_height / 2 + (self.imuData.pitch * self.pixels_per_deg))
 
         # Blit pre-rendered combined surface
         temp_surface.blit(self.combined_surface, (0, 0))
@@ -104,11 +107,13 @@ class artificalhorz(Module):
         # Draw pitch lines on the original-sized surface
         pitch_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         self.draw_pitch_lines(pitch_surface, self.height / 2 + (self.imuData.pitch * self.pixels_per_deg))
+        self.draw_pitch_lines(pitch_surface, self.height / 2 + (self.imuData.pitch * self.pixels_per_deg))
 
         # Blit pitch lines onto the larger surface
         temp_surface.blit(pitch_surface, ((larger_width - self.width) // 2, (larger_height - self.height) // 2))
 
         # Rotate the larger surface
+        rotated_surface = pygame.transform.rotate(temp_surface, self.imuData.roll)
         rotated_surface = pygame.transform.rotate(temp_surface, self.imuData.roll)
         rotated_rect = rotated_surface.get_rect(center=(self.width/2, self.height/2))
 

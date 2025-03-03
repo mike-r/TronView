@@ -624,7 +624,7 @@ class horizon_v2(Module):
                 self.draw_flight_path(dataship, smartdisplay, x, y)
 
         # Blit the entire surface to the screen at the specified position
-        smartdisplay.pygamescreen.blit(self.surface, pos)
+        self.pygamescreen.blit(self.surface, pos)
 
     def draw_target(self, t, dataship):
         '''
@@ -835,7 +835,8 @@ class horizon_v2(Module):
         '''
         # source_imu_index_name got changed. find the index of the imu id in the imu list.
         self.source_imu_index = self.imu_ids.index(self.source_imu_index_name)
-        shared.Dataship.imus[self.source_imu_index].home(delete=True) 
+        self.imuData = shared.Dataship.imuData[self.source_imu_index]
+        self.imuData.home(delete=True) 
 
     def changeSource2IMU(self):
         if self.source_imu_index2_name == "NONE":
@@ -843,10 +844,11 @@ class horizon_v2(Module):
             self.camera_head_imu = None
         else:
             self.source_imu_index2 = self.imu_ids2.index(self.source_imu_index2_name)
-            shared.Dataship.imus[self.source_imu_index2].home(delete=True)
-            self.camera_head_imu = shared.Dataship.imus[self.source_imu_index2]
+            self.imuData2 = shared.Dataship.imuData[self.source_imu_index2]
+            self.imuData2.home(delete=True)
+            self.camera_head_imu = self.imuData2
 
-    def draw_horizon_line(self, aircraft, camera_yaw=0, camera_pitch=0, camera_roll=0):
+    def draw_horizon_line(self, dataship:Dataship, camera_yaw=0, camera_pitch=0, camera_roll=0):
         """
         Draw a single line representing the true horizon from the camera's perspective.
         Takes into account both aircraft attitude and camera head position.
@@ -856,8 +858,8 @@ class horizon_v2(Module):
         center_y = self.height // 2
         
         # Convert all angles to radians
-        pitch_rad = math.radians(aircraft.pitch)
-        roll_rad = math.radians(aircraft.roll)
+        pitch_rad = math.radians(self.imuData.pitch)
+        roll_rad = math.radians(self.imuData.roll)
         cam_yaw_rad = math.radians(camera_yaw)
         cam_pitch_rad = math.radians(camera_pitch) 
         cam_roll_rad = math.radians(camera_roll)
@@ -865,7 +867,7 @@ class horizon_v2(Module):
         # Calculate effective pitch angle (how far horizon appears from center)
         # When looking straight ahead, aircraft pitch directly affects horizon position
         # When looking to the side, pitch effect diminishes with cos of yaw angle
-        effective_pitch = aircraft.pitch * math.cos(cam_yaw_rad) - camera_pitch
+        effective_pitch = self.imuData.pitch * math.cos(cam_yaw_rad) - camera_pitch
         
         # Calculate vertical offset in pixels
         pixels_per_degree = self.height / self.pxy_div
@@ -874,7 +876,7 @@ class horizon_v2(Module):
         # Calculate effective roll angle
         # When looking straight ahead, use aircraft roll minus camera roll
         # When looking to the side (90°), horizon appears level regardless of aircraft roll
-        effective_roll = (aircraft.roll - camera_roll) * math.cos(cam_yaw_rad)
+        effective_roll = (self.imuData.roll - camera_roll) * math.cos(cam_yaw_rad)
         
         # When looking up/down, horizon line should curve
         # This creates the effect of horizon curvature when looking up/down

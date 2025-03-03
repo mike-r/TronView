@@ -16,6 +16,7 @@
 
 import os, sys, time, threading, argparse, pygame, importlib
 from lib import hud_utils
+from lib import hud_graphics
 from lib.util import drawTimer
 from lib.util import rpi_hardware
 from lib.util import mac_hardware
@@ -143,37 +144,9 @@ def loadInput(num, nameToLoad, playFile=None):
     return newInput
 
 #############################################
-## Function: initDataShip
-def initDataship():
-    #global Dataship object.
-    # speed = hud_utils.readConfig("Formats", "speed_distance", "Standard")
-    # if speed == "Standard" or speed == "MPH":
-    #     shared.Dataship.data_format = shared.Dataship.MPH
-    #     print("speed distance format: mph ")
-    # elif speed == "Knots":
-    #     shared.Dataship.data_format = shared.Dataship.KNOTS
-    #     print("speed distance format: Knots ")
-    # elif speed == "Metric":
-    #     shared.Dataship.data_format = shared.Dataship.METERS
-    #     print("speed distance format: Meters ")
-
-    # temp = hud_utils.readConfig("Formats", "temperature", "C")
-    # if temp == "F":
-    #     shared.Dataship.data_format_temp = shared.Dataship.TEMP_F
-    #     print("temperature format: F ")
-    # elif temp == "C":
-    #     shared.Dataship.data_format_temp = shared.Dataship.TEMP_C
-    #     print("temperature format: C ")
-    # else :
-    #     print("Unknown temperature format:"+temp)
-    pass
-
-#############################################
 #############################################
 # Main function.
 #
-
-ScreenNameToLoad = hud_utils.readConfig("Main", "screen", "Default")  # default screen to load
 
 # check args passed in.
 if __name__ == "__main__":
@@ -231,12 +204,13 @@ if __name__ == "__main__":
     if args.screen:
         ScreenNameToLoad = args.screen
     else:
-        ScreenNameToLoad = hud_utils.readConfig("Main", "screen", "F18_HUD")
+        ScreenNameToLoad = hud_utils.readConfig("Main", "screen", "template:default")
     if args.l:
         rpi_hardware.list_serial_ports(True)
         sys.exit()
-    if args.load_screen:
-        edit_mode.load_screen_from_json(args.load_screen)
+    # if args.load_screen:
+    #     hud_graphics.initDisplay(0)
+    #     edit_mode.load_screen_from_json(args.load_screen)
 
     hud_utils.getDataRecorderDir(exitOnFail=True)
     hud_utils.setupDirs()
@@ -261,19 +235,10 @@ if __name__ == "__main__":
     if(shared.Dataship.errorFoundNeedToExit==True): sys.exit()
     # check and load screen module. (if not starting in text mode)
 
-    initDataship()
-
-    shared.Dataship.interface = Interface.EDITOR
+    shared.Dataship.interface = Interface.GRAPHIC_2D
 
     if(shared.Dataship.errorFoundNeedToExit==True): sys.exit()
     # TODO: support text mode.
-    if shared.Dataship.interface != Interface.TEXT:
-        if hud_utils.findScreen(ScreenNameToLoad) == False:
-            print(("Screen module not found: %s"%(ScreenNameToLoad)))
-            hud_utils.findScreen() # show available screens
-            sys.exit()
-        graphic_mode.loadScreen(ScreenNameToLoad) # load and init screen
-        #drawTimer.addGrowlNotice("1: %s"%(DataInputToLoad),3000,drawTimer.green,drawTimer.TOP_RIGHT)
 
     if args.input_threads:
         input_threads = []
@@ -289,12 +254,10 @@ if __name__ == "__main__":
         thread1.start()
 
     # testing.. start in edit mode.
-    if shared.Dataship.interface == Interface.EDITOR:
+    if shared.Dataship.interface == Interface.EDITOR or shared.Dataship.interface == Interface.GRAPHIC_2D:
+        hud_graphics.initDisplay(0)
         # check if /data/screens/screen.json exists.. if so load edit_save_load.load_screen_from_json()
-        if os.path.exists("data/screens/screen.json"):
-            edit_save_load.load_screen_from_json("screen.json")
-        else:
-            edit_save_load.load_screen_from_json("default.json",from_templates=True)
+        edit_save_load.load_screen_from_json(ScreenNameToLoad)
 
     shared.GrowlManager.add_message("TronView " + __version__, position=GrowlPosition.CENTER, duration=8)
     shared.GrowlManager.add_message("Build: " + __build__ + " " + __build_date__ + " " + __build_time__, position=GrowlPosition.CENTER, duration=8)
@@ -302,8 +265,8 @@ if __name__ == "__main__":
     shared.GrowlManager.add_message("Use at own risk!", position=GrowlPosition.CENTER, duration=8)
     shared.GrowlManager.add_message("TronView.org", position=GrowlPosition.CENTER, duration=8)
 
-    shared.GrowlManager.add_message("Press ? for help menu", position=GrowlPosition.BOTTOM_MIDDLE, duration=12)
-    shared.GrowlManager.add_message("Press Ctrl+L to show available screen templates", position=GrowlPosition.BOTTOM_MIDDLE, duration=12)
+    shared.GrowlManager.add_message("Press E to enter edit mode", position=GrowlPosition.BOTTOM_MIDDLE, duration=12)
+    shared.GrowlManager.add_message("Press L to load screen", position=GrowlPosition.BOTTOM_MIDDLE, duration=12)
     shared.GrowlManager.add_message("Press Q to quit", position=GrowlPosition.BOTTOM_MIDDLE, duration=12)
 
     shared.GrowlManager.add_message("USE AT YOUR OWN RISK!", position=GrowlPosition.BOTTOM_LEFT, duration=8)
