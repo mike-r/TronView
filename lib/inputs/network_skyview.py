@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-# wifi udp input source
+# network wifi or ethernet udp input source
 # Skyview UDP
-# 03/--/2025 Zap  Based on Topher 2019 stratux_wifi.py
+# 03/--/2025 Zap  Based on Topher 2019 stratux_wifi.py and serial_skyview.py
 
 
 import struct
@@ -15,6 +15,7 @@ import time
 import math
 from geographiclib.geodesic import Geodesic
 import datetime
+from lib import hud_utils
 from ..common.dataship.dataship import Dataship
 from ..common.dataship.dataship_imu import IMUData
 from ..common.dataship.dataship_gps import GPSData
@@ -25,7 +26,7 @@ from ..common import shared
 from . import _input_file_utils
 
 
-class skyview_wifi(Input):
+class network_skyview(Input):
     def __init__(self):
         self.name = "dynon_skyview"
         self.version = 1.0
@@ -44,12 +45,13 @@ class skyview_wifi(Input):
     def initInput(self, num, dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
         self.dataship = dataship
+        self.data_format = hud_utils.readConfigInt("Main", "format", "0")
 
         if(self.PlayFile!=None and self.PlayFile!=False):
             # if in playback mode then load example data file.
             # get file to read from config.  else default to..
             if self.PlayFile==True:
-                defaultTo = "skyview_wifi_data_1.dat"
+                defaultTo = "dynon_wifi_data1.dat"
                 self.PlayFile = "../data/skyview/"+defaultTo
             self.ser,self.input_logFileName = Input.openLogFile(self,self.PlayFile,"rb")
             self.isPlaybackMode = True
@@ -132,7 +134,7 @@ class skyview_wifi(Input):
                     #print(str(x), end ="." )
                 else:
                     self.ser.seek(0)
-                    print("Stratux file reset")
+                    print("Skyview file reset")
 
             #print("first ~", end ="." )
             x = 0
@@ -176,8 +178,8 @@ class skyview_wifi(Input):
         if dataship.errorFoundNeedToExit: return dataship
         if self.skipReadInput == True: return dataship
         msg = self.getNextChunck(dataship)
-        #count = msg.count(b'~~')
-        #print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
+        count = msg.count(b'~~')
+        print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
         if(dataship.debug_mode>2):
             if len(msg) >= 4:
                 print("Skyview: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
@@ -297,7 +299,8 @@ class skyview_wifi(Input):
                     #else reading realtime data via udp connection
                     pass
 
-
+            elif(msg[0]) == "!":
+                print("Skyview message:"+str(msg))
             else:
                 print("GDL 90 message id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
                 print(msg.hex())
