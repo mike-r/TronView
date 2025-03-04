@@ -303,7 +303,7 @@ class network_skyview(Input):
                 print("Skyview message:"+str(msg))
             else:
                 print("GDL 90 message id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
-                print(msg.hex())
+                #print(msg.hex())
                 #aircraft.msg_bad += 1 #bad message found.
                 if(msg[1]==0): # GDL heart beat. 
                     #print("GDL 90 HeartBeat message id:"+str(msg[1])+" len:"+str(len(msg)))

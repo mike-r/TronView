@@ -211,7 +211,10 @@ if __name__ == "__main__":
     # if args.load_screen:
     #     hud_graphics.initDisplay(0)
     #     edit_mode.load_screen_from_json(args.load_screen)
-
+    print ("Original data_format: ",shared.Dataship.airData.data_format)
+    shared.Dataship.airData.data_format = hud_utils.readConfigInt("Main", "format", "0")
+    print ("Changed data_format: ",shared.Dataship.airData.data_format)
+  
     hud_utils.getDataRecorderDir(exitOnFail=True)
     hud_utils.setupDirs()
     isRunningOnPi = rpi_hardware.is_raspberrypi()

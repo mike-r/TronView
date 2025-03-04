@@ -46,6 +46,7 @@ class AirData(object):
 
     # get IAS in converted format.
     def get_ias(self):
+        print("get_ias Data format: ", self.data_format)
         if(self.data_format==0):
             return self.ias # mph
         if(self.data_format==1):

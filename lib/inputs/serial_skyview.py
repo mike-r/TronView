@@ -39,7 +39,7 @@ class serial_skyview(Input):
         Input.initInput( self,num, dataship )  # call parent init Input.
 
         self.data_format = hud_utils.readConfigInt("Main", "format", "0")
-        print("Data format: ", self.data_format)
+        #print("Data format: ", self.data_format)
         
         if(self.PlayFile!=None and self.PlayFile!=False):
             # load playback file.
@@ -49,7 +49,7 @@ class serial_skyview(Input):
             self.ser,self.input_logFileName = Input.openLogFile(self,self.PlayFile,"r")
             self.isPlaybackMode = True
         else:
-            self.efis_data_format = hud_utils.readConfig(self.name, "format", "none")
+            #self.efis_data_format = hud_utils.readConfig(self.name, "format", "none")
             self.efis_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyS0")
             self.efis_data_baudrate = hud_utils.readConfigInt(
                 self.name, "baudrate", 115200
