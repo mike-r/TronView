@@ -139,9 +139,9 @@ class network_skyview(Input):
                                 x = ord(t)
                                 data.extend(t)
                                 #print(str(x), end ="." )
-                            else:
-                                self.ser.seek(0)
-                                print("Skyview file reset")
+                            #else:
+                                #self.ser.seek(0)
+                                #print("Skyview file reset")
                         print("end ~", end ="." )
                         return data
                     elif t == 0x21:     # Dynon Skyview Message
@@ -161,7 +161,7 @@ class network_skyview(Input):
                             return data
                 else:
                     #self.ser.seek(0)
-                    print("Skyview file reset")
+                    #print("Skyview file reset")
 
 
             
