@@ -114,7 +114,7 @@ class serial_skyview(Input):
     ## Function: readMessage
     def readMessage(self, dataship: Dataship):
         if dataship.errorFoundNeedToExit:
-            return dataship;
+            return dataship
         try:
             # Read until we find a message start character ($ or !)
             x = 0
@@ -128,6 +128,7 @@ class serial_skyview(Input):
                     return dataship
 
             # Found a start character - handle NMEA or Skyview message
+            print("Found start: ")
             if x == ord('$'):  # NMEA message
                 nmea_msg = bytes([x]) + self.ser.readline()
                 try:
@@ -466,7 +467,7 @@ class serial_skyview(Input):
                     self.msg_unknown += 1 # unknown message found.
         except ValueError:
             self.msg_bad += 1
-            #print("bad:"+str(msg))
+            print("bad:"+str(msg))
             pass
         except struct.error:
             self.msg_bad += 1
