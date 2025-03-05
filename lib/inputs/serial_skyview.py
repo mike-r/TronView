@@ -46,7 +46,7 @@ class serial_skyview(Input):
             if self.PlayFile==True:
                 defaultTo = "dynon_skyview_data2.txt"
                 self.PlayFile = hud_utils.readConfig(self.name, "playback_file", defaultTo)
-            self.ser,self.input_logFileName = Input.openLogFile(self,self.PlayFile,"r")
+            self.ser,self.input_logFileName = Input.openLogFile(self,self.PlayFile,"rb")
             self.isPlaybackMode = True
         else:
             #self.efis_data_format = hud_utils.readConfig(self.name, "format", "none")
