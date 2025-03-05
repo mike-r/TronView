@@ -39,7 +39,7 @@ class serial_skyview(Input):
         Input.initInput( self,num, dataship )  # call parent init Input.
 
         self.data_format = hud_utils.readConfigInt("Main", "format", "0")
-        #print("Data format: ", self.data_format)
+        print("In serial_skyview: Data format: ", self.data_format)
         
         if(self.PlayFile!=None and self.PlayFile!=False):
             # load playback file.

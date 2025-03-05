@@ -183,8 +183,6 @@ class network_skyview(Input):
         if(dataship.debug_mode>2):
             if len(msg) >= 4:
                 print("Skyview: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
-            
-
         for line in msg.split(b'~~'):
             theLen = len(line)
             if(theLen>3):

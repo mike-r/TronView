@@ -253,7 +253,7 @@ while $RUN_MENU_AGAIN; do
                                 "serial_mgl" "MGL Serial" OFF \
                                 "serial_d100" "Dynon D100 Serial" OFF \
                                 "serial_skyview" "Dynon Skyview Serial" OFF \
-                                "wifi_skyview" "Dynon Skyview WiFi" OFF \
+                                "network_skyview" "Dynon Skyview Network" OFF \
                                 "serial_g3x" "Garmin G3x Serial" OFF \
                                 "serial_grt_eis" "Grand Rapids EIS Serial" OFF \
                                 "serial_nmea" "NMEA Serial" OFF \
