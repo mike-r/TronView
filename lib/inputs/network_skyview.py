@@ -125,11 +125,12 @@ class network_skyview(Input):
 
     def getNextChunck(self,aircraft):
         if self.isPlaybackMode:
+            print("In Playback mode")
             x = 0
-            while x != 0x7E or x != 0x21: # read until ~ or !
+            while x != b'~' or x != b'!': # read until ~ or !
                 t = self.ser.read(1)
                 if len(t) != 0:
-                    if t == 0x7E:       # GDL-90 Traffic Message
+                    if t == b'~':       # GDL-90 Traffic Message
                         print("first ~", end ="." )
                         x = 0
                         data = bytearray(b"~")
@@ -144,22 +145,25 @@ class network_skyview(Input):
                                 #print("Skyview file reset")
                         print("end ~", end ="." )
                         return data
-                    elif t == 0x21:     # Dynon Skyview Message
-                        #print("! ", end ="." )
+                    elif t == b'!':     # Dynon Skyview Message
+                        print("! ", end ="." )
                         t =  self.ser.read(1)
-                        if t == 'b1': # Skyview ADHAES message with 33 bytes
-                            data = bytearray(b"!1")
+                        if t == b'1': # Skyview ADHAES message with 33 bytes
+                            print("Dynon Skyview ADHAES message with 33 bytes")
+                            data = bytearray(b'!1')
                             data.extend(self.ser.read(33))
                             return data
-                        elif t == "2": # Skyview NAV/AP message with 90 bytes
-                            data = bytearray(b"!2")
+                        elif t == b'2': # Skyview NAV/AP message with 90 bytes
+                            print("Dynon Skyview NAV/AP message with 90 bytes")
+                            data = bytearray(b'!2')
                             data.extend(self.ser.read(90))
                             return data
-                        elif t == "3": # Skyview GPS message with 222 bytes
-                            data = bytearray(b"!3")
+                        elif t == b'3': # Skyview GPS message with 222 bytes
+                            print("Dynon Skyview GPS message with 222 bytes")
+                            data = bytearray(b'!3')
                             data.extend(self.ser.read(222))
                             return data
-                else:
+                #else:
                     #self.ser.seek(0)
                     #print("Skyview file reset")
 
