@@ -200,7 +200,7 @@ class network_skyview(Input):
         msg = self.getNextChunck(dataship)
         count = msg.count(b'~~')
         print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
-        print("msg: ", msg)
+        print("msg[0]:"+str(msg[0])+"msg[1]:"+str(msg[1])+"msg[2]:"+str(msg[2])+"msg[3]:"+str(msg[3]))
         if(dataship.debug_mode>2):
             if len(msg) >= 4:
                 print("Skyview: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
@@ -221,6 +221,7 @@ class network_skyview(Input):
                         Input.addToLog(self,self.output_logFile,newline)
             return dataship
         elif msg[0] == b'!':
+            print("Skyview message: ", str(msg))
             if msg[1] == b'1': print("Decode Skyview ADHAES message")
             elif msg[1] == b'2': print("Decode Skyview NAV/AP message")
             elif msg[1] == b'3': print("Decode Skyview GPS message")
