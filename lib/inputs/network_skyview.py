@@ -51,12 +51,12 @@ class network_skyview(Input):
             # if in playback mode then load example data file.
             # get file to read from config.  else default to..
             if self.PlayFile==True:
-                defaultTo = "dynon_wifi_data1.dat"
+                defaultTo = "ws_49155_1.dat"
                 self.PlayFile = "../data/skyview/"+defaultTo
             self.ser,self.input_logFileName = Input.openLogFile(self,self.PlayFile,"rb")
             self.isPlaybackMode = True
         else:
-            self.udpport = _input_file_utils.readConfigInt(self.name, "udpport", "49115")
+            self.udpport = _input_file_utils.readConfigInt(self.name, "udpport", "49155")
             # ADS-B-IN with GDL-90 encoding on port 4000
 
             # open udp connection.
@@ -125,31 +125,45 @@ class network_skyview(Input):
 
     def getNextChunck(self,aircraft):
         if self.isPlaybackMode:
-            
             x = 0
-            while x != 126: # read until ~
+            while x != 0x7E or x != 0x21: # read until ~ or !
                 t = self.ser.read(1)
                 if len(t) != 0:
-                    x = ord(t)
-                    #print(str(x), end ="." )
+                    if t == 0x7E:       # GDL-90 Traffic Message
+                        print("first ~", end ="." )
+                        x = 0
+                        data = bytearray(b"~")
+                        while x != 126: # read until ~ 0x7E
+                            t = self.ser.read(1)
+                            if len(t) != 0:
+                                x = ord(t)
+                                data.extend(t)
+                                #print(str(x), end ="." )
+                            else:
+                                self.ser.seek(0)
+                                print("Skyview file reset")
+                        print("end ~", end ="." )
+                        return data
+                    elif t == 0x21:     # Dynon Skyview Message
+                        #print("! ", end ="." )
+                        t =  self.ser.read(1)
+                        if t == 'b1': # Skyview ADHAES message with 33 bytes
+                            data = bytearray(b"!1")
+                            data.extend(self.ser.read(33))
+                            return data
+                        elif t == "2": # Skyview NAV/AP message with 90 bytes
+                            data = bytearray(b"!2")
+                            data.extend(self.ser.read(90))
+                            return data
+                        elif t == "3": # Skyview GPS message with 222 bytes
+                            data = bytearray(b"!3")
+                            data.extend(self.ser.read(222))
+                            return data
                 else:
-                    self.ser.seek(0)
+                    #self.ser.seek(0)
                     print("Skyview file reset")
 
-            #print("first ~", end ="." )
-            x = 0
-            data = bytearray(b"~")
-            while x != 126: # read until ~ 0x7E
-                t = self.ser.read(1)
-                if len(t) != 0:
-                    x = ord(t)
-                    data.extend(t)
-                    #print(str(x), end ="." )
-                else:
-                    self.ser.seek(0)
-                    print("Skyview file reset")
-            #print("end ~", end ="." )
-            return data
+
             
             #data = self.ser.read(80)
             #if(len(data)==0): 
@@ -183,22 +197,27 @@ class network_skyview(Input):
         if(dataship.debug_mode>2):
             if len(msg) >= 4:
                 print("Skyview: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
-        for line in msg.split(b'~~'):
-            theLen = len(line)
-            if(theLen>3):
-                if(line[0]!=126): # if no ~ then add one...
-                    newline = b''.join([b'~',line])
-                    theLen += 1
-                else:
-                    newline = line
-                if(newline[theLen-1]!=126): # add ~ on the end if not there.
-                    newline = b''.join([newline,b'~'])
-                dataship = self.processSingleMessage(newline,dataship)
+        if msg[0] == b'~':
+            for line in msg.split(b'~~'):
+                theLen = len(line)
+                if(theLen>3):
+                    if(line[0]!=126): # if no ~ then add one...
+                        newline = b''.join([b'~',line])
+                        theLen += 1
+                    else:
+                        newline = line
+                    if(newline[theLen-1]!=126): # add ~ on the end if not there.
+                        newline = b''.join([newline,b'~'])
+                    dataship = self.processSingleMessage(newline,dataship)
 
-                if self.output_logFile != None:
-                    Input.addToLog(self,self.output_logFile,newline)
+                    if self.output_logFile != None:
+                        Input.addToLog(self,self.output_logFile,newline)
 
-        return dataship
+            return dataship
+        elif msg[0] == b'!':
+            if msg[1] == b'1': print("Decode Skyview ADHAES message")
+            elif msg[1] == b'2': print("Decode Skyview NAV/AP message")
+            elif msg[1] == b'3': print("Decode Skyview GPS message")
 
     #############################################
     def processSingleMessage(self, msg, dataship):
@@ -298,7 +317,8 @@ class network_skyview(Input):
                     pass
 
             elif(msg[0]) == "!":
-                print("Skyview message:"+str(msg))
+                print("Skyview message Type:"+str(msg[1],"Version:"+str(msg[2])+" len:"+str(len(msg))))
+                #print(msg)            
             else:
                 print("GDL 90 message id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
                 #print(msg.hex())
