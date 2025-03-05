@@ -127,7 +127,7 @@ class network_skyview(Input):
         if self.isPlaybackMode:
             print("In Playback mode")
             x = 0
-            while x != b'~' or x != b'!': # read until ~ or !
+            while x != b'~' and x != b'!': # read until ~ or !
                 t = self.ser.read(1)
                 if len(t) != 0:
                     if t == b'~':       # GDL-90 Traffic Message
