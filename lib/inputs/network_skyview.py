@@ -144,6 +144,7 @@ class network_skyview(Input):
                                 #self.ser.seek(0)
                                 #print("Skyview file reset")
                         print("end ~", end ="." )
+                        print(str(data))
                         return data
                     elif t == b'!':     # Dynon Skyview Message
                         print("! ", end ="." )
@@ -152,17 +153,19 @@ class network_skyview(Input):
                             print("Dynon Skyview ADHAES message with 33 bytes")
                             data = bytearray(b'!1')
                             data.extend(self.ser.read(33))
-                            print("data: "+str(data))
+                            print(str(data))
                             return data
                         elif t == b'2': # Skyview NAV/AP message with 90 bytes
                             print("Dynon Skyview NAV/AP message with 90 bytes")
                             data = bytearray(b'!2')
                             data.extend(self.ser.read(90))
+                            print(str(data))
                             return data
                         elif t == b'3': # Skyview GPS message with 222 bytes
                             print("Dynon Skyview GPS message with 222 bytes")
                             data = bytearray(b'!3')
                             data.extend(self.ser.read(222))
+                            print(str(data))
                             return data
                 else:
                     self.ser.seek(0)
@@ -197,6 +200,7 @@ class network_skyview(Input):
         msg = self.getNextChunck(dataship)
         count = msg.count(b'~~')
         print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
+        print("msg: ", msg)
         if(dataship.debug_mode>2):
             if len(msg) >= 4:
                 print("Skyview: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
@@ -215,7 +219,6 @@ class network_skyview(Input):
 
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,newline)
-
             return dataship
         elif msg[0] == b'!':
             if msg[1] == b'1': print("Decode Skyview ADHAES message")
@@ -225,7 +228,6 @@ class network_skyview(Input):
     #############################################
     def processSingleMessage(self, msg, dataship):
         try:
-            
             if(len(msg)<1):
                 pass
             elif(msg[0]==126 and msg[1]==ord('L') and msg[2]==ord('E')):  # Check for Levil specific messages ~LE
