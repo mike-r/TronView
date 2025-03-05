@@ -128,7 +128,6 @@ class serial_skyview(Input):
                     return dataship
 
             # Found a start character - handle NMEA or Skyview message
-            print("Found start: ")
             if x == ord('$'):  # NMEA message
                 nmea_msg = bytes([x]) + self.ser.readline()
                 try:
@@ -340,17 +339,17 @@ class serial_skyview(Input):
                     elif CDISrcType == b'2':
                         navSourceType = 'LOC'
                     self.navData.SourceDesc = navSourceType + str(Input.cleanInt(self,CDISourePort))
-                    self.navData.GLSHoriz = Input.cleanInt(self,CDIScale) / 10
+                    if CDIScale != b'XX': self.navData.GLSHoriz = Input.cleanInt(self,CDIScale) / 10
                     if APEng == b'0': self.navData.APeng = 0
                     if APEng == b'1' or APEng == b'2' or APEng == b'3' or APEng == b'4' or APEng == b'5' or APEng == b'6' or APEng == b'7': self.navData.APeng = 1
                     self.navData.AP_RollForce = Input.cleanInt(self,APRollF)
-                    self.navData.AP_RollPos = Input.cleanInt(self,APRollP)
+                    if APRollP != b'XXXXX': self.navData.AP_RollPos = Input.cleanInt(self,APRollP)
                     self.navData.AP_RollSlip = Input.cleanInt(self,APRollSlip)
                     self.navData.AP_PitchForce = Input.cleanInt(self,APPitchF)
-                    self.navData.AP_PitchPos = Input.cleanInt(self,APPitchP)
+                    if APPitchP != b'XXXXX': self.navData.AP_PitchPos = Input.cleanInt(self,APPitchP)
                     self.navData.AP_PitchSlip = Input.cleanInt(self,APPitchSlip)
                     self.navData.AP_YawForce = Input.cleanInt(self,APYawF)
-                    self.navData.AP_YawPos = Input.cleanInt(self,APYawP)
+                    if APYawP != b'XXXXX': self.navData.AP_YawPos = Input.cleanInt(self,APYawP)
                     self.navData.AP_YawSlip = Input.cleanInt(self,APYawSlip)
                     if TransponderStatus == b'0':
                         self.navData.XPDR_Status = 'SBY'
@@ -360,9 +359,9 @@ class serial_skyview(Input):
                         self.navData.XPDR_Status = 'ON'
                     elif TransponderStatus == b'3':
                         self.navData.XPDR_Status = 'ALT'
-                    self.navData.XPDR_Reply = Input.cleanInt(self,TransponderReply)
-                    self.navData.XPDR_Ident = Input.cleanInt(self,TransponderIdent)
-                    self.navData.XPDR_Code = Input.cleanInt(self,TransponderCode)
+                    if TransponderReply != b'X': self.navData.XPDR_Reply = Input.cleanInt(self,TransponderReply)
+                    if TransponderIdent != b'X': self.navData.XPDR_Ident = Input.cleanInt(self,TransponderIdent)
+                    if TransponderCode != b'XXXX': self.navData.XPDR_Code = Input.cleanInt(self,TransponderCode)
                     
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
@@ -370,7 +369,7 @@ class serial_skyview(Input):
 
                 elif dataType == b'3': #Dynon EMS Engine data message
                     self.engineData.msg_count += 1
-                    msg = self.ser.read(222)
+                    msg = self.ser.read(246)
                     if isinstance(msg,str):msg = msg.encode() # if read from file then convert to bytes
                     HH,MM,SS,FF,OilPress,OilTemp, RPM_L,RPM_R,MAP,FF1,FF2,FP,FL_L,FL_R,Frem,V1,V2,AMPs,Hobbs,Tach,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,TC10,TC11,TC12,TC13,TC14,GP1,GP2,GP3,GP4,GP5,GP6,GP7,GP8,GP9,GP10,GP11,GP12,GP13,Contacts,Pwr,EGTstate,Checksum,CRLF= struct.unpack(
                                                   # First part - Engine parameters (47 bytes total):
@@ -385,7 +384,7 @@ class serial_skyview(Input):
                          # 3s - Fuel pressure (3 bytes)
                          # 3s - Left fuel quantity (3 bytes)
                          # 3s - Right fuel quantity (3 bytes)
-                         # 3s - Fuel remaining (3 bytes)
+                         # 4s - Fuel remaining (4 bytes)
                          # 3s - Voltage 1 (3 bytes)
                          # 3s - Voltage 2 (3 bytes)
                          # 4s - Amperage (4 bytes)
@@ -423,23 +422,23 @@ class serial_skyview(Input):
                          # 16c- Contact inputs status (Not Used) (16 bytes)
                          # 3s - Power percentage (3 bytes)
                          # 2s - Checksum (2 bytes)
-                         "2s2s2s2s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
+                         "2s2s2s2s3s4s4s4s3s3s3s3s3s3s4s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
                     )
                     #print("EMS Message !3:", msg)
                     #dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     #self.time_stamp_string = dataship.sys_time_string
 
-                    self.engineData.OilPress = Input.cleanInt(self,OilPress)
-                    self.engineData.OilTemp = Input.cleanInt(self,OilTemp)
+                    if OilPress != b'XXX': self.engineData.OilPress = Input.cleanInt(self,OilPress)
+                    if OilTemp != b'XXXX': self.engineData.OilTemp = Input.cleanInt(self,OilTemp)
                     self.engineData.RPM = max(Input.cleanInt(self,RPM_L), Input.cleanInt(self,RPM_R))
-                    self.engineData.ManPress = Input.cleanInt(self,MAP) / 10
+                    if MAP != b'XXX': self.engineData.ManPress = Input.cleanInt(self,MAP) / 10
                     self.engineData.FuelFlow = Input.cleanInt(self,FF1) / 10
                     self.engineData.FuelFlow2 = Input.cleanInt(self,FF2) / 10
-                    self.engineData.FuelPress = Input.cleanInt(self,FP) / 10
+                    if FP != b'XXX': self.engineData.FuelPress = Input.cleanInt(self,FP) / 10
                     fuel_level_left  = Input.cleanInt(self, FL_L) / 10
                     fuel_level_right = Input.cleanInt(self, FL_R) / 10
                     self.fuelData.FuelLevels = [fuel_level_left, fuel_level_right, 0, 0]
-                    self.fuelData.FuelRemain = Input.cleanInt(self,Frem) / 10
+                    if Frem != b'XXXX': self.fuelData.FuelRemain = Input.cleanInt(self,Frem) / 10
                     self.engineData.volts1 = Input.cleanInt(self,V1) / 10
                     self.engineData.volts2 = Input.cleanInt(self,V2) / 10
                     if AMPs != b'XXXX': self.engineData.amps = Input.cleanInt(self,AMPs) / 10
@@ -467,14 +466,14 @@ class serial_skyview(Input):
                     self.msg_unknown += 1 # unknown message found.
         except ValueError:
             self.msg_bad += 1
-            print("bad:"+str(msg))
+            print("bad: "+str(msg))
             pass
         except struct.error:
             self.msg_bad += 1
             pass
         except serial.serialutil.SerialException:
             print("skyview serial exception")
-            traceback.print_exc()
+            #traceback.print_exc()
             dataship.errorFoundNeedToExit = True
 
         if self.isPlaybackMode:  #if play back mode then add a delay.  Else reading a file is way to fast.
