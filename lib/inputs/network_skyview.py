@@ -152,6 +152,7 @@ class network_skyview(Input):
                             print("Dynon Skyview ADHAES message with 33 bytes")
                             data = bytearray(b'!1')
                             data.extend(self.ser.read(33))
+                            print("data: "+str(data))
                             return data
                         elif t == b'2': # Skyview NAV/AP message with 90 bytes
                             print("Dynon Skyview NAV/AP message with 90 bytes")
@@ -163,12 +164,10 @@ class network_skyview(Input):
                             data = bytearray(b'!3')
                             data.extend(self.ser.read(222))
                             return data
-                #else:
-                    #self.ser.seek(0)
-                    #print("Skyview file reset")
+                else:
+                    self.ser.seek(0)
+                    print("Skyview file reset")
 
-
-            
             #data = self.ser.read(80)
             #if(len(data)==0): 
             #    self.ser.seek(0)
