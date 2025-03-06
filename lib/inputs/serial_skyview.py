@@ -195,7 +195,6 @@ class serial_skyview(Input):
             dataType = self.ser.read(1)
             dataVer = self.ser.read(1)
             print("dataType: ", dataType)
-            print("dataVer: ", dataVer)
 
             if isinstance(dataType,str):
                 dataType = dataType.encode() # if read from file then convert to bytes

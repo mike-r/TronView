@@ -51,7 +51,7 @@ class network_skyview(Input):
             # if in playback mode then load example data file.
             # get file to read from config.  else default to..
             if self.PlayFile==True:
-                defaultTo = "ws_49155_1.dat"
+                defaultTo = "ws_49155_2.bin"
                 self.PlayFile = "../data/skyview/"+defaultTo
             self.ser,self.input_logFileName = Input.openLogFile(self,self.PlayFile,"rb")
             self.isPlaybackMode = True
@@ -125,13 +125,14 @@ class network_skyview(Input):
 
     def getNextChunck(self,aircraft):
         if self.isPlaybackMode:
-            print("In Playback mode")
+            print("Reading next Chunk from file")
             x = 0
             while x != b'~' and x != b'!': # read until ~ or !
                 t = self.ser.read(1)
                 if len(t) != 0:
                     if t == b'~':       # GDL-90 Traffic Message
-                        print("first ~", end ="." )
+                        #print("first ~", end ="." )
+                        print("GDL-90 Message")
                         x = 0
                         data = bytearray(b"~")
                         while x != 126: # read until ~ 0x7E
@@ -143,8 +144,8 @@ class network_skyview(Input):
                             #else:
                                 #self.ser.seek(0)
                                 #print("Skyview file reset")
-                        print("end ~", end ="." )
-                        print(str(data))
+                        #print("end ~", end ="." )
+                        #print(str(data))
                         return data
                     elif t == b'!':     # Dynon Skyview Message
                         print("! ", end ="." )
@@ -200,8 +201,8 @@ class network_skyview(Input):
         msg = self.getNextChunck(dataship)
         count = msg.count(b'~~')
         print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
-        print("msg[0-2]:", msg[0], msg[1], msg[2], msg[3])
-        if(dataship.debug_mode>2):
+        if(dataship.debug_mode>1):
+            print("msg[0-3]:", msg[0], msg[1], msg[2], msg[3])
             if len(msg) >= 4:
                 print("Skyview: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
         if msg[0] == b'~':
@@ -330,7 +331,7 @@ class network_skyview(Input):
                 #print(msg.hex())
                 #aircraft.msg_bad += 1 #bad message found.
                 if(msg[1]==0): # GDL heart beat. 
-                    #print("GDL 90 HeartBeat message id:"+str(msg[1])+" len:"+str(len(msg)))
+                    print("GDL 90 HeartBeat message id:"+str(msg[1])+" len:"+str(len(msg)))
                     if(len(msg)==11):
                         statusByte2 = msg[3]
                         timeStamp = _unsigned16(msg[4:], littleEndian=True)
@@ -410,6 +411,7 @@ class network_skyview(Input):
 
 
                 elif(msg[1]==11): # GDL OwnershipGeometricAltitude
+                    print("GDL 90 OwnershipGeometricAltitude id:"+str(msg[1])+" len:"+str(len(msg)))
                     # get alt from GDL90
                     self.gpsData.AltPressure = _signed16(msg[2:]) * 5
                     if(dataship.debug_mode>1):
