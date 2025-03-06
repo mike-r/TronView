@@ -200,10 +200,6 @@ class network_skyview(Input):
         if self.skipReadInput == True: return dataship
         msg = self.getNextChunck(dataship)
         count = msg.count(b'~~')
-        
-        print("readMessage; self.dataship.debug_mode: ", self.dataship.debug_mode)
-        print("readMessage; .dataship.debug_mode: ", dataship.debug_mode)
-        
         if(self.dataship.debug_mode>0):
             print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
             if len(msg) >= 4: print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
@@ -234,6 +230,10 @@ class network_skyview(Input):
 
     #############################################
     def processSingleMessage(self, msg, dataship):
+        
+        print("processSingleMessage; self.dataship.debug_mode: ", self.dataship.debug_mode)
+        print("processSingleMessage; dataship.debug_mode:      ", dataship.debug_mode)
+        
         if(self.dataship.debug_mode>0): print("Processing Single Message")
         try:
             if(len(msg)<1):
