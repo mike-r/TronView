@@ -125,14 +125,14 @@ class network_skyview(Input):
 
     def getNextChunck(self,aircraft):
         if self.isPlaybackMode:
-            print("Reading next Chunk from file")
             x = 0
             while x != b'~' and x != b'!': # read until ~ or !
                 t = self.ser.read(1)
                 if len(t) != 0:
                     if t == b'~':       # GDL-90 Traffic Message
-                        #print("first ~", end ="." )
-                        print("GDL-90 Message")
+                        if(self.dataship.debug_mode>0):
+                            print("first ~", end ="." )
+                            print("GDL-90 Message")
                         x = 0
                         data = bytearray(b"~")
                         while x != 126: # read until ~ 0x7E
@@ -151,26 +151,26 @@ class network_skyview(Input):
                         #print("! ", end ="." )
                         t =  self.ser.read(1)
                         if t == b'1': # Skyview ADHAES message with 33 bytes
-                            print("Dynon Skyview ADHAES message with 33 bytes")
+                            if(self.dataship.debug_mode>0): print("Dynon Skyview ADHAES message with 33 bytes")
                             data = bytearray(b'!1')
                             data.extend(self.ser.read(33))
-                            print(str(data))
+                            if(self.dataship.debug_mode>1): print(str(data))
                             return data
                         elif t == b'2': # Skyview NAV/AP message with 90 bytes
-                            print("Dynon Skyview NAV/AP message with 90 bytes")
+                            if(self.dataship.debug_mode>0): print("Dynon Skyview NAV/AP message with 90 bytes")
                             data = bytearray(b'!2')
                             data.extend(self.ser.read(90))
-                            print(str(data))
+                            if(self.dataship.debug_mode>1): print(str(data))
                             return data
                         elif t == b'3': # Skyview GPS message with 222 bytes
-                            print("Dynon Skyview GPS message with 222 bytes")
+                            if(self.dataship.debug_mode>0): print("Dynon Skyview GPS message with 246 bytes")
                             data = bytearray(b'!3')
-                            data.extend(self.ser.read(222))
-                            print(str(data))
+                            data.extend(self.ser.read(246))
+                            if(self.dataship.debug_mode>1): print(str(data))
                             return data
                 else:
                     self.ser.seek(0)
-                    print("Skyview file reset")
+                    if(self.dataship.debug_mode>0): print("Skyview file reset")
 
             #data = self.ser.read(80)
             #if(len(data)==0): 
@@ -200,12 +200,15 @@ class network_skyview(Input):
         if self.skipReadInput == True: return dataship
         msg = self.getNextChunck(dataship)
         count = msg.count(b'~~')
-        print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
-        if(dataship.debug_mode>0):
-            if len(msg) >= 4:
-                print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
+        
+        print("readMessage; self.dataship.debug_mode: ", self.dataship.debug_mode)
+        print("readMessage; .dataship.debug_mode: ", dataship.debug_mode)
+        
+        if(self.dataship.debug_mode>0):
+            print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
+            if len(msg) >= 4: print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
         if msg[0] == 126:  # '~'
-            print("Processing GDL-90 message")
+            if(self.dataship.debug_mode>0): print("Processing GDL-90 message")
             for line in msg.split(b'~~'):
                 theLen = len(line)
                 if(theLen>3):
@@ -222,21 +225,23 @@ class network_skyview(Input):
                         Input.addToLog(self,self.output_logFile,newline)
             return dataship
         elif msg[0] == 33:  # '!'
-            print("May be Skyview message: ", str(msg))
-            if msg[1] == 49: print("Decode Skyview Type 1; ADHAES message")
-            elif msg[1] == 50: print("Decode Skyview Type 2; NAV/AP message")
-            elif msg[1] == 51: print("Decode Skyview Type 3; GPS message")
+            if(self.dataship.debug_mode>0):
+                print("May be Skyview message")
+                if msg[1] == 49: print("Decode Skyview Type 1; ADHAES message")
+                elif msg[1] == 50: print("Decode Skyview Type 2; NAV/AP message")
+                elif msg[1] == 51: print("Decode Skyview Type 3; GPS message")
+                else: print("just a single !")
 
     #############################################
     def processSingleMessage(self, msg, dataship):
-        print("Processing Single Message")
+        if(self.dataship.debug_mode>0): print("Processing Single Message")
         try:
             if(len(msg)<1):
                 pass
             elif(msg[0]==126 and msg[1]==ord('L') and msg[2]==ord('E')):  # Check for Levil specific messages ~LE
                 print(msg)
                 print("Len:"+str(len(msg)))
-                if(dataship.debug_mode>0):
+                if(self.dataship.debug_mode>0):
                     print("Message ID "+format(msg[3]));
 
                 if(msg[3]==0): # status message
@@ -309,7 +314,7 @@ class network_skyview(Input):
                     self.gpsData.msg_count += 1
                     self.gpsData.GPSWAAS = WAASstatus
 
-                    if(dataship.debug_mode>1):
+                    if(self.dataship.debug_mode>1):
                         print(f"GPS status: {WAASstatus} Sats:{Sats} Power:{Power} OutRate:{OutRate}")
 
                 else:
@@ -325,14 +330,14 @@ class network_skyview(Input):
                     pass
 
             elif(msg[0]) == "!":
-                print("Skyview message Type:"+str(msg[1],"Version:"+str(msg[2])+" len:"+str(len(msg))))
+                if(self.dataship.debug_mode>0): print("Skyview message Type:"+str(msg[1],"Version:"+str(msg[2])+" len:"+str(len(msg))))
                 #print(msg)            
             else:
-                print("GDL 90 message id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
-                #print(msg.hex())
+                if(self.dataship.debug_mode>0): print("GDL 90 message id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
+                if(self.dataship.debug_mode>1): print(msg.hex())
                 #aircraft.msg_bad += 1 #bad message found.
                 if(msg[1]==0): # GDL heart beat. 
-                    print("GDL 90 HeartBeat message id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if(self.dataship.debug_mode>0): print("GDL 90 HeartBeat message")
                     if(len(msg)==11):
                         statusByte2 = msg[3]
                         timeStamp = _unsigned16(msg[4:], littleEndian=True)
@@ -374,7 +379,7 @@ class network_skyview(Input):
                     x Spare (reserved for future use)
                     
                     '''
-                    print("GDL 90 owership id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if(self.dataship.debug_mode>0): print("GDL 90 owership id:"+str(msg[1])+" len:"+str(len(msg)))
                     if(len(msg)==32):
 
                         # save gps data coming from traffic source..
@@ -407,16 +412,16 @@ class network_skyview(Input):
 
                         self.gpsData.msg_count += 1
 
-                        if(dataship.debug_mode>0):
-                            print(f"GPS Data: {self.gpsData.GPSTime_string} {self.gpsData.Lat} {self.gpsData.Lon} {self.gpsData.GndSpeed} {self.gpsData.GndTrack}")
+                        if(self.dataship.debug_mode>0):
+                            if(self.dataship.debug_mode>0):
+                                print(f"GPS Data: {self.gpsData.GPSTime_string} {self.gpsData.Lat} {self.gpsData.Lon} {self.gpsData.GndSpeed} {self.gpsData.GndTrack}")
 
 
                 elif(msg[1]==11): # GDL OwnershipGeometricAltitude
-                    print("GDL 90 OwnershipGeometricAltitude id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if(self.dataship.debug_mode>0): print("GDL 90 OwnershipGeometricAltitude id:"+str(msg[1])+" len:"+str(len(msg)))
                     # get alt from GDL90
                     self.gpsData.AltPressure = _signed16(msg[2:]) * 5
-                    if(dataship.debug_mode>1):
-                        print(f"GPS Altitude: {self.gpsData.AltPressure}m")
+                    if(self.dataship.debug_mode>0): print(f"GPS Altitude: {self.gpsData.AltPressure}m")
 
                 elif(msg[1]==20): # Traffic report
                     '''
@@ -428,7 +433,7 @@ class network_skyview(Input):
                     represents the Address Type and occupies Byte 2 bits 3..0. Similarly, Byte 28 contains the value
                     "0xpx".
                     '''
-                    print("GDL 90 Traffic message id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if(self.dataship.debug_mode>0): print("GDL 90 Traffic message id:"+str(msg[1])+" len:"+str(len(msg)))
                     if(len(msg)==32): 
                         print(msg.hex())
 
@@ -473,7 +478,7 @@ class network_skyview(Input):
                         target.cat = int(msg[19]) # emitter category (type/size of aircraft)
 
                         self.targetData.addTarget(target) # add/update target to traffic list.
-                        if(dataship.debug_mode>0):
+                        if(self.dataship.debug_mode>0):
                             print(f"GDL 90 Target: {target.callsign} {target.type} {target.address} {target.lat} {target.lon} {target.alt} {target.speed} {target.track} {target.vspeed}")
 
                         self.targetData.msg_count += 1
