@@ -204,7 +204,7 @@ class network_skyview(Input):
         if(dataship.debug_mode>0):
             if len(msg) >= 4:
                 print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
-        if msg[0] == b'~':
+        if msg[0] == 126:  # '~'
             print("Processing GDL-90 message")
             for line in msg.split(b'~~'):
                 theLen = len(line)
@@ -221,11 +221,11 @@ class network_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,newline)
             return dataship
-        elif msg[0] == b'!':
-            print("Skyview message: ", str(msg))
-            if msg[1] == b'1': print("Decode Skyview ADHAES message")
-            elif msg[1] == b'2': print("Decode Skyview NAV/AP message")
-            elif msg[1] == b'3': print("Decode Skyview GPS message")
+        elif msg[0] == 33:  # '!'
+            print("May be Skyview message: ", str(msg))
+            if msg[1] == 49: print("Decode Skyview Type 1; ADHAES message")
+            elif msg[1] == 50: print("Decode Skyview Type 2; NAV/AP message")
+            elif msg[1] == 51: print("Decode Skyview Type 3; GPS message")
 
     #############################################
     def processSingleMessage(self, msg, dataship):
