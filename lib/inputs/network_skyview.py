@@ -201,10 +201,11 @@ class network_skyview(Input):
         msg = self.getNextChunck(dataship)
         count = msg.count(b'~~')
         print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
-        if(dataship.debug_mode>1):
+        if(dataship.debug_mode>0):
             if len(msg) >= 4:
                 print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
         if msg[0] == b'~':
+            print("Processing GDL-90 message")
             for line in msg.split(b'~~'):
                 theLen = len(line)
                 if(theLen>3):
@@ -228,6 +229,7 @@ class network_skyview(Input):
 
     #############################################
     def processSingleMessage(self, msg, dataship):
+        print("Processing Single Message")
         try:
             if(len(msg)<1):
                 pass
