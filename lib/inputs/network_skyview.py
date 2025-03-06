@@ -147,8 +147,8 @@ class network_skyview(Input):
                         #print("end ~", end ="." )
                         #print(str(data))
                         return data
-                    elif t == b'!':     # Dynon Skyview Message
-                        print("! ", end ="." )
+                    elif t == b'!':     # May be a Dynon Skyview Message
+                        #print("! ", end ="." )
                         t =  self.ser.read(1)
                         if t == b'1': # Skyview ADHAES message with 33 bytes
                             print("Dynon Skyview ADHAES message with 33 bytes")
@@ -202,9 +202,8 @@ class network_skyview(Input):
         count = msg.count(b'~~')
         print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
         if(dataship.debug_mode>1):
-            print("msg[0-3]:", msg[0], msg[1], msg[2], msg[3])
             if len(msg) >= 4:
-                print("Skyview: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
+                print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
         if msg[0] == b'~':
             for line in msg.split(b'~~'):
                 theLen = len(line)
@@ -427,8 +426,7 @@ class network_skyview(Input):
                     represents the Address Type and occupies Byte 2 bits 3..0. Similarly, Byte 28 contains the value
                     "0xpx".
                     '''
-                    if(dataship.debug_mode>0):
-                        print("GDL 90 Traffic message id:"+str(msg[1])+" len:"+str(len(msg)))
+                    print("GDL 90 Traffic message id:"+str(msg[1])+" len:"+str(len(msg)))
                     if(len(msg)==32): 
                         print(msg.hex())
 
@@ -504,7 +502,7 @@ class network_skyview(Input):
             print(traceback.format_exc())
         except struct.error:
             #error with read in length.. ignore for now?
-            #print("Error with read in length")
+            print("Error with read in length")
             pass
         except Exception as e:
             dataship.errorFoundNeedToExit = True
