@@ -230,10 +230,6 @@ class network_skyview(Input):
 
     #############################################
     def processSingleMessage(self, msg, dataship):
-        
-        print("processSingleMessage; self.dataship.debug_mode: ", self.dataship.debug_mode)
-        print("processSingleMessage; dataship.debug_mode:      ", dataship.debug_mode)
-        
         if(self.dataship.debug_mode>0): print("Processing Single Message")
         try:
             if(len(msg)<1):
