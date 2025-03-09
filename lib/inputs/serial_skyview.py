@@ -202,9 +202,9 @@ class serial_skyview(Input):
 
             if True:
                 #msg = (msg[:73]) if len(msg) > 73 else msg
-                #aircraft.msg_last = msg
+                #dataship.msg_last = msg
                 if dataType == b'1':  # AHRS message
-                    msg = self.ser.read(71)
+                    msg = self.ser.read(70)
                     if(isinstance(msg,str)): msg = msg.encode() # if read from file then convert to bytes
                     HH, MM, SS, FF, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel, AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
                          # Format string breakdown:
@@ -233,7 +233,7 @@ class serial_skyview(Input):
                     self.gpsData.GPSTime_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     self.time_stamp_string = dataship.sys_time_string
                     
-                    #print("time: "+aircraft.sys_time_string)
+                    #print("time: "+dataship.sys_time_string)
                     self.imuData.pitch = Input.cleanInt(self,pitch) / 10
                     self.imuData.roll = Input.cleanInt(self,roll) / 10
                     self.imuData.mag_head = Input.cleanInt(self,HeadingMAG)
@@ -282,7 +282,7 @@ class serial_skyview(Input):
 
                 elif dataType == b'2': #Dynon System message (nav,AP, etc)
                     self.navData.msg_count += 1
-                    msg = self.ser.read(90)
+                    msg = self.ser.read(89)
                     if isinstance(msg, str): msg = msg.encode()  # if read from file then convert to bytes
                     HH,MM,SS,FF,HBug,AltBug, ASIBug,VSBug,Course,CDISrcType,CDISourePort,CDIScale,CDIDeflection,GS,APEng,APRollMode,Not1,APPitch,Not2,APRollF,APRollP,APRollSlip,APPitchF, APPitchP,APPitchSlip,APYawF,APYawP,APYawSlip,TransponderStatus,TransponderReply,TransponderIdent,TransponderCode,DynonUnused,Checksum,CRLF= struct.unpack(
                          # Format string breakdown:
@@ -368,7 +368,7 @@ class serial_skyview(Input):
 
                 elif dataType == b'3': #Dynon EMS Engine data message
                     self.engineData.msg_count += 1
-                    msg = self.ser.read(246)
+                    msg = self.ser.read(221)
                     if isinstance(msg,str):msg = msg.encode() # if read from file then convert to bytes
                     HH,MM,SS,FF,OilPress,OilTemp, RPM_L,RPM_R,MAP,FF1,FF2,FP,FL_L,FL_R,Frem,V1,V2,AMPs,Hobbs,Tach,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,TC10,TC11,TC12,TC13,TC14,GP1,GP2,GP3,GP4,GP5,GP6,GP7,GP8,GP9,GP10,GP11,GP12,GP13,Contacts,Pwr,EGTstate,Checksum,CRLF= struct.unpack(
                                                   # First part - Engine parameters (47 bytes total):
@@ -383,7 +383,7 @@ class serial_skyview(Input):
                          # 3s - Fuel pressure (3 bytes)
                          # 3s - Left fuel quantity (3 bytes)
                          # 3s - Right fuel quantity (3 bytes)
-                         # 4s - Fuel remaining (4 bytes)
+                         # 3s - Fuel remaining (3 bytes)
                          # 3s - Voltage 1 (3 bytes)
                          # 3s - Voltage 2 (3 bytes)
                          # 4s - Amperage (4 bytes)
@@ -420,8 +420,10 @@ class serial_skyview(Input):
                          # 6s- General purpose input 13 (6 bytes)
                          # 16c- Contact inputs status (Not Used) (16 bytes)
                          # 3s - Power percentage (3 bytes)
+                         # 1s - EGT leaning state (1 byte)
                          # 2s - Checksum (2 bytes)
-                         "2s2s2s2s3s4s4s4s3s3s3s3s3s3s4s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
+                         # 2s - CRLF (2 bytes)
+                         "2s2s2s2s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
                     )
                     #print("EMS Message !3:", msg)
                     #dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
