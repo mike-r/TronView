@@ -126,7 +126,6 @@ class stratux_wifi(Input):
 
     def getNextChunck(self,aircraft):
         if self.isPlaybackMode:
-            
             x = 0
             while x != 126: # read until ~
                 t = self.ser.read(1)

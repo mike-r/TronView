@@ -222,6 +222,7 @@ class network_skyview(Input):
         if dataship.errorFoundNeedToExit: return dataship
         if self.skipReadInput == True: return dataship
         msg = self.getNextChunck(dataship)
+        if len(msg) == 0: return dataship
         count = msg.count(b'~~')
         if(self.dataship.debug_mode>0):
             print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
@@ -508,7 +509,7 @@ class network_skyview(Input):
                 
                 else: # unknown message id
                     if(self.dataship.debug_mode>0):
-                        print("stratuxmessage unkown id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
+                        print("skyview message unkown id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
                     pass
 
                 # if(self.textMode_showRaw==True): 
