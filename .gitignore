@@ -15,4 +15,5 @@ profile.html
 profile.json
 venv/
 venv_*
+bytarray_test.py
 

@@ -53,7 +53,7 @@ class network_skyview(Input):
             # if in playback mode then load example data file.
             # get file to read from config.  else default to..
             if self.PlayFile==True:
-                defaultTo = "ws_49155_2.bin"
+                defaultTo = "ws_49155_3.bin"
                 self.PlayFile = "../data/skyview/"+defaultTo
             self.ser,self.input_logFileName = Input.openLogFile(self,self.PlayFile,"rb")
             self.isPlaybackMode = True
@@ -188,7 +188,7 @@ class network_skyview(Input):
                             data = bytearray(b'!3')
                             data.extend(self.ser.read(222))
                             if(self.dataship.debug_mode>0):
-                                print("Dynon Skyview GPS message with 224 bytes")
+                                print("Dynon Skyview EMS message with 224 bytes")
                                 print(str(data))
                             return data
                 else:
@@ -226,11 +226,12 @@ class network_skyview(Input):
         count = msg.count(b'~~')
         if(self.dataship.debug_mode>0):
             print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
-            if len(msg) >= 4 and msg[0] == b'~':
+            print("msg[0]:", msg[0], " msg[1]:", msg[1], " msg[2]:", msg[2], " msg[3]:", msg[3])
+            if len(msg) >= 4 and msg[0] == 126: # GDL-90 message '~'
                 print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
-            elif len(msg) >= 30 and msg[0] == b'!':
-                print("Skyview Type: "+str(msg[1])+" Ver: "+str(len(msg)))
-        if msg[0] == b'~':
+            if len(msg) >= 30 and msg[0] == 33: # Skyview message '!'
+                print("Skyview Type: "+str(msg[1])+" Ver: "+str(msg[2]))
+        if msg[0] == 126: # GDL-90 message '~'
             if(self.dataship.debug_mode>0): print("Parsing GDL-90 message")
             for line in msg.split(b'~~'):
                 theLen = len(line)
@@ -247,12 +248,12 @@ class network_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,newline)
             return dataship
-        elif msg[0] == b'!':
+        elif msg[0] == 33:
             if(self.dataship.debug_mode>0):
                 print("Parsing a Skyview message")
-                if msg[1] == b'1': print("Decode Skyview Type 1; ADHAES message")
-                elif msg[1] == b'2': print("Decode Skyview Type 2; NAV/AP message")
-                elif msg[1] == b'3': print("Decode Skyview Type 3; GPS message")
+                if msg[1] == 49: print("Decode Skyview Type 1; ADHAES message")
+                elif msg[1] == 50: print("Decode Skyview Type 2; NAV/AP message")
+                elif msg[1] == 51: print("Decode Skyview Type 3; GPS message")
                 dataship = self.processSingleSkyviewMessage(msg,dataship)
             return dataship
 
@@ -536,16 +537,33 @@ class network_skyview(Input):
             print(traceback.format_exc())
         return dataship
     
-    def processSingleSkyviewMessage(self, msg, dataship):
+
+    def processSingleSkyviewMessageTest(self, data, dataship):
+        if (len(data)==73):
+            pass
+        msg = bytes(data)
         dataType = msg[1]
         dataVer = msg[2]
+        if isinstance(dataType,str):
+            pass
+
+
+    
+    def processSingleSkyviewMessage(self, msg, dataship):
+        dataType, dataVer = struct.unpack(">BB", msg[1:3])
+        if(self.dataship.debug_mode>0):
+            print("processSingleSkyviewMessage; length of data: ",len(msg))
+            print(msg)
+            print("dataType: "+str(dataType)+" dataVer: "+str(dataVer))
+
         if isinstance(dataType,str):
             dataType = dataType.encode() # if read from file then convert to bytes
             dataVer = dataVer.encode()
         try:
             if True:
-                if dataType == b'1':  # AHRS message
-                    if(isinstance(msg,str)): msg = msg.encode() # if read from file then convert to bytes
+                if dataType == ord('1'):  # AHRS message
+                    if(isinstance(msg,str)):
+                        msg = msg.encode() # if read from file then convert to bytes
                     HH, MM, SS, FF, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel, AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
                          # Format string breakdown:
                          # 8s - System time (8 bytes)
@@ -567,9 +585,8 @@ class network_skyview(Input):
                          # 2s - Wind Speed (2 bytes)
                          # 2s - Checksum (2 bytes)
                          # 2s - CRLF (2 bytes)                            
-                        "2s2s2s2s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg
+                        "2s2s2s2s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg[3:len(msg)-2]
                     ) 
-                    #print(msg)
                     self.gpsData.GPSTime_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     self.time_stamp_string = dataship.sys_time_string
                     
@@ -803,7 +820,8 @@ class network_skyview(Input):
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
                 else:
-                    self.msg_unknown += 1 # unknown message found.
+                    pass
+                    #self.msg_unknown += 1 # unknown message found.
         except ValueError:
             self.msg_bad += 1
             print("bad: "+str(msg))
