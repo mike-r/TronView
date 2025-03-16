@@ -179,16 +179,16 @@ class network_skyview(Input):
                             return data
                         elif t == b'2': # Skyview NAV/AP message with 93 bytes
                             data = bytearray(b'!2')
-                            data.extend(self.ser.read(90))
+                            data.extend(self.ser.read(91))
                             if(self.dataship.debug_mode>0):
-                                print("Dynon Skyview NAV/AP message with 92 bytes")
+                                print("Dynon Skyview NAV/AP message with 93 bytes")
                                 print(str(data))
                             return data
-                        elif t == b'3': # Skyview GPS message with 224 bytes
+                        elif t == b'3': # Skyview GPS message with 225 bytes
                             data = bytearray(b'!3')
-                            data.extend(self.ser.read(222))
+                            data.extend(self.ser.read(223))
                             if(self.dataship.debug_mode>0):
-                                print("Dynon Skyview EMS message with 224 bytes")
+                                print("Dynon Skyview EMS message with 225 bytes")
                                 print(str(data))
                             return data
                 else:
@@ -625,7 +625,7 @@ class network_skyview(Input):
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
 
-                elif dataType == b'2': #Dynon System message (nav,AP, etc)
+                elif dataType == ord('2'): #Dynon System message (nav,AP, etc)
                     self.navData.msg_count += 1
                     if isinstance(msg, str): msg = msg.encode()  # if read from file then convert to bytes
                     HH,MM,SS,FF,HBug,AltBug, ASIBug,VSBug,Course,CDISrcType,CDISourePort,CDIScale,CDIDeflection,GS,APEng,APRollMode,Not1,APPitch,Not2,APRollF,APRollP,APRollSlip,APPitchF, APPitchP,APPitchSlip,APYawF,APYawP,APYawSlip,TransponderStatus,TransponderReply,TransponderIdent,TransponderCode,DynonUnused,Checksum,CRLF= struct.unpack(
@@ -662,9 +662,8 @@ class network_skyview(Input):
                          # 10s- Not used (10 bytes)
                          # 2s - Checksum (2 bytes)
                          # 2s - CRLF (2 bytes)
-                        "2s2s2s2s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg
+                        ">2s2s2s2s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg[3:94]
                     )
-                    #print("NAV & System Message !2:", msg)
                     self.gpsData.GPSTime_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     self.time_stamp_string = self.gpsData.GPSTime_string
 
@@ -710,12 +709,10 @@ class network_skyview(Input):
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
 
-                elif dataType == b'3': #Dynon EMS Engine data message
+                elif dataType == ord('3'): #Dynon EMS Engine data message
                     self.engineData.msg_count += 1
-                    msg = self.ser.read(221)
                     if isinstance(msg,str):msg = msg.encode() # if read from file then convert to bytes
-                    HH,MM,SS,FF,OilPress,OilTemp, RPM_L,RPM_R,MAP,FF1,FF2,FP,FL_L,FL_R,Frem,V1,V2,AMPs,Hobbs,Tach,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,TC10,TC11,TC12,TC13,TC14,GP1,GP2,GP3,GP4,GP5,GP6,GP7,GP8,GP9,GP10,GP11,GP12,GP13,Contacts,Pwr,EGTstate,Checksum,CRLF= struct.unpack(
-                                                  # First part - Engine parameters (47 bytes total):
+                    HH,MM,SS,FF,OilPress,OilTemp,RPM_L,RPM_R,MAP,FF1,FF2,FP,FL_L,FL_R,Frem,V1,V2,AMPs,Hobbs,Tach,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,TC10,TC11,TC12,TC13,TC14,GP1,GP2,GP3,GP4,GP5,GP6,GP7,GP8,GP9,GP10,GP11,GP12,GP13,Contacts,Pwr,EGTstate,Checksum,CRLF=struct.unpack(
                          # 8s - System time (8 bytes)
                          # 3s - Oil pressure (3 bytes)
                          # 4s - Oil temperature (4 bytes)
@@ -767,9 +764,9 @@ class network_skyview(Input):
                          # 1s - EGT leaning state (1 byte)
                          # 2s - Checksum (2 bytes)
                          # 2s - CRLF (2 bytes)
-                         "2s2s2s2s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
+                         ">2s2s2s2s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg[3:226]
                     )
-                    #print("EMS Message !3:", msg)
+
                     #dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     #self.time_stamp_string = dataship.sys_time_string
 
