@@ -170,11 +170,11 @@ class network_skyview(Input):
                     elif t == b'!':     # May be a Dynon Skyview Message
                         #print("! ", end ="." )
                         t =  self.ser.read(1)
-                        if t == b'1': # Skyview ADHAES message with 73 bytes
+                        if t == b'1': # Skyview ADHAES message with 74 bytes
                             data = bytearray(b'!1')
-                            data.extend(self.ser.read(71))
+                            data.extend(self.ser.read(72))
                             if(self.dataship.debug_mode>0):
-                                print("Dynon Skyview ADHAES message with 73 bytes")
+                                print("Dynon Skyview ADHAES message with 74 bytes")
                                 print(str(data))
                             return data
                         elif t == b'2': # Skyview NAV/AP message with 93 bytes
@@ -248,13 +248,13 @@ class network_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,newline)
             return dataship
-        elif msg[0] == 33:
+        elif msg[0] == 33:  # Skyview message '!'
             if(self.dataship.debug_mode>0):
                 print("Parsing a Skyview message")
                 if msg[1] == 49: print("Decode Skyview Type 1; ADHAES message")
                 elif msg[1] == 50: print("Decode Skyview Type 2; NAV/AP message")
                 elif msg[1] == 51: print("Decode Skyview Type 3; GPS message")
-                dataship = self.processSingleSkyviewMessage(msg,dataship)
+            dataship = self.processSingleSkyviewMessage(msg,dataship)
             return dataship
 
     def processSingleMessage(self, msg, dataship):
@@ -537,18 +537,6 @@ class network_skyview(Input):
             print(traceback.format_exc())
         return dataship
     
-
-    def processSingleSkyviewMessageTest(self, data, dataship):
-        if (len(data)==73):
-            pass
-        msg = bytes(data)
-        dataType = msg[1]
-        dataVer = msg[2]
-        if isinstance(dataType,str):
-            pass
-
-
-    
     def processSingleSkyviewMessage(self, msg, dataship):
         dataType, dataVer = struct.unpack(">BB", msg[1:3])
         if(self.dataship.debug_mode>0):
@@ -585,7 +573,7 @@ class network_skyview(Input):
                          # 2s - Wind Speed (2 bytes)
                          # 2s - Checksum (2 bytes)
                          # 2s - CRLF (2 bytes)                            
-                        "2s2s2s2s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg[3:len(msg)-2]
+                        ">2s2s2s2s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg[3:75]
                     ) 
                     self.gpsData.GPSTime_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     self.time_stamp_string = dataship.sys_time_string
