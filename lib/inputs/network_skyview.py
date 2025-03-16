@@ -352,7 +352,7 @@ class network_skyview(Input):
                     #else reading realtime data via udp connection
                     pass
                         
-            elif (msg[0] == b'~'): # GDL 90 message
+            elif (msg[0] == ord('~')): # GDL 90 message
                 if(self.dataship.debug_mode>0): print("GDL 90 message id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
                 if(self.dataship.debug_mode>1): print(msg.hex())
                 #aircraft.msg_bad += 1 #bad message found.
@@ -505,7 +505,12 @@ class network_skyview(Input):
                     else:
                         self.targetData.msg_bad += 1
 
-                elif(msg[1]==101): # Foreflight id?
+                elif(msg[1]==7): # GDL 90 Uplink Data
+                    if(self.dataship.debug_mode>0): print("GDL 90 Uplink Data id:"+str(msg[1])+" len:"+str(len(msg)))
+
+                elif(msg[1]==18): # Dynon ADS-B Unknown message 55 bytes
+                    pass
+                elif(msg[1]==211): # Dynon ADS-B Unknown message 53 bytes
                     pass
                 
                 else: # unknown message id
@@ -518,8 +523,6 @@ class network_skyview(Input):
                 #     msgNum = int(msg[1])
                 #     if(msgNum!=20 and msgNum != 10 and msgNum != 11 and msgNum != 83):
                 #         dataship.gdl_msg_last_id = " "+str(msgNum)+" "
-
-
 
             return dataship
         except ValueError as e :
