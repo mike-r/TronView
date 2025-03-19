@@ -150,25 +150,24 @@ class network_skyview(Input):
                 t = self.ser.read(1)
                 if len(t) != 0:
                     if t == b'~':       # May be a GDL-90 formated Traffic Message
-                        print("first ~", end ="." )
-                        t1 = self.ser.read(1)
-
-                        if True:
-                            print("first ~", end ="." )
-                            print("GDL-90 formated message type: "+str(t1))
-                        x = 0
-                        data = bytearray(b'~')
-                        data.extend(t1)
-                        while x != b'~': # read until ending "~"
-                            t = self.ser.read(1)
-                            if len(t) != 0:
-                                x = ord(t)
-                                data.extend(t)
-                                #print(str(x), end ="." )
-                            else:
-                                self.ser.seek(0)
-                                print("Skyview file reset")
-                        return data
+                        if dataship.debug_mode>0: print("first ~", end ="." )
+                        t1 = self.ser.read(1)   # 0, 7, 10, 11, 18, 20, 211 are known GDL-90 message types from Skyview
+                        x = ord(t1)
+                        if x == 0 or x == 7 or x == 10 or x == 11 or x == 18 or x == 20 or x == 211:
+                            if dataship.debug_mode>0: print("GDL-90 formated message type: "+str(x), end = ".")
+                            x = 0
+                            data = bytearray(b'~')
+                            data.extend(t1)
+                            while x != 126: # read until ending "~"
+                                t = self.ser.read(1)
+                                if len(t) != 0:
+                                    x = ord(t)
+                                    data.extend(t)
+                                    if x == 126:
+                                        if dataship.debug_mode>0: print("last ~ len=: "+str(len(data)))
+                            return data
+                        else: # Not a GDL-90 message so pass
+                            pass
                     
                     elif t == b'!':     # May be a Dynon Skyview Message
                         #print("! ", end ="." )
@@ -406,14 +405,12 @@ class network_skyview(Input):
                         self.targetData.addTarget(target) # add/update target to traffic list.
                         if dataship.debug_mode>0 :
                             print(f"GDL 90 Target: {target.callsign} {target.type} {target.address} {target.lat} {target.lon} {target.alt} {target.speed} {target.track} {target.vspeed}")
-
                         self.targetData.msg_count += 1
                     else:
                         self.targetData.msg_bad += 1
 
                 elif(msg[1]==7): # GDL 90 Uplink Data
                     if dataship.debug_mode>0: print("GDL 90 formated Uplink Data id:"+str(msg[1])+" len:"+str(len(msg)))
-
                 elif(msg[1]==18): # Skyview ADS-B Unknown message type of 55 bytes
                     if dataship.debug_mode>0: print("Skyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg)))
                     if dataship.debug_mode>1: print(str(msg))
@@ -424,8 +421,7 @@ class network_skyview(Input):
                 else: # unknown message id
                     if dataship.debug_mode>0:
                         print("skyview message unkown id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
-                    if dataship.debug_mode>1: print(str(msg))
-                    pass
+                        if dataship.debug_mode>1: print(str(msg))
             return dataship
         
         except ValueError as e :
