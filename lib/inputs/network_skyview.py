@@ -42,11 +42,9 @@ class network_skyview(Input):
         self.airData = None
         self.targetData_index = 0
         self.targetData = None
-        self.dataship = None
 
     def initInput(self, num, dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
-        self.dataship = dataship
         self.data_format = hud_utils.readConfigInt("Main", "format", "0")
 
         if(self.PlayFile!=None and self.PlayFile!=False):
@@ -92,7 +90,7 @@ class network_skyview(Input):
         self.imu_index = len(dataship.imuData)  # Start at 0
         dataship.imuData.append(self.imuData)
         self.last_read_time = time.time()
-        if(self.dataship.debug_mode>0):
+        if(dataship.debug_mode>0):
             print("new skyview imu "+str(self.imu_index)+": "+str(self.imuData))       
 
         # create a empty nav object.
@@ -132,10 +130,10 @@ class network_skyview(Input):
         self.targetData.name = self.name
         self.targetData_index = len(dataship.targetData)  # Start at 0
         dataship.targetData.append(self.targetData)
-        if(self.dataship.debug_mode>0):
+        if dataship.debug_mode>0:
             print("new skyview targets "+str(self.targetData_index)+": "+str(self.targetData))
 
-    def closeInput(self,aircraft):
+    def closeInput(self, dataShip: Dataship):
         if self.isPlaybackMode:
             self.ser.close()
         else:
@@ -143,14 +141,14 @@ class network_skyview(Input):
 
     #############################################
     ## Function: getNextChunck
-    def getNextChunck(self,aircraft):
+    def getNextChunck(self,dataship):
         if self.isPlaybackMode:
             x = 0
             while x != b'~' and x != b'!': # read until ~ or !
                 t = self.ser.read(1)
                 if len(t) != 0:
                     if t == b'~':       # GDL-90 Traffic Message
-                        if(self.dataship.debug_mode>0):
+                        if dataship.debug_mode>0:
                             print("first ~", end ="." )
                             print("GDL-90 Message")
                         x = 0
@@ -173,27 +171,27 @@ class network_skyview(Input):
                         if t == b'1': # Skyview ADHAES message with 74 bytes
                             data = bytearray(b'!1')
                             data.extend(self.ser.read(72))
-                            if(self.dataship.debug_mode>0):
+                            if dataship.debug_mode>0:
                                 print("Dynon Skyview ADHAES message with 74 bytes")
                                 print(str(data))
                             return data
                         elif t == b'2': # Skyview NAV/AP message with 93 bytes
                             data = bytearray(b'!2')
                             data.extend(self.ser.read(91))
-                            if(self.dataship.debug_mode>0):
+                            if dataship.debug_mode>0:
                                 print("Dynon Skyview NAV/AP message with 93 bytes")
                                 print(str(data))
                             return data
                         elif t == b'3': # Skyview GPS message with 225 bytes
                             data = bytearray(b'!3')
                             data.extend(self.ser.read(223))
-                            if(self.dataship.debug_mode>0):
+                            if dataship.debug_mode>0:
                                 print("Dynon Skyview EMS message with 225 bytes")
                                 print(str(data))
                             return data
                 else:
                     self.ser.seek(0)
-                    if(self.dataship.debug_mode>0): print("Skyview file reset")
+                    if dataship.debug_mode>0: print("Skyview file reset")
 
             #data = self.ser.read(80)
             #if(len(data)==0): 
@@ -224,7 +222,7 @@ class network_skyview(Input):
         msg = self.getNextChunck(dataship)
         if len(msg) == 0: return dataship
         count = msg.count(b'~~')
-        if(self.dataship.debug_mode>0):
+        if dataship.debug_mode>1:
             print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
             print("msg[0]:", msg[0], " msg[1]:", msg[1], " msg[2]:", msg[2], " msg[3]:", msg[3])
             if len(msg) >= 4 and msg[0] == 126: # GDL-90 message '~'
@@ -232,7 +230,7 @@ class network_skyview(Input):
             if len(msg) >= 30 and msg[0] == 33: # Skyview message '!'
                 print("Skyview Type: "+str(msg[1])+" Ver: "+str(msg[2]))
         if msg[0] == 126: # GDL-90 message '~'
-            if(self.dataship.debug_mode>0): print("Parsing GDL-90 message")
+            if dataship.debug_mode>0: print("Parsing GDL-90 message")
             for line in msg.split(b'~~'):
                 theLen = len(line)
                 if(theLen>3):
@@ -249,7 +247,7 @@ class network_skyview(Input):
                         Input.addToLog(self,self.output_logFile,newline)
             return dataship
         elif msg[0] == 33:  # Skyview message '!'
-            if(self.dataship.debug_mode>0):
+            if(dataship.debug_mode>0):
                 print("Parsing a Skyview message")
                 if msg[1] == 49: print("Decode Skyview Type 1; ADHAES message")
                 elif msg[1] == 50: print("Decode Skyview Type 2; NAV/AP message")
@@ -258,12 +256,12 @@ class network_skyview(Input):
             return dataship
 
     def processSingleMessage(self, msg, dataship):
-        if(self.dataship.debug_mode>0): print("Processing Single Message")
+        if dataship.debug_mode>0: print("Processing Single Message")
         try:
             if(len(msg)<1):
                 pass
             elif(msg[0]==126 and msg[1]==ord('L') and msg[2]==ord('E')):  # Check for Levil specific messages ~LE
-                if(self.dataship.debug_mode>0):
+                if dataship.debug_mode>0:
                     print(msg)
                     print("Len:"+str(len(msg)))
                     print("Message ID "+format(msg[3]));
@@ -322,7 +320,6 @@ class network_skyview(Input):
 
                     else:
                         self.imuData.msg_bad +=1
-                        #aircraft.msg_len = len(msg)
 
                 elif(msg[3]==2): # more metrics.. 
                     print("additonal metrics message len:"+str(len(msg)))
@@ -337,7 +334,7 @@ class network_skyview(Input):
                     self.gpsData.msg_count += 1
                     self.gpsData.GPSWAAS = WAASstatus
 
-                    if(self.dataship.debug_mode>1):
+                    if(dataship.debug_mode>1):
                         print(f"GPS status: {WAASstatus} Sats:{Sats} Power:{Power} OutRate:{OutRate}")
 
                 else:
@@ -353,11 +350,10 @@ class network_skyview(Input):
                     pass
                         
             elif (msg[0] == ord('~')): # GDL 90 message
-                if(self.dataship.debug_mode>0): print("GDL 90 message id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
-                if(self.dataship.debug_mode>1): print(msg.hex())
-                #aircraft.msg_bad += 1 #bad message found.
+                if(dataship.debug_mode>0): print("GDL 90 message id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
+                if(dataship.debug_mode>1): print(msg.hex())
                 if(msg[1]==0): # GDL heart beat. 
-                    if(self.dataship.debug_mode>0): print("GDL 90 HeartBeat message")
+                    if(dataship.debug_mode>0): print("GDL 90 HeartBeat message")
                     if(len(msg)==11):
                         statusByte2 = msg[3]
                         timeStamp = _unsigned16(msg[4:], littleEndian=True)
@@ -399,7 +395,7 @@ class network_skyview(Input):
                     x Spare (reserved for future use)
                     
                     '''
-                    if(self.dataship.debug_mode>0): print("GDL 90 owership id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if(dataship.debug_mode>0): print("GDL 90 owership id:"+str(msg[1])+" len:"+str(len(msg)))
                     if(len(msg)==32):
 
                         # save gps data coming from traffic source..
@@ -432,16 +428,16 @@ class network_skyview(Input):
 
                         self.gpsData.msg_count += 1
 
-                        if(self.dataship.debug_mode>0):
-                            if(self.dataship.debug_mode>0):
+                        if(dataship.debug_mode>0):
+                            if(dataship.debug_mode>0):
                                 print(f"GPS Data: {self.gpsData.GPSTime_string} {self.gpsData.Lat} {self.gpsData.Lon} {self.gpsData.GndSpeed} {self.gpsData.GndTrack}")
 
 
                 elif(msg[1]==11): # GDL OwnershipGeometricAltitude
-                    if(self.dataship.debug_mode>0): print("GDL 90 OwnershipGeometricAltitude id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if(dataship.debug_mode>0): print("GDL 90 OwnershipGeometricAltitude id:"+str(msg[1])+" len:"+str(len(msg)))
                     # get alt from GDL90
                     self.gpsData.AltPressure = _signed16(msg[2:]) * 5
-                    if(self.dataship.debug_mode>0): print(f"GPS Altitude: {self.gpsData.AltPressure}m")
+                    if(dataship.debug_mode>0): print(f"GPS Altitude: {self.gpsData.AltPressure}m")
 
                 elif(msg[1]==20): # Traffic report
                     '''
@@ -453,9 +449,9 @@ class network_skyview(Input):
                     represents the Address Type and occupies Byte 2 bits 3..0. Similarly, Byte 28 contains the value
                     "0xpx".
                     '''
-                    if(self.dataship.debug_mode>0): print("GDL 90 Traffic message id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if dataship.debug_mode>0: print("GDL 90 Traffic message id:"+str(msg[1])+" len:"+str(len(msg)))
                     if(len(msg)==32): 
-                        print(msg.hex())
+                        if dataship.debug_mode>1: print(msg.hex())
 
                         callsign = re.sub(r'[^A-Za-z0-9]+', '', msg[20:28].rstrip().decode('ascii', errors='ignore') ) # clean the N number.
                         targetStatus = _thunkByte(msg[2], 0x0b11110000, -4) # status
@@ -498,7 +494,7 @@ class network_skyview(Input):
                         target.cat = int(msg[19]) # emitter category (type/size of aircraft)
 
                         self.targetData.addTarget(target) # add/update target to traffic list.
-                        if(self.dataship.debug_mode>0):
+                        if dataship.debug_mode>0 :
                             print(f"GDL 90 Target: {target.callsign} {target.type} {target.address} {target.lat} {target.lon} {target.alt} {target.speed} {target.track} {target.vspeed}")
 
                         self.targetData.msg_count += 1
@@ -506,7 +502,7 @@ class network_skyview(Input):
                         self.targetData.msg_bad += 1
 
                 elif(msg[1]==7): # GDL 90 Uplink Data
-                    if(self.dataship.debug_mode>0): print("GDL 90 Uplink Data id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if dataship.debug_mode>0: print("GDL 90 Uplink Data id:"+str(msg[1])+" len:"+str(len(msg)))
 
                 elif(msg[1]==18): # Dynon ADS-B Unknown message 55 bytes
                     pass
@@ -514,7 +510,7 @@ class network_skyview(Input):
                     pass
                 
                 else: # unknown message id
-                    if(self.dataship.debug_mode>0):
+                    if(dataship.debug_mode>0):
                         print("skyview message unkown id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
                     pass
 
@@ -542,7 +538,7 @@ class network_skyview(Input):
     
     def processSingleSkyviewMessage(self, msg, dataship):
         dataType, dataVer = struct.unpack(">BB", msg[1:3])
-        if(self.dataship.debug_mode>0):
+        if dataship.debug_mode>0:
             print("processSingleSkyviewMessage; length of data: ",len(msg))
             print(msg)
             print("dataType: "+str(dataType)+" dataVer: "+str(dataVer))

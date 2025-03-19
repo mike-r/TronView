@@ -269,7 +269,7 @@ class stratux_wifi(Input):
 
                     else:
                         self.imuData.msg_bad +=1
-                        #aircraft.msg_len = len(msg)
+                        self.airData.msg_len = len(msg)
 
                 elif(msg[3]==2): # more metrics.. 
                     #print("additonal metrics message len:"+str(len(msg)))
@@ -303,7 +303,7 @@ class stratux_wifi(Input):
             else:
                 #print("GDL 90 message id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
                 #print(msg.hex())
-                #aircraft.msg_bad += 1 #bad message found.
+                self.gpsData.msg_bad += 1 #bad message found.
                 if(msg[1]==0): # GDL heart beat. 
                     #print("GDL 90 HeartBeat message id:"+str(msg[1])+" len:"+str(len(msg)))
                     if(len(msg)==11):
@@ -457,7 +457,7 @@ class stratux_wifi(Input):
                     pass
                 
                 else: # unknown message id
-                    if(self.dataship.debug_mode>0):
+                    if(dataship.debug_mode>0):
                         print("stratuxmessage unkown id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
                     pass
 
@@ -466,8 +466,6 @@ class stratux_wifi(Input):
                 #     msgNum = int(msg[1])
                 #     if(msgNum!=20 and msgNum != 10 and msgNum != 11 and msgNum != 83):
                 #         dataship.gdl_msg_last_id = " "+str(msgNum)+" "
-
-
 
             return dataship
         except ValueError as e :
