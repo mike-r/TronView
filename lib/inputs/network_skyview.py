@@ -134,8 +134,9 @@ class network_skyview(Input):
         if dataship.debug_mode>0:
             print("new skyview targets "+str(self.targetData_index)+": "+str(self.targetData))
 
-    def closeInput(self, dataShip: Dataship):
+    def closeInput(self, dataShip:Dataship):
         if self.isPlaybackMode:
+            print("closing the file")
             self.ser.close()
         else:
             self.ser.close()
@@ -148,13 +149,17 @@ class network_skyview(Input):
             while x != b'~' and x != b'!': # read until ~ or !
                 t = self.ser.read(1)
                 if len(t) != 0:
-                    if t == b'~':       # GDL-90 formated Traffic Message
-                        if dataship.debug_mode>0:
+                    if t == b'~':       # May be a GDL-90 formated Traffic Message
+                        print("first ~", end ="." )
+                        t1 = self.ser.read(1)
+
+                        if True:
                             print("first ~", end ="." )
-                            print("GDL-90 formated message")
+                            print("GDL-90 formated message type: "+str(t1))
                         x = 0
                         data = bytearray(b'~')
-                        while x != b'~': # read until "~"
+                        data.extend(t1)
+                        while x != b'~': # read until ending "~"
                             t = self.ser.read(1)
                             if len(t) != 0:
                                 x = ord(t)
