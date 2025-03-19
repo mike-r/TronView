@@ -118,7 +118,7 @@ class serial_skyview(Input):
         try:
             # Read until we find a message start character ($ or !)
             x = 0
-            while x != 33 and x != ord('$'):  # Look for ! (33) or $ start characters
+            while x != ord('!') and x != ord('$'):  # Look for !  or $ start characters
                 t = self.ser.read(1)
                 if len(t) != 0:
                     x = ord(t)
@@ -194,7 +194,6 @@ class serial_skyview(Input):
             # Must be Skyview message (x == 33)
             dataType = self.ser.read(1)
             dataVer = self.ser.read(1)
-            print("dataType: ", dataType)
 
             if isinstance(dataType,str):
                 dataType = dataType.encode() # if read from file then convert to bytes
@@ -204,7 +203,7 @@ class serial_skyview(Input):
                 #msg = (msg[:73]) if len(msg) > 73 else msg
                 #dataship.msg_last = msg
                 if dataType == b'1':  # AHRS message
-                    msg = self.ser.read(70)
+                    msg = self.ser.read(71)
                     if(isinstance(msg,str)): msg = msg.encode() # if read from file then convert to bytes
                     HH, MM, SS, FF, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel, AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
                          # Format string breakdown:
@@ -425,7 +424,7 @@ class serial_skyview(Input):
                          # 2s - CRLF (2 bytes)
                          "2s2s2s2s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
                     )
-                    #print("EMS Message !3:", msg)
+                    if dataship.debug_mode>0: print("EMS Message !3:", msg)
                     #dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     #self.time_stamp_string = dataship.sys_time_string
 
