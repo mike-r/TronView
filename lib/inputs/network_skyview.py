@@ -170,7 +170,7 @@ class network_skyview(Input):
                             pass
                     
                     elif t == b'!':     # May be a Dynon Skyview Message
-                        #print("! ", end ="." )
+                        if dataship.debug_mode>0: print("! ", end ="." )
                         t =  self.ser.read(1)
                         if t == b'1': # Skyview ADHAES message with 74 bytes
                             data = bytearray(b'!1')
@@ -201,14 +201,18 @@ class network_skyview(Input):
         else:
             try:
                 #Attempt to receive up to 1024 bytes of data
+                if dataship.debug_mode>0: print("Trying to read 1024 bytes")
                 data = self.ser.recvfrom(1024)
+                if dataship.debug_mode>0: print("Data received, first byte: "+str(data[0][0]))
                 return data[0]
             except socket.timeout:
-                pass
+                print("Socket timeout")
+                #pass
             except socket.error:
                 #If no data is received, you get here, but it's not an error
                 #Ignore and continue
-                pass
+                print("Socket error")
+                # pass
         return bytes(0)
 
     #############################################
@@ -220,9 +224,8 @@ class network_skyview(Input):
         msg = self.getNextChunck(dataship)
         if len(msg) == 0: return dataship
         count = msg.count(b'~~')
-        if dataship.debug_mode>1:
-            print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
         if dataship.debug_mode>0:
+            print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
             print("msg[0]:", msg[0], " msg[1]:", msg[1], " msg[2]:", msg[2], " msg[3]:", msg[3])
             if len(msg) >= 4 and msg[0] == 126: # GDL-90 message '~'
                 print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
@@ -240,7 +243,7 @@ class network_skyview(Input):
                         newline = line
                     if(newline[theLen-1]!=ord('~')): # add ~ on the end if not there.
                         newline = b''.join([newline,b'~'])
-                    dataship = self.processSingleMessage(newline,dataship)
+                    dataship = self.processSingleGDL90Message(newline,dataship)
 
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,newline)
@@ -254,7 +257,7 @@ class network_skyview(Input):
             dataship = self.processSingleSkyviewMessage(msg,dataship)
             return dataship
 
-    def processSingleMessage(self, msg, dataship):
+    def processSingleGDL90Message(self, msg, dataship: Dataship):
         if dataship.debug_mode>0: print("Processing Single Message")
         try:
             if(len(msg)<1):
@@ -439,7 +442,7 @@ class network_skyview(Input):
             print(traceback.format_exc())
         return dataship
     
-    def processSingleSkyviewMessage(self, msg, dataship):
+    def processSingleSkyviewMessage(self, msg, dataship: Dataship):
         dataType, dataVer = struct.unpack(">BB", msg[1:3])
         if dataship.debug_mode>0:
             print("processSingleSkyviewMessage; length of data: ",len(msg))
