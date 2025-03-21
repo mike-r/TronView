@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Network WiFi or ethernet udp input source
-# Skyview Data via UDP
+# Skyview UDP for ADS-B data in GDL-90 format
 
 # 03/22/2025 Zap  Based on Topher 2019 stratux_wifi.py and serial_skyview.py
 
@@ -57,8 +57,8 @@ class network_skyview(Input):
             self.ser,self.input_logFileName = Input.openLogFile(self,self.PlayFile,"rb")
             self.isPlaybackMode = True
         else:
-            default_skyviewDataUdpPort = "49155"
-            self.udpport = _input_file_utils.readConfigInt(self.name, "skyviewDataUdpPort", default_skyviewDataUdpPort)
+            default_skyviewAdsbUdpPort = "4000"
+            self.udpport = _input_file_utils.readConfigInt(self.name, "skyviewAdsbUdpPort", default_skyviewAdsbUdpPort)
 
             # open udp connection.
             self.ser = socket.socket(socket.AF_INET, #Internet
