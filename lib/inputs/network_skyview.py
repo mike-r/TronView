@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Network WiFi or ethernet udp input source
-# Skyview Data via UDP
+# Skyview ADHRA, NAV, AP, and Engine Data
 
 # 03/22/2025 Zap  Based on Topher 2019 stratux_wifi.py and serial_skyview.py
 
@@ -205,13 +205,13 @@ class network_skyview(Input):
                 if dataship.debug_mode>0: print("Data received, first byte: "+str(data[0][0]))
                 return data[0]
             except socket.timeout:
-                print("Socket timeout")
-                #pass
+                #print("Socket timeout")
+                pass
             except socket.error:
                 #If no data is received, you get here, but it's not an error
                 #Ignore and continue
-                print("Socket error")
-                # pass
+                #print("Socket error")
+                pass
         return bytes(0)
 
     #############################################
@@ -227,7 +227,8 @@ class network_skyview(Input):
             print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
             print("msg[0]:", msg[0], " msg[1]:", msg[1], " msg[2]:", msg[2], " msg[3]:", msg[3])
             if len(msg) >= 4 and msg[0] == 126: # GDL-90 message '~'
-                print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
+                print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg)))
+                if dataship.debug_mode>1: print(" "+str(msg))
             if len(msg) >= 30 and msg[0] == 33: # Skyview message '!'
                 print("Skyview Type: "+str(msg[1])+" Ver: "+str(msg[2]))
         if msg[0] == ord('~'): # GDL-90 message '~'
