@@ -29,9 +29,9 @@ from ..common import shared
 from . import _input_file_utils
 
 
-class network_skyview(Input):
+class network_skyview_adsb(Input):
     def __init__(self):
-        self.name = "dynon_skyview"
+        self.name = "dynon_skyview_adsb"
         self.version = 1.0
         self.inputtype = "network"
         self.PlayFile = None
