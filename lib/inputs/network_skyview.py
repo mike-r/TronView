@@ -201,7 +201,8 @@ class network_skyview(Input):
             try:
                 #Attempt to receive up to 1024 bytes of data
                 if dataship.debug_mode>0: print("Trying to read 1024 bytes")
-                data = bytearray(self.ser.recvfrom(1024))
+                rec_data = self.ser.recvfrom(1024)
+                data = bytearray(rec_data[0])
                 if dataship.debug_mode>0: print("Data received, first byte: "+str(data[0]))
                 return data
             except socket.timeout:
@@ -248,13 +249,19 @@ class network_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,newline)
             return dataship
-        elif msg[0] == ord('!'):  # Skyview message '!'
-            if dataship.debug_mode>0:
-                print("Parsing a Skyview message")
-                if msg[1] == ord('1'): print("Decode Skyview Type 1; ADHAES message")
-                elif msg[1] == ord('2'): print("Decode Skyview Type 2; NAV/AP message")
-                elif msg[1] == ord('3'): print("Decode Skyview Type 3; Engine Data message")
-            dataship = self.processSingleSkyviewMessage(msg,dataship)
+        elif msg[0] == ord('!') and len(msg) == 392:  # set of 3 Skyview messages
+            if msg[1] == ord('1'):
+                if dataship.debug_mode>0: print("Decode Skyview Type 1; ADHAES message")
+                msg1 = msg[0:74]
+                dataship = self.processSingleSkyviewMessage(msg1,dataship)
+            if msg[74] == ord('2'):
+                if dataship.debug_mode>0: print("Decode Skyview Type 2; NAV/AP message")
+                msg2 = msg[74:167]
+                dataship = self.processSingleSkyviewMessage(msg2,dataship)
+            if msg[167] == ord('3'):
+                if dataship.debug_mode>0: print("Decode Skyview Type 3; Engine Data message")
+                msg3 = msg[167:393]
+                dataship = self.processSingleSkyviewMessage(msg3,dataship)
             return dataship
 
     def processSingleGDL90Message(self, msg, dataship: Dataship):
