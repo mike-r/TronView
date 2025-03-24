@@ -140,8 +140,9 @@ class network_skyview(Input):
     def getNextChunck(self,dataship: Dataship):
         if self.isPlaybackMode:
             x = 0
-            while x != b'~': # read until  !
+            while x != b'!': # read until  !
                 t = self.ser.read(1)
+                x = t
                 if len(t) != 0:
                     if t == b'!':     # May be a Dynon Skyview Message
                         if dataship.debug_mode>0: print("! ", end ="." )
@@ -220,6 +221,25 @@ class network_skyview(Input):
                 msg3 = msg[167:393]
                 dataship = self.processSingleSkyviewMessage(msg3,dataship)
             return dataship
+        elif msg[0] == ord('!'): # probably a single Skyview message
+            #print(len(msg))
+            if msg[1]==ord('1') and len(msg)==74:
+                msg1 = msg[0:74]
+                if dataship.debug_mode>0:
+                    print("Decode Skyview Type 1; ADHAES message")
+                    if dataship.debug_mode>1: print(msg1.hex())
+            elif msg[1]==ord('2') and len(msg)==93:
+                msg2 = msg[0:93]
+                if dataship.debug_mode>0:
+                    print("Decode Skyview Type 2; NAV/AP message")
+                    if dataship.debug_mode>1: print(msg2.hex())
+            elif msg[1]==ord('3') and len(msg)==225:
+                msg3 = msg[0:225]
+                if dataship.debug_mode>0:
+                    print("Decode Skyview Type 3; Engine Data message")
+                    if dataship.debug_mode>1: print(msg3.hex())
+            dataship = self.processSingleSkyviewMessage(msg,dataship)
+            return dataship
     
     def processSingleSkyviewMessage(self, msg, dataship: Dataship):
         dataType, dataVer = struct.unpack(">BB", msg[1:3])
@@ -236,6 +256,7 @@ class network_skyview(Input):
                 if dataType == ord('1'):  # AHRS message
                     if(isinstance(msg,str)):
                         msg = msg.encode() # if read from file then convert to bytes
+                        if dataship.debug_mode==2: print("ADHARS !1", msg)
                     HH, MM, SS, FF, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel, AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
                          # Format string breakdown:
                          # 8s - System time (8 bytes)
@@ -395,6 +416,7 @@ class network_skyview(Input):
 
                 elif dataType == ord('3'): #Skyview EMS Engine data message
                     self.engineData.msg_count += 1
+                    self.fuelData.msg_count += 1
                     if isinstance(msg,str):msg = msg.encode() # if read from file then convert to bytes
                     HH,MM,SS,FF,OilPress,OilTemp,RPM_L,RPM_R,MAP,FF1,FF2,FP,FL_L,FL_R,Frem,V1,V2,AMPs,Hobbs,Tach,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,TC10,TC11,TC12,TC13,TC14,GP1,GP2,GP3,GP4,GP5,GP6,GP7,GP8,GP9,GP10,GP11,GP12,GP13,Contacts,Pwr,EGTstate,Checksum,CRLF=struct.unpack(
                          # 8s - System time (8 bytes)
