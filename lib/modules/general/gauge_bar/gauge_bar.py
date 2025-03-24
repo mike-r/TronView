@@ -58,23 +58,23 @@ class gauge_bar(Module):
         self.font = pygame.font.SysFont(self.font_name, self.font_size, self.font_bold)
         self.surface2 = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
 
-    def get_data_field(self, aircraft, data_field):
-        def get_nested_attr(obj, attr):
-            parts = attr.split('.')
-            for part in parts:
-                if part.endswith('()'):
-                    func_name = part[:-2]
-                    obj = getattr(obj, func_name)()
-                else:
-                    obj = getattr(obj, part)
-            return obj
-        if data_field == "":
-            return 0
-        try:
-            return get_nested_attr(aircraft, data_field)
-        except Exception as e:
-            print(f"Error getting data field {data_field}: {e}")
-            return 0
+    # def get_data_field(self, aircraft, data_field):
+    #     def get_nested_attr(obj, attr):
+    #         parts = attr.split('.')
+    #         for part in parts:
+    #             if part.endswith('()'):
+    #                 func_name = part[:-2]
+    #                 obj = getattr(obj, func_name)()
+    #             else:
+    #                 obj = getattr(obj, part)
+    #         return obj
+    #     if data_field == "":
+    #         return 0
+    #     try:
+    #         return get_nested_attr(aircraft, data_field)
+    #     except Exception as e:
+    #         print(f"Error getting data field {data_field}: {e}")
+    #         return 0
 
     def draw(self, aircraft, smartdisplay, pos=(None,None)):
         if pos[0] is None:
@@ -90,7 +90,17 @@ class gauge_bar(Module):
         self.surface2.fill((0,0,0,0))
         
         # Get and smooth value(s)
-        target_value = self.get_data_field(aircraft, self.data_field)
+        target_value = self.get_data_field(aircraft, self.data_field, default_value=0, default_value_on_error=None)
+        
+        # Show error message if target_value is None or a string
+        if target_value is None or isinstance(target_value, str):
+            error_msg = f"Error with data: {self.data_field}"
+            error_font = pygame.font.SysFont(self.font_name, self.font_size, True)
+            error_text = error_font.render(error_msg, True, (255, 0, 0))
+            text_rect = error_text.get_rect(center=(self.width//2, self.height//2))
+            self.surface2.blit(error_text, text_rect)
+            self.pygamescreen.blit(self.surface2, (x, y))
+            return
         
         # Convert single value to list for uniform processing
         if not isinstance(target_value, (list, tuple)):
@@ -225,12 +235,18 @@ class gauge_bar(Module):
         
         return {
             "data_field": {
-                "type": "dropdown",
+                "type": "dataship_var",
                 "default": self.data_field,
-                "options": data_fields,
                 "label": "Data Field",
                 "description": "Select a data field to display",
             },
+            # "data_field": {
+            #     "type": "dropdown",
+            #     "default": self.data_field,
+            #     "options": data_fields,
+            #     "label": "Data Field",
+            #     "description": "Select a data field to display",
+            # },
             "minValue": {
                 "type": "int",
                 "default": self.minValue,
