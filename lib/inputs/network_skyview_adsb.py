@@ -44,8 +44,9 @@ class network_skyview_adsb(Input):
 
     def initInput(self, num, dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
-        self.data_format = hud_utils.readConfigInt("Main", "format", "0")
-
+        self.output_logBinary = True
+        self.dataship = dataship
+        
         if(self.PlayFile!=None and self.PlayFile!=False):
             # if in playback mode then load example data file.
             # get file to read from config.  else default to..
