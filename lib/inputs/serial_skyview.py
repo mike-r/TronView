@@ -197,10 +197,10 @@ class serial_skyview(Input):
                 dataVer = dataVer.encode()
 
             if True:
-                #msg = (msg[:73]) if len(msg) > 73 else msg
                 #dataship.msg_last = msg
                 if dataType == b'1':  # AHRS message
                     msg = self.ser.read(71)
+                    if dataship.debug_mode==2: print("ADHARS !1", msg)
                     if(isinstance(msg,str)): msg = msg.encode() # if read from file then convert to bytes
                     HH, MM, SS, FF, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel, AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
                          # Format string breakdown:
@@ -225,7 +225,6 @@ class serial_skyview(Input):
                          # 2s - CRLF (2 bytes)                            
                         "2s2s2s2s4s5s3s4s6s4s3s3s2s4s3s4s3s6s3s2s2s2s", msg
                     ) 
-                    #print(msg)
                     if HH != b'--' and MM != b'--' and SS != b'--':
                         self.gpsData.GPSTime_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                         self.time_stamp_string = dataship.sys_time_string
@@ -276,10 +275,12 @@ class serial_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
+                    if dataship.debug_mode>0: print("Completed AHRS Message !1:")
 
                 elif dataType == b'2': #Dynon System message (nav,AP, etc)
                     self.navData.msg_count += 1
-                    msg = self.ser.read(89)
+                    msg = self.ser.read(90)
+                    if dataship.debug_mode==2: print("NAV !2:", msg)
                     if isinstance(msg, str): msg = msg.encode()  # if read from file then convert to bytes
                     HH,MM,SS,FF,HBug,AltBug, ASIBug,VSBug,Course,CDISrcType,CDISourePort,CDIScale,CDIDeflection,GS,APEng,APRollMode,Not1,APPitch,Not2,APRollF,APRollP,APRollSlip,APPitchF, APPitchP,APPitchSlip,APYawF,APYawP,APYawSlip,TransponderStatus,TransponderReply,TransponderIdent,TransponderCode,DynonUnused,Checksum,CRLF= struct.unpack(
                          # Format string breakdown:
@@ -317,7 +318,6 @@ class serial_skyview(Input):
                          # 2s - CRLF (2 bytes)
                         "2s2s2s2s3s5s4s4s3scc2s3s3sccccc3s5sc3s5sc3s5scccc4s10s2s2s", msg
                     )
-                    #print("NAV & System Message !2:", msg)
                     if HH != b'--' and MM != b'--' and SS != b'--':
                         self.gpsData.GPSTime_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                         self.time_stamp_string = self.gpsData.GPSTime_string
@@ -365,10 +365,13 @@ class serial_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
+                    if dataship.debug_mode>0: print("Completed NAV Message  !2:") 
 
                 elif dataType == b'3': #Dynon EMS Engine data message
                     self.engineData.msg_count += 1
-                    msg = self.ser.read(221)
+                    msg = self.ser.read(222)
+                    if dataship.debug_mode==2: print("EMS Message !3:", msg)
+
                     if isinstance(msg,str):msg = msg.encode() # if read from file then convert to bytes
                     HH,MM,SS,FF,OilPress,OilTemp, RPM_L,RPM_R,MAP,FF1,FF2,FP,FL_L,FL_R,Frem,V1,V2,AMPs,Hobbs,Tach,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,TC10,TC11,TC12,TC13,TC14,GP1,GP2,GP3,GP4,GP5,GP6,GP7,GP8,GP9,GP10,GP11,GP12,GP13,Contacts,Pwr,EGTstate,Checksum,CRLF= struct.unpack(
                                                   # First part - Engine parameters (47 bytes total):
@@ -425,8 +428,6 @@ class serial_skyview(Input):
                          # 2s - CRLF (2 bytes)
                          "2s2s2s2s3s4s4s4s3s3s3s3s3s3s3s3s3s4s5s5s4s4s4s4s4s4s4s4s4s4s4s4s4s4s6s6s6s6s6s6s6s6s6s6s6s6s6s16s3s1s2s2s", msg
                     )
-                    #print("EMS Message !3:", msg)
-
                     if HH != b'--' and MM != b'--' and SS != b'--':
                         self.gpsData.GPSTime_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                         self.time_stamp_string = self.gpsData.GPSTime_string
@@ -465,6 +466,8 @@ class serial_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
+                    if dataship.debug_mode>0: print("Completed EMS Message  !3:") 
+
                 else:
                     self.msg_unknown += 1 # unknown message found.
         except ValueError:
@@ -472,10 +475,11 @@ class serial_skyview(Input):
             print("bad: "+str(msg))
             pass
         except struct.error:
+            if dataship.debug_mode>0: print("struct error")
             self.msg_bad += 1
             pass
         except serial.serialutil.SerialException:
-            print("skyview serial exception")
+            if dataship.debug_mode>0: print("skyview serial exception")
             #traceback.print_exc()
             dataship.errorFoundNeedToExit = True
 
