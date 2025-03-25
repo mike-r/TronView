@@ -134,7 +134,7 @@ class network_skyview_adsb(Input):
 
     def closeInput(self, dataShip:Dataship):
         if self.isPlaybackMode:
-            print("closing the file")
+            print("closing file: ", self.PlayFile)
             self.ser.close()
         else:
             self.ser.close()
@@ -148,11 +148,10 @@ class network_skyview_adsb(Input):
                 t = self.ser.read(1)
                 if len(t) != 0:
                     if t == b'~':       # May be a GDL-90 formated Traffic Message
-                        if dataship.debug_mode>0: print("first ~", end ="." )
                         t1 = self.ser.read(1)   # 0, 7, 10, 11, 18, 20, 211 are known GDL-90 message types from Skyview
                         x = ord(t1)
                         if x == 0 or x == 7 or x == 10 or x == 11 or x == 18 or x == 20 or x == 211:
-                            if dataship.debug_mode>0: print("GDL-90 formated message type: "+str(x), end = ".")
+                            if dataship.debug_mode>0: print("\n~ .GDL-90 formated message type: "+str(x), end = ".")
                             x = 0
                             data = bytearray(b'~')
                             data.extend(t1)
@@ -197,8 +196,8 @@ class network_skyview_adsb(Input):
         if len(msg) == 0: return dataship
         count = msg.count(b'~~')
         if dataship.debug_mode>0:
-            print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
-            print("msg[0]:", msg[0], " msg[1]:", msg[1], " msg[2]:", msg[2], " msg[3]:", msg[3])
+            print("---------------neywork_skyview_adsb--------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
+            print("msg[0:4]:", msg[0:4])
             if len(msg) >= 4 and msg[0] == 126: # GDL-90 message '~'
                 print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg)))
                 if dataship.debug_mode>1: print(" "+str(msg))

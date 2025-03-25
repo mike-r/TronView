@@ -130,7 +130,7 @@ class network_skyview(Input):
 
     def closeInput(self, dataShip:Dataship):
         if self.isPlaybackMode:
-            print("closing the file")
+            print("closing file: ", self.PlayFile)
             self.ser.close()
         else:
             self.ser.close()
@@ -145,7 +145,7 @@ class network_skyview(Input):
                 x = t
                 if len(t) != 0:
                     if t == b'!':     # May be a Dynon Skyview Message
-                        if dataship.debug_mode>0: print("! ", end ="." )
+                        if dataship.debug_mode>0: print("\n! ", end ="." )
                         t =  self.ser.read(1)
                         if t == b'1': # Skyview ADHAES message with 74 bytes
                             data = bytearray(b'!1')
@@ -200,16 +200,13 @@ class network_skyview(Input):
         msg = self.getNextChunck(dataship)
         if len(msg) == 0: return dataship
         if dataship.debug_mode>0:
-            print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg)))
-            print("msg[0]:", msg[0], " msg[1]:", msg[1], " msg[2]:", msg[2], " msg[3]:", msg[3])
-            if len(msg) >= 30 and msg[0] == 33: # Skyview message '!'
-                print("Skyview Type: "+str(msg[1])+" Ver: "+str(msg[2]))
+            print("---------------network_skyview-------------------------------------\nNEW Chunk len:"+str(len(msg)))
+            print("msg[0:4]:", msg[0:4])
         if msg[0] == ord('!') and len(msg) == 392:  # set of 3 Skyview messages
             if msg[1] == ord('1'):
                 msg1 = msg[0:74]
                 if dataship.debug_mode>0:
                     print("Decode Skyview Type 1; ADHAES message")
-                    print("msg1[0]:", msg1[0], " msg1[1]:", msg1[1], " msg1[74]:", msg1[74], " msg1[75]:", msg1[75], " msg1[167]:", msg1[167], " msg1[168]:", msg1[168])
                     if dataship.debug_mode>1: print(msg1.hex())
                 dataship = self.processSingleSkyviewMessage(msg1,dataship)
             if msg[75] == ord('2'):
