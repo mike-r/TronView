@@ -176,10 +176,10 @@ class network_skyview(Input):
         else:
             try:
                 #Attempt to receive up to 1024 bytes of data
-                if dataship.debug_mode>0: print("Trying to read 1024 bytes")
+                #if dataship.debug_mode>0: print("Trying to read 1024 bytes")
                 rec_data = self.ser.recvfrom(1024)
                 data = bytearray(rec_data[0])
-                if dataship.debug_mode>0: print("Data received, first byte: "+str(data[0]))
+                if dataship.debug_mode>0: print("Skyview Data received, first byte: "+str(data[0]))
                 return data
             except socket.timeout:
                 #print("Socket timeout")

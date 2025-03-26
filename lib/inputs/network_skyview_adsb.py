@@ -80,7 +80,7 @@ class network_skyview_adsb(Input):
             defaultUseAHRS = False
         self.use_ahrs = _input_file_utils.readConfigBool(self.name, "use_ahrs", defaultUseAHRS)
         if(self.use_ahrs==False):
-            print("Skipping AHRS data from Skyview")
+            print("Skipping AHRS data from Skyview ADSB input")
 
         # create a empty imu object.
         self.imuData = IMUData()
@@ -174,7 +174,7 @@ class network_skyview_adsb(Input):
                 #if dataship.debug_mode>0: print("Trying to read 1024 bytes")
                 recv_data = self.ser.recvfrom(1024)
                 data = bytearray(recv_data[0])
-                if dataship.debug_mode>0: print("Data received, first byte: "+str(data[0]))
+                if dataship.debug_mode>0 and data[0]==126: print("Skyview GDL-90 Data received")
                 return data
             except socket.timeout:
                 #print("Socket timeout")
@@ -196,10 +196,9 @@ class network_skyview_adsb(Input):
         if len(msg) == 0: return dataship
         count = msg.count(b'~~')
         if dataship.debug_mode>0:
-            print("---------------neywork_skyview_adsb--------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
+            print("---------------network_skyview_adsb--------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
             print("msg[0:4]:", msg[0:4])
             if len(msg) >= 4 and msg[0] == 126: # GDL-90 message '~'
-                print("Skyview ADSB: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg)))
                 if dataship.debug_mode>1: print(" "+str(msg))
             if len(msg) >= 30 and msg[0] == 33: # Skyview message '!'
                 print("Skyview Type: "+str(msg[1])+" Ver: "+str(msg[2]))
@@ -227,8 +226,6 @@ class network_skyview_adsb(Input):
             if(len(msg)<1):
                 pass       
             elif (msg[0] == ord('~')): # GDL 90 message
-                if dataship.debug_mode>0: print("GDL 90 message id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
-                if dataship.debug_mode>1: print(msg.hex())
                 if(msg[1]==0): # GDL heart beat. 
                     if dataship.debug_mode>0: print("GDL 90 HeartBeat message")
                     if(len(msg)==11):
