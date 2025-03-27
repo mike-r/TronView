@@ -26,7 +26,7 @@ $RUN_PREFIX mkdir -p "$TRONVIEW_DIR/data"
 $RUN_PREFIX mkdir -p "$TRONVIEW_DIR/data/system"
 
 # refresh available serial ports output file.
-python3 $TRONVIEW_DIR/util/menu/serial_getlist.py -o data/system/available_serial_ports.json
+$RUN_PREFIX python3 $TRONVIEW_DIR/util/menu/serial_getlist.py -o data/system/available_serial_ports.json
 
 # Check if ccze is installed (for colorizing console logs)
 if ! command -v ccze &> /dev/null; then
@@ -73,26 +73,37 @@ run_python() {
 
     # if $ADD_ARGS contains --console-log-debug, then remove it and replace with the following:
     # of if $* contains --console-log-debug, then remove it and replace with the following:
-    if [[ "$ADD_ARGS" == *"--console-log-debug"* ]]; then
+    # or if $LAST_ADD_ARGS contains --console-log-debug, then remove it and replace with the following:
+    if [[ "$ADD_ARGS" == *"--console-log-debug"* || "$LAST_ADD_ARGS" == *"--console-log-debug"* ]]; then
         echo "Opening console log file: data/console_logs/last-console.log"
         # remove --console-log-debug from the command line arguments
         ADD_ARGS=$(echo "$ADD_ARGS" | sed 's/--console-log-debug//g')
         today=$(date +%Y-%m-%d_%H:%M:%S)
         log_file="data/console_logs/last-console.log"
-        mkdir -p data/console_logs
-        touch $log_file
+        $RUN_PREFIX mkdir -p data/console_logs
+        $RUN_PREFIX rm -f $log_file
+        echo "log_file: $log_file run_prefix: $RUN_PREFIX"
         # clear the file and put today's date on the first line. then line feed.
-        echo -n "" > $log_file
-        echo "##Date Run: $today" >> $log_file
+        echo "##Date Run: $today" | $RUN_PREFIX tee $log_file > /dev/null
         # get __build_version__ from lib/version.py
         BUILD_VERSION=$(PYTHONPATH=$TRONVIEW_DIR python3 -c "from lib.version import __build_version__; print(__build_version__)")
-        echo "##Build Version: $BUILD_VERSION" >> $log_file
-        echo "" >> $log_file
-        if command -v tee &> /dev/null; then
-            ADD_ARGS="$ADD_ARGS 2>&1 | tee -a $log_file"
+        echo "##Build Version: $BUILD_VERSION" | $RUN_PREFIX tee -a $log_file > /dev/null
+        echo "" | $RUN_PREFIX tee -a $log_file > /dev/null
+        
+        # Setup Python to run with unbuffered output
+        # The -u flag to Python forces unbuffered output
+        echo "Running with unbuffered output to console and log file..."
+        
+        if command -v stdbuf &> /dev/null; then
+            # Use stdbuf to force unbuffered standard output and error
+            $RUN_PREFIX stdbuf -o0 -e0 python3 -u $TRONVIEW_DIR/main.py $choice $ADD_ARGS 2>&1 | $RUN_PREFIX tee -a $log_file
         else
-            ADD_ARGS="$ADD_ARGS >> $log_file 2>&1"
+            # If stdbuf isn't available, just use Python's unbuffered mode (-u flag)
+            # Setting PYTHONUNBUFFERED ensures all Python output is unbuffered
+            PYTHONUNBUFFERED=1 $RUN_PREFIX python3 -u $TRONVIEW_DIR/main.py $choice $ADD_ARGS 2>&1 | $RUN_PREFIX tee -a $log_file
         fi
+        
+        return $?
     fi
 
     # run the python app with any additional arguments
@@ -201,7 +212,7 @@ if [[ ! " $* " =~ "--skiplastrun" ]]; then
                 SHOW_ADDITIONAL_OPTIONS=false
                 # Run the command immediately
                 if [ ! -z "$choice" ]; then
-                    run_python "$choice"
+                    run_python "$choice" "$LAST_ADD_ARGS"
                 fi
                 exit 0
                 ;;
@@ -490,7 +501,7 @@ while $RUN_MENU_AGAIN; do
                     
                     if handle_menu_exit $exit_status "sub"; then
                         case $subchoice in
-                            1) FULL_COMMAND="python3 $TRONVIEW_DIR/util/rpi/i2c/calibrate_bno085.py" 
+                            1) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/rpi/i2c/calibrate_bno085.py" 
                                choice=""
                                break 2 
                                ;;
@@ -563,7 +574,7 @@ while $RUN_MENU_AGAIN; do
                     
                     if handle_menu_exit $exit_status "sub"; then
                         case $subchoice in
-                            1) FULL_COMMAND="python3 $TRONVIEW_DIR/util/menu/serial_getlist.py --select" 
+                            1) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/menu/serial_getlist.py --select" 
                                 SKIP_PAUSE=false;;
                             2) FULL_COMMAND="pico $TRONVIEW_DIR/config.cfg"
                                # check if $TRONVIEW_DIR/config.cfg exists.. if not
@@ -574,19 +585,19 @@ while $RUN_MENU_AGAIN; do
                             3) 
                                # check if ccze is installed.. if not use just less
                                if command -v ccze &> /dev/null; then
-                                    FULL_COMMAND="cat $TRONVIEW_DIR/data/console_logs/last-console.log | ccze -A | less -R"
+                                    FULL_COMMAND="$RUN_PREFIX cat $TRONVIEW_DIR/data/console_logs/last-console.log | ccze -A | less -R"
                                else
-                                    FULL_COMMAND="less $TRONVIEW_DIR/data/console_logs/last-console.log"
+                                    FULL_COMMAND="$RUN_PREFIX less $TRONVIEW_DIR/data/console_logs/last-console.log"
                                fi
                                ;;
-                            4) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/joystick.py" ;;
-                            5) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/serial_raw.py" ;;
-                            6) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/serial_read.py -m" ;;
-                            7) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/serial_read.py -s" ;;
-                            8) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/serial_read.py -g" ;;
-                            9) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/nmea_gps.py -a" ;;
-                            10) FULL_COMMAND="$TRONVIEW_DIR/util/tests/test_stratux_wifi.sh" ;;
-                            11) FULL_COMMAND="python3 $TRONVIEW_DIR/util/tests/i2c_test.py" ;;
+                            4) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/joystick.py" ;;
+                            5) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/serial_raw.py" ;;
+                            6) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/serial_read.py -m" ;;
+                            7) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/serial_read.py -s" ;;
+                            8) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/serial_read.py -g" ;;
+                            9) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/nmea_gps.py -a" ;;
+                            10) FULL_COMMAND="$RUN_PREFIX $TRONVIEW_DIR/util/tests/test_stratux_wifi.sh" ;;
+                            11) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/i2c_test.py" ;;
                         esac
                         echo "Running: $FULL_COMMAND"
                         #exit 0

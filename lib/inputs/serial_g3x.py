@@ -142,8 +142,6 @@ class serial_g3x(Input):
                             )
                             if CRLF[0] == self.EOL:
                                 while suppress(ValueError):
-                                    if(not dataship.gps.Source == "G3X" and not dataship.gps.Source == None):
-                                        return dataship
                                     self.gpsData.msg_count += 1
                                     #self.gpsData.sys_time_string = "%d:%d:%d"%(int(UTCHour),int(UTCMin),int(UTCSec))
                                     self.gpsData.GPSTime_string = self.gpsData.sys_time_string
@@ -221,6 +219,7 @@ class serial_g3x(Input):
                             if len(self.readings1) == self.max_samples1:
                                 self.readings1.pop(0)
                             self.imuData.mag_head = int(Heading)
+                            self.imuData.yaw = int(Heading)
                             self.airData.Baro = (int(AltSet) + 2750.0) / 100.0
                             self.airData.Baro_diff = self.airData.Baro - 29.9213
                             self.airData.Alt = int(
