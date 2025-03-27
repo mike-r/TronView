@@ -73,14 +73,9 @@ class network_skyview_adsb(Input):
             #self.ser.settimeout(.1)
             self.ser.setblocking(0)
 
-        # if this input is not the first input then don't default to read the ahrs input.
-        if(num==0): 
-            defaultUseAHRS = True
-        else: 
-            defaultUseAHRS = False
-        self.use_ahrs = _input_file_utils.readConfigBool(self.name, "use_ahrs", defaultUseAHRS)
-        if(self.use_ahrs==False):
-            print("Skipping AHRS data from Skyview ADSB input")
+        # The Skyview ADSB input stream does not support ahars yet.
+        print("Skipping AHRS data from Skyview ADSB input")
+        self.use_ahrs =  False
 
         # create a empty imu object.
         self.imuData = IMUData()

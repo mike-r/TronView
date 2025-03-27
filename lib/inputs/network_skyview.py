@@ -76,7 +76,7 @@ class network_skyview(Input):
             defaultUseAHRS = False
         self.use_ahrs = _input_file_utils.readConfigBool(self.name, "use_ahrs", defaultUseAHRS)
         if(self.use_ahrs==False):
-            print("Skipping AHRS data from Skyview")
+            print("Skipping AHRS data from Skyview input")
 
         # create a empty imu object.
         self.imuData = IMUData()
