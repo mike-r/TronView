@@ -30,6 +30,7 @@ from . import _input_file_utils
 class network_skyview_adsb(Input):
     def __init__(self):
         self.name = "dynon_skyview_adsb"
+        self.id = "dynon_skyview_adsb"
         self.version = 1.0
         self.inputtype = "network"
         self.PlayFile = None
@@ -78,14 +79,14 @@ class network_skyview_adsb(Input):
         self.use_ahrs =  False
 
         # create a empty imu object.
-        self.imuData = IMUData()
-        self.imuData.id = "skyview_imu"
-        self.imuData.name = self.name
-        self.imu_index = len(dataship.imuData)  # Start at 0
-        dataship.imuData.append(self.imuData)
-        self.last_read_time = time.time()
-        if dataship.debug_mode>0:
-            print("new skyview imu "+str(self.imu_index)+": "+str(self.imuData))       
+        #self.imuData = IMUData()
+        #self.imuData.id = "skyview_imu"
+        #self.imuData.name = self.name
+        #self.imu_index = len(dataship.imuData)  # Start at 0
+        #dataship.imuData.append(self.imuData)
+        #self.last_read_time = time.time()
+       # if dataship.debug_mode>0:
+            #print("new skyview imu "+str(self.imu_index)+": "+str(self.imuData))       
 
         # create a empty nav object.
         self.navData = NavData()
