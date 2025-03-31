@@ -107,10 +107,10 @@ class network_skyview_adsb(Input):
         dataship.fuelData.append(self.fuelData)
 
         # create a empty gps object.
-        self.gpsData = GPSData()
-        self.gpsData.name = "skyview_gps"
-        self.gpsData.id = "skyview_gps"+str(len(dataship.gpsData))
-        dataship.gpsData.append(self.gpsData)
+        #self.gpsData = GPSData()
+        #self.gpsData.name = "skyview_gps"
+        #self.gpsData.id = "skyview_gps"+str(len(dataship.gpsData))
+        #dataship.gpsData.append(self.gpsData)
 
         # create a empty air object.
         self.airData = AirData()
