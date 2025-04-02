@@ -92,30 +92,35 @@ class network_skyview(Input):
         # create a empty nav object.
         self.navData = NavData()
         self.navData.name = "skyview_nav"
+        self.nav_index = len(dataship.navData)  # Start at 0
         self.navData.id = "skyview_nav"+str(len(dataship.navData))
         dataship.navData.append(self.navData)
 
         # create a empty engine object.
         self.engineData = EngineData()
         self.engineData.name = "skyview_engine"
+        self.engineData.index = len(dataship.engineData)  # Start at 0
         self.engineData.id = "skyview_engine"+str(len(dataship.engineData))
         dataship.engineData.append(self.engineData)
 
         # create a empty fuel object.
         self.fuelData = FuelData()
         self.fuelData.name = "skyview_fuel"
+        self.fuelData.index = len(dataship.fuelData)  # Start at 0
         self.fuelData.id = "skyview_fuel"+str(len(dataship.fuelData))
         dataship.fuelData.append(self.fuelData)
 
         # create a empty gps object.
         self.gpsData = GPSData()
         self.gpsData.name = "skyview_gps"
+        self.gps_index = len(dataship.gpsData)  # Start at 0
         self.gpsData.id = "skyview_gps"+str(len(dataship.gpsData))
         dataship.gpsData.append(self.gpsData)
 
         # create a empty air object.
         self.airData = AirData()
         self.airData.name = "skyview_air"
+        self.airData.index = len(dataship.airData)  # Start at 0
         self.airData.id = "skyview_air"+str(len(dataship.airData))
         dataship.airData.append(self.airData)
 
