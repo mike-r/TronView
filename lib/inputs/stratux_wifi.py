@@ -31,6 +31,7 @@ from . import _input_file_utils
 class stratux_wifi(Input):
     def __init__(self):
         self.name = "stratux"
+        self.id = "stratux"
         self.version = 1.0
         self.inputtype = "network"
         self.PlayFile = None
@@ -181,11 +182,10 @@ class stratux_wifi(Input):
         msg = self.getNextChunck(dataship)
         #count = msg.count(b'~~')
         #print("-----------------------------------------------\nNEW Chunk len:"+str(len(msg))+" seperator count:"+str(count))
-        if(dataship.debug_mode>2):
+        if(dataship.debug_mode>1):
             if len(msg) >= 4:
                 print("stratux: "+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" "+str(len(msg))+" "+str(msg))
             
-
         for line in msg.split(b'~~'):
             theLen = len(line)
             if(theLen>3):
@@ -382,14 +382,16 @@ class stratux_wifi(Input):
                         self.gpsData.msg_count += 1
 
                         if(dataship.debug_mode>0):
-                            print(f"GPS Data: {self.gpsData.GPSTime_string} {self.gpsData.Lat} {self.gpsData.Lon} {self.gpsData.GndSpeed} {self.gpsData.GndTrack}")
+                            print(f"Own GPS Data: {self.gpsData.GPSTime_string} {self.gpsData.Lat} {self.gpsData.Lon} {self.gpsData.GndSpeed} {self.gpsData.GndTrack}")
+                            if(dataship.debug_mode > 1): print("Own GPS: ", msg.hex(),"",msg)
+                
 
 
                 elif(msg[1]==11): # GDL OwnershipGeometricAltitude
                     # get alt from GDL90
                     self.gpsData.AltPressure = _signed16(msg[2:]) * 5
                     if(dataship.debug_mode>1):
-                        print(f"GPS Altitude: {self.gpsData.AltPressure}m")
+                        print(f"Own GPS Altitude: {self.gpsData.AltPressure}m")
 
                 elif(msg[1]==20): # Traffic report
                     '''
@@ -456,7 +458,8 @@ class stratux_wifi(Input):
 
                 elif(msg[1]==101): # Foreflight id?
                     pass
-                
+                elif(msg[1]==7): # GDL 90 uplink message 
+                    pass
                 else: # unknown message id
                     if(dataship.debug_mode>0):
                         print("stratuxmessage unkown id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg)))
