@@ -38,6 +38,7 @@ class network_skyview_adsb(Input):
         self.gpsData = None
         self.targetData_index = 0
         self.targetData = None
+        self.dataship = None
 
     def initInput(self, num, dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
@@ -72,9 +73,10 @@ class network_skyview_adsb(Input):
 
         # create a empty gps object.
         self.gpsData = GPSData()
-        self.gpsData.name = "skyview_gps_adsb"
+        self.gpsData.name = self.name
         self.gps_index = len(dataship.gpsData)  # Start at 0
-        self.gpsData.id = "skyview_gps_adsb"+str(len(dataship.gpsData))
+        self.gpsData.id = "skyview_gps_adsb"
+        print("new skyview gps "+str(self.gps_index)+": "+str(self.gpsData))
         dataship.gpsData.append(self.gpsData)
 
         # create a empty targets object.
@@ -83,9 +85,8 @@ class network_skyview_adsb(Input):
         self.targetData.source = "skyview_adsb"
         self.targetData.name = self.name
         self.targetData_index = len(dataship.targetData)  # Start at 0
+        print("new skyview targets "+str(self.targetData_index)+": "+str(self.targetData))
         dataship.targetData.append(self.targetData)
-        if dataship.debug_mode>0:
-            print("new skyview targets "+str(self.targetData_index)+": "+str(self.targetData))
 
     def closeInput(self, dataShip:Dataship):
         if self.isPlaybackMode:
@@ -106,7 +107,7 @@ class network_skyview_adsb(Input):
                         t1 = self.ser.read(1)   # 0, 7, 10, 11, 18, 20, 211 are known GDL-90 message types from Skyview
                         if len(t1) !=0: x = ord(t1)
                         if x == 0 or x == 7 or x == 10 or x == 11 or x == 18 or x == 20 or x == 211:
-                            if dataship.debug_mode>0: print("\n~ .GDL-90 formated message type: "+str(x), end = ".")
+                            if dataship.debug_mode>1: print("\n~ .GDL-90 formated message type: "+str(x), end = ".")
                             x = 0
                             data = bytearray(b'~')
                             data.extend(t1)
@@ -116,20 +117,20 @@ class network_skyview_adsb(Input):
                                     x = ord(t)
                                     data.extend(t)
                                     if x == 126:
-                                        if dataship.debug_mode>0: print("last ~ len=: "+str(len(data)))
+                                        if dataship.debug_mode>1: print("last ~ len=: "+str(len(data)))
                             return data
                         else: # Not a GDL-90 message so pass
                             pass
                 else:
                     self.ser.seek(0)
-                    if dataship.debug_mode>0: print("Skyview ADS-B file reset")
+                    if dataship.debug_mode>1: print("Skyview ADS-B file reset")
         else:
             try:
                 #Attempt to receive up to 1024 bytes of data
                 #if dataship.debug_mode>0: print("Trying to read 1024 bytes")
                 recv_data = self.ser.recvfrom(1024)
                 data = bytearray(recv_data[0])
-                if dataship.debug_mode>0 and data[0]==126: print("Skyview GDL-90 Data received")
+                if dataship.debug_mode>1 and data[0]==126: print("Skyview GDL-90 Data received")
                 return data
             except socket.timeout:
                 #print("Socket timeout")
@@ -173,7 +174,7 @@ class network_skyview_adsb(Input):
             return dataship
 
     def processSingleGDL90Message(self, msg, dataship: Dataship):
-        if dataship.debug_mode>0: print("Processing Single Message")
+        if dataship.debug_mode>1: print("Processing Single Message")
         try:
             if(len(msg)<1):
                 pass       
@@ -222,7 +223,7 @@ class network_skyview_adsb(Input):
                     x Spare (reserved for future use)
                     
                     '''
-                    if dataship.debug_mode>0: print("GDL 90 formated owership id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if dataship.debug_mode>0: print("GDL 90 formated Owership id:"+str(msg[1])+" len:"+str(len(msg)))
                     if(len(msg)==32):
 
                         # save gps data coming from traffic source..
@@ -263,7 +264,7 @@ class network_skyview_adsb(Input):
                     if dataship.debug_mode>0: print("GDL 90 formated OwnershipGeometricAltitude id:"+str(msg[1])+" len:"+str(len(msg)))
                     # get alt
                     self.gpsData.AltPressure = _signed16(msg[2:]) * 5
-                    if dataship.debug_mode>0: print(f"GPS Altitude: {self.gpsData.AltPressure}m")
+                    if dataship.debug_mode>0: print(f"GPS Altitude: {self.gpsData.AltPressure}ft")
 
                 elif(msg[1]==20): # Traffic report
                     '''
@@ -275,7 +276,7 @@ class network_skyview_adsb(Input):
                     represents the Address Type and occupies Byte 2 bits 3..0. Similarly, Byte 28 contains the value
                     "0xpx".
                     '''
-                    if dataship.debug_mode>0: print("GDL 90 formated Traffic message id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if dataship.debug_mode>1: print("GDL 90 formated Traffic message id:"+str(msg[1])+" len:"+str(len(msg)))
                     if len(msg)==32:  # 32 bytes is the standard GDL-90 traffic message length
                         if dataship.debug_mode>1: print(msg.hex())
 
@@ -320,7 +321,7 @@ class network_skyview_adsb(Input):
                         target.cat = int(msg[19]) # emitter category (type/size of aircraft)
 
                         self.targetData.addTarget(target) # add/update target to traffic list.
-                        if dataship.debug_mode>0 :
+                        if dataship.debug_mode>1 :
                             print(f"GDL 90 Target: {target.callsign} {target.type} {target.address} {target.lat} {target.lon} {target.alt} {target.speed} {target.track} {target.vspeed}")
                         self.targetData.msg_count += 1
                     else:
@@ -333,16 +334,25 @@ class network_skyview_adsb(Input):
                             print("")
 
                 elif(msg[1]==7): # GDL 90 Uplink Data
-                    if dataship.debug_mode>0: print("\nGDL 90 formated Uplink Data id:"+str(msg[1])+" len:"+str(len(msg))+"\n")
+                    if dataship.debug_mode>1: print("\nGDL 90 formated Uplink Data id:"+str(msg[1])+" len:"+str(len(msg))+"\n")
                 elif(msg[1]==18): # Skyview ADS-B Unknown message type of 55 bytes
-                    if dataship.debug_mode>0: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg))+"\n")
+                    if dataship.debug_mode>1: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg))+"\n")
                     if dataship.debug_mode>1: print(str(msg))
                 elif(msg[1]==211): # Skyview ADS-B Unknown message type of 53 bytes
-                    if dataship.debug_mode>0: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg)))
+                    if dataship.debug_mode>1: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg)))
                     if dataship.debug_mode>1: 
                         print(str(msg))
                         print("\n")
-                
+                elif(msg[1]==76):
+                    if dataship.debug_mode>1: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg)))
+                elif(msg[1]==101):
+                    if dataship.debug_mode>1: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg)))
+                elif(msg[1]==83):
+                    if dataship.debug_mode>1: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg)))
+                elif(msg[1]==204):
+                    if dataship.debug_mode>1: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg)))
+                elif(msg[1]==31):
+                    if dataship.debug_mode>1: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg)))
                 else: # unknown message id
                     if dataship.debug_mode>0:
                         print("\n\n   skyview message unkown id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg))+"\n\n")

@@ -384,14 +384,12 @@ class stratux_wifi(Input):
                         if(dataship.debug_mode>0):
                             print(f"Own GPS Data: {self.gpsData.GPSTime_string} {self.gpsData.Lat} {self.gpsData.Lon} {self.gpsData.GndSpeed} {self.gpsData.GndTrack}")
                             if(dataship.debug_mode > 1): print("Own GPS: ", msg.hex(),"",msg)
-                
-
 
                 elif(msg[1]==11): # GDL OwnershipGeometricAltitude
                     # get alt from GDL90
                     self.gpsData.AltPressure = _signed16(msg[2:]) * 5
                     if(dataship.debug_mode>1):
-                        print(f"Own GPS Altitude: {self.gpsData.AltPressure}m")
+                        print(f"Own GPS Altitude: {self.gpsData.AltPressure}ft")
 
                 elif(msg[1]==20): # Traffic report
                     '''
