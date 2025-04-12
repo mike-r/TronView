@@ -27,6 +27,7 @@ echo "For UDP, If hex data shows then its connected. Then hit cntrl-c to exit"
 echo "Press u for iLevil UDP port 43211"
 echo "Press t for iLevil TCP port 2000"
 echo "Press s for stratux or skyview UDP port 4000"
+echo "Press 8 for Dynon Skyview UDP port 8384"
 echo "Press d for Dynon Skyview UDP port 49155"
 
 # Get a single character input without waiting for return
@@ -67,6 +68,13 @@ case $char in
 			nc -lu 4000 | hexdump -C
 		else
 			nc -u -l -p 4000 -k | hd
+		fi
+		;;
+	[Ss]* )echo "Listening for Skyview UDP port 8384"
+		if [[ "$OSTYPE" == "darwin"* ]]; then
+			nc -lu 8384 | hexdump -C
+		else
+			nc -u -l -p 8384 -k | hd
 		fi
 		;;
 	[Dd]* )echo "Listening for Dynon Skyview UDP port 49155"

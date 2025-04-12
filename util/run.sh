@@ -566,7 +566,7 @@ while $RUN_MENU_AGAIN; do
                                       "7" "Read Serial Dynon Skyview" \
                                       "8" "Read Serial Garmin G3x" \
                                       "9" "Read NMEA GPS data" \
-                                      "10" "Test Stratux and iLevil WiFi connection" \
+                                      "10" "Read GDL90 over WiFi from Dynon, Stratux or iLevil" \
                                       "11" "I2C Test (Pi only)" \
                                       2>&1 1>&3)
                     exit_status=$?
@@ -596,7 +596,7 @@ while $RUN_MENU_AGAIN; do
                             7) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/serial_read.py -s" ;;
                             8) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/serial_read.py -g" ;;
                             9) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/nmea_gps.py -a" ;;
-                            10) FULL_COMMAND="$RUN_PREFIX $TRONVIEW_DIR/util/tests/test_stratux_wifi.sh" ;;
+                            10) FULL_COMMAND="$RUN_PREFIX $TRONVIEW_DIR/util/tests/wifi_read.sh" ;;
                             11) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/i2c_test.py" ;;
                         esac
                         echo "Running: $FULL_COMMAND"
