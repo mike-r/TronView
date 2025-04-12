@@ -70,7 +70,7 @@ case $char in
 			nc -u -l -p 4000 -k | hd
 		fi
 		;;
-	[Ss]* )echo "Listening for Skyview UDP port 8384"
+	[8]* )echo "Listening for Skyview UDP port 8384"
 		if [[ "$OSTYPE" == "darwin"* ]]; then
 			nc -lu 8384 | hexdump -C
 		else
