@@ -180,7 +180,7 @@ class network_skyview_adsb(Input):
                 pass       
             elif (msg[0] == ord('~')): # GDL 90 message
                 if(msg[1]==0): # GDL heart beat. 
-                    if dataship.debug_mode>0: print("GDL 90 HeartBeat message")
+                    if dataship.debug_mode>0: print("\nGDL 90 HeartBeat message")
                     if dataship.debug_mode>1: print(msg.hex())
                     if(len(msg)==11):
                         statusByte2 = msg[3]
@@ -223,7 +223,7 @@ class network_skyview_adsb(Input):
                     x Spare (reserved for future use)
                     
                     '''
-                    if dataship.debug_mode>0: print("GDL 90 formated Owership id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if dataship.debug_mode>0: print("\nGDL 90 Owership message")
                     if(len(msg)==32):
 
                         # save gps data coming from traffic source..
@@ -261,7 +261,7 @@ class network_skyview_adsb(Input):
                                 print(f"GPS Data: {self.gpsData.GPSTime_string} {self.gpsData.Lat} {self.gpsData.Lon} {self.gpsData.GndSpeed} {self.gpsData.GndTrack}")
 
                 elif(msg[1]==11): # GDL 90 formated OwnershipGeometricAltitude
-                    if dataship.debug_mode>0: print("GDL 90 formated OwnershipGeometricAltitude id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if dataship.debug_mode>0: print("\nGDL 90 Ownership GeometricA Altitude message")
                     # get alt
                     self.gpsData.AltPressure = _signed16(msg[2:]) * 5
                     if dataship.debug_mode>0: print(f"GPS Altitude: {self.gpsData.AltPressure}ft")
@@ -276,7 +276,7 @@ class network_skyview_adsb(Input):
                     represents the Address Type and occupies Byte 2 bits 3..0. Similarly, Byte 28 contains the value
                     "0xpx".
                     '''
-                    if dataship.debug_mode>1: print("GDL 90 formated Traffic message id:"+str(msg[1])+" len:"+str(len(msg)))
+                    if dataship.debug_mode>1: print("\nGDL 90 formated Traffic message id:"+str(msg[1])+" len:"+str(len(msg)))
                     if len(msg)==32:  # 32 bytes is the standard GDL-90 traffic message length
                         if dataship.debug_mode>1: print(msg.hex())
 
@@ -351,11 +351,13 @@ class network_skyview_adsb(Input):
                     if dataship.debug_mode>1: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg)))
                 elif(msg[1]==204):
                     if dataship.debug_mode>1: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg)))
-                elif(msg[1]==31):
+                elif(msg[1]==30):
                     if dataship.debug_mode>1: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg)))
+                elif(msg[1]==31):
+                    if dataship.debug_mode>1: print("\nSkyview ADS-B Unknown Message Type:"+str(msg[1])+" len:"+str(len(msg))) 
                 else: # unknown message id
                     if dataship.debug_mode>0:
-                        print("\n\n   skyview message unkown id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg))+"\n\n")
+                        print("\n   skyview message unkown id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg))+"\n")
                         if dataship.debug_mode>1: print(str(msg))
             return dataship
         
