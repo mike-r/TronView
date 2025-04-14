@@ -252,10 +252,11 @@ class stratux_wifi(Input):
                         self.imuData.Slip_Skid = None if TurnCoord == 32767 else TurnCoord / 100
                         self.imuData.Vert_G = None if GLoad == 32767 else GLoad / 10
 
-                        if dataship.debug_mode > 0:
+                        if dataship.debug_mode > 1:
                             current_time = time.time() # calculate hz.
                             self.imuData.hz = round(1 / (current_time - self.last_read_time), 1)
                             self.last_read_time = current_time
+                            print("Stratux WiFi System Time: " + str(current_time))
 
                         if(ias != 32767):
                             self.airData.IAS = ias # if ias is 32767 then no airspeed given?

@@ -992,7 +992,7 @@
         "options": [
           {
             "name": "source_imu_index_name",
-            "value": "mgl_imu"
+            "value": "skyview_imu"
           },
           {
             "name": "source_imu_index",

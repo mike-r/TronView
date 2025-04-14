@@ -32,12 +32,19 @@ class network_skyview(Input):
         self.PlayFile = None
         self.imu_index = 0
         self.imuData = None
+        self.engine_index = 0
+        self.engineData = None
+        self.nav_index = 0
+        self.navData = None
+        self.fuelData = None
+        self.fuel_index = 0
         self.gps_index = 0
         self.gpsData = None
-        self.airdata_index = 0
+        self.airData_index = 0
         self.airData = None
         self.targetData_index = 0
         self.targetData = None
+
 
     def initInput(self, num, dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
@@ -70,24 +77,14 @@ class network_skyview(Input):
             #self.ser.settimeout(.1)
             self.ser.setblocking(0)
 
-        # if this input is not the first input then don't default to read the ahrs input.
-        if(num==0): 
-            defaultUseAHRS = True
-        else: 
-            defaultUseAHRS = False
-        self.use_ahrs = _input_file_utils.readConfigBool(self.name, "use_ahrs", defaultUseAHRS)
-        if(self.use_ahrs==False):
-            print("Skipping AHRS data from Skyview input")
-
         # create a empty imu object.
         self.imuData = IMUData()
-        self.imuData.id = "skyview_imu"
+        self.imuData.id = "skyview_imu"+str(len(dataship.imuData))
         self.imuData.name = self.name
         self.imu_index = len(dataship.imuData)  # Start at 0
         dataship.imuData.append(self.imuData)
         self.last_read_time = time.time()
-        if dataship.debug_mode>0:
-            print("new skyview imu "+str(self.imu_index)+": "+str(self.imuData))       
+        print("new skyview imu "+str(self.imu_index)+": "+str(self.imuData))       
 
         # create a empty nav object.
         self.navData = NavData()
@@ -95,20 +92,23 @@ class network_skyview(Input):
         self.nav_index = len(dataship.navData)  # Start at 0
         self.navData.id = "skyview_nav"+str(len(dataship.navData))
         dataship.navData.append(self.navData)
+        print("new skyview nav "+str(self.nav_index)+": "+str(self.navData))
 
         # create a empty engine object.
         self.engineData = EngineData()
         self.engineData.name = "skyview_engine"
-        self.engineData.index = len(dataship.engineData)  # Start at 0
+        self.engine_index = len(dataship.engineData)  # Start at 0
         self.engineData.id = "skyview_engine"+str(len(dataship.engineData))
         dataship.engineData.append(self.engineData)
+        print("new skyview engine "+str(self.engine_index)+": "+str(self.engineData))
 
         # create a empty fuel object.
         self.fuelData = FuelData()
         self.fuelData.name = "skyview_fuel"
-        self.fuelData.index = len(dataship.fuelData)  # Start at 0
+        self.fuel_index = len(dataship.fuelData)  # Start at 0
         self.fuelData.id = "skyview_fuel"+str(len(dataship.fuelData))
         dataship.fuelData.append(self.fuelData)
+        print("new skyview fuel "+str(self.fuel_index)+": "+str(self.fuelData))
 
         # create a empty gps object.
         self.gpsData = GPSData()
@@ -116,13 +116,15 @@ class network_skyview(Input):
         self.gps_index = len(dataship.gpsData)  # Start at 0
         self.gpsData.id = "skyview_gps"+str(len(dataship.gpsData))
         dataship.gpsData.append(self.gpsData)
+        print("new skyview gps "+str(self.gps_index)+": "+str(self.gpsData))
 
         # create a empty air object.
         self.airData = AirData()
         self.airData.name = "skyview_air"
-        self.airData.index = len(dataship.airData)  # Start at 0
+        self.airData_index = len(dataship.airData)  # Start at 0
         self.airData.id = "skyview_air"+str(len(dataship.airData))
         dataship.airData.append(self.airData)
+        print("new skyview air "+str(self.airData_index)+": "+str(self.airData))
 
         # create a empty targets object.
         self.targetData = TargetData()
@@ -131,8 +133,7 @@ class network_skyview(Input):
         self.targetData.name = self.name
         self.targetData_index = len(dataship.targetData)  # Start at 0
         dataship.targetData.append(self.targetData)
-        if dataship.debug_mode>0:
-            print("new skyview targets "+str(self.targetData_index)+": "+str(self.targetData))
+        print("new skyview targets "+str(self.targetData_index)+": "+str(self.targetData))
 
     def closeInput(self, dataShip:Dataship):
         if self.isPlaybackMode:
@@ -151,41 +152,41 @@ class network_skyview(Input):
                 x = t
                 if len(t) != 0:
                     if t == b'!':     # May be a Dynon Skyview Message
-                        if dataship.debug_mode>0: print("\n! ", end ="." )
+                        if dataship.debug_mode>1: print("\n! ", end ="." )
                         t =  self.ser.read(1)
                         if t == b'1': # Skyview ADHAES message with 74 bytes
                             data = bytearray(b'!1')
                             data.extend(self.ser.read(72))
-                            if dataship.debug_mode>0:
+                            if dataship.debug_mode>1:
                                 print("Skyview ADHAES message with 74 bytes")
-                                if dataship.debug_mode>1: print(str(data))
+                                print(str(data))
                             return data
                         elif t == b'2': # Skyview NAV/AP message with 93 bytes
                             data = bytearray(b'!2')
                             data.extend(self.ser.read(91))
-                            if dataship.debug_mode>0:
+                            if dataship.debug_mode>1:
                                 print("Skyview NAV/AP message with 93 bytes")
-                                if dataship.debug_mode>1: print(str(data))
+                                print(str(data))
                             return data
                         elif t == b'3': # Skyview Engine data message with 225 bytes
                             data = bytearray(b'!3')
                             data.extend(self.ser.read(223))
-                            if dataship.debug_mode>0:
+                            if dataship.debug_mode>1:
                                 print("Skyview Engine data message with 225 bytes")
-                                if dataship.debug_mode>1: print(str(data))
+                                print(str(data))
                             return data
                         else: # Not a Skyview message so pass
                             pass
                 else:
                     self.ser.seek(0)
-                    if dataship.debug_mode>0: print("Skyview file reset")
+                    if dataship.debug_mode>1: print("Skyview file reset")
         else:
             try:
                 #Attempt to receive up to 1024 bytes of data
                 #if dataship.debug_mode>0: print("Trying to read 1024 bytes")
                 rec_data = self.ser.recvfrom(1024)
                 data = bytearray(rec_data[0])
-                if dataship.debug_mode>0: print("Skyview Data received, first byte: "+str(data[0]))
+                if dataship.debug_mode>1: print("Skyview Data received, first byte: "+str(data[0]))
                 return data
             except socket.timeout:
                 #print("Socket timeout")
@@ -205,22 +206,22 @@ class network_skyview(Input):
         if self.skipReadInput == True: return dataship
         msg = self.getNextChunck(dataship)
         if len(msg) == 0: return dataship
-        if dataship.debug_mode>0:
+        if dataship.debug_mode>1:
             print("---------------network_skyview-------------------------------------\nNEW Chunk len:"+str(len(msg)))
             print("msg[0:4]:", msg[0:4])
         if msg[0] == ord('!') and len(msg) == 392:  # set of 3 Skyview messages
             if msg[1] == ord('1'):
                 msg1 = msg[0:74]
-                if dataship.debug_mode>0:
+                if dataship.debug_mode>1:
                     print("Decode Skyview Type 1; ADHAES message")
                     if dataship.debug_mode>1: print(msg1.hex())
                 dataship = self.processSingleSkyviewMessage(msg1,dataship)
             if msg[75] == ord('2'):
-                if dataship.debug_mode>0: print("Decode Skyview Type 2; NAV/AP message")
+                if dataship.debug_mode>1: print("Decode Skyview Type 2; NAV/AP message")
                 msg2 = msg[74:167]
                 dataship = self.processSingleSkyviewMessage(msg2,dataship)
             if msg[168] == ord('3'):
-                if dataship.debug_mode>0: print("Decode Skyview Type 3; Engine Data message")
+                if dataship.debug_mode>1: print("Decode Skyview Type 3; Engine Data message")
                 msg3 = msg[167:393]
                 dataship = self.processSingleSkyviewMessage(msg3,dataship)
             return dataship
@@ -228,17 +229,17 @@ class network_skyview(Input):
             #print(len(msg))
             if msg[1]==ord('1') and len(msg)==74:
                 msg1 = msg[0:74]
-                if dataship.debug_mode>0:
+                if dataship.debug_mode>1:
                     print("Decode Skyview Type 1; ADHAES message")
                     if dataship.debug_mode>1: print(msg1.hex())
             elif msg[1]==ord('2') and len(msg)==93:
                 msg2 = msg[0:93]
-                if dataship.debug_mode>0:
+                if dataship.debug_mode>1:
                     print("Decode Skyview Type 2; NAV/AP message")
                     if dataship.debug_mode>1: print(msg2.hex())
             elif msg[1]==ord('3') and len(msg)==225:
                 msg3 = msg[0:225]
-                if dataship.debug_mode>0:
+                if dataship.debug_mode>1:
                     print("Decode Skyview Type 3; Engine Data message")
                     if dataship.debug_mode>1: print(msg3.hex())
             dataship = self.processSingleSkyviewMessage(msg,dataship)
@@ -246,10 +247,10 @@ class network_skyview(Input):
     
     def processSingleSkyviewMessage(self, msg, dataship: Dataship):
         dataType, dataVer = struct.unpack(">BB", msg[1:3])
-        if dataship.debug_mode>0:
+        if dataship.debug_mode>1:
             print("processSingleSkyviewMessage; length of data: ",len(msg))
             print("dataType: "+str(dataType)+" dataVer: "+str(dataVer))
-            if dataship.debug_mode>1: print(msg)
+            print(msg)
 
         if isinstance(dataType,str):
             dataType = dataType.encode() # if read from file then convert to bytes
@@ -293,10 +294,11 @@ class network_skyview(Input):
 
                     # Update IMU data
                     self.imuData.yaw = self.imuData.mag_head
-                    if dataship.debug_mode > 0:
+                    if dataship.debug_mode > 1:
                         current_time = time.time() # calculate hz.
                         self.imuData.hz = round(1 / (current_time - self.last_read_time), 1)
                         self.last_read_time = current_time
+                        print("Skyview WiFi System Time: " + str(current_time))
 
                     self.airData.IAS = Input.cleanInt(self,IAS) * 0.1
                     self.airData.Alt_pres = Input.cleanInt(self,PresAlt)

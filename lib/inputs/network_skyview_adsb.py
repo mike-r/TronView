@@ -76,7 +76,7 @@ class network_skyview_adsb(Input):
         self.gpsData.name = self.name
         self.gps_index = len(dataship.gpsData)  # Start at 0
         self.gpsData.id = "skyview_gps_adsb"
-        print("new skyview gps "+str(self.gps_index)+": "+str(self.gpsData))
+        print("new skyview_adsb gps "+str(self.gps_index)+": "+str(self.gpsData))
         dataship.gpsData.append(self.gpsData)
 
         # create a empty targets object.
@@ -85,7 +85,7 @@ class network_skyview_adsb(Input):
         self.targetData.source = "skyview_adsb"
         self.targetData.name = self.name
         self.targetData_index = len(dataship.targetData)  # Start at 0
-        print("new skyview targets "+str(self.targetData_index)+": "+str(self.targetData))
+        print("new skyview_adsb targets "+str(self.targetData_index)+": "+str(self.targetData))
         dataship.targetData.append(self.targetData)
 
     def closeInput(self, dataShip:Dataship):
