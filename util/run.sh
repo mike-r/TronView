@@ -304,19 +304,19 @@ while $RUN_MENU_AGAIN; do
                                 --checklist "Use space bar to select 1 or more Inputs :" 20 60 10 \
                                 "serial_mgl" "MGL Serial" OFF \
                                 "serial_d100" "Dynon D100 Serial" OFF \
-                                "serial_nmea" "NMEA Serial" OFF \
-                                "serial_skyview" "Dynon Skyview Serial" OFF \
                                 "serial_g3x" "Garmin G3x Serial" OFF \
                                 "serial_grt_eis" "Grand Rapids EIS Serial" OFF \
+                                "serial_nmea" "NMEA Serial" OFF \
                                 "network_skyview_adsb" "Dynon Skyview ADSB Network" OFF \
+                                "serial_skyview" "Dynon Skyview Serial" OFF \
                                 "network_skyview" "Dynon Skyview Network" OFF \
+                                "meshtastic" "Meshtastic Serial" OFF \
                                 "gyro_i2c_bno055" "BNO055 IMU i2c (Pi only)" OFF \
                                 "gyro_i2c_bno055" "2nd BNO055 IMU i2c (Pi only)" OFF \
                                 "gyro_i2c_bno085" "BNO085 IMU i2c (Pi only)" OFF \
                                 "gyro_i2c_bno085" "2nd BNO085 IMU i2c (Pi only)" OFF \
                                 "stratux_wifi" "Stratux WIFI Compatible Device" OFF \
                                 "levil_wifi" "iLevil B.O.M WiFi (UDP)" OFF \
-                                "meshtastic" "Meshtastic Serial" OFF \
                                 "gyro_virtual" "Virtual IMU" OFF \
                                 "gyro_virtual" "2nd Virtual IMU" OFF \
                                 "gyro_joystick" "Joystick vIMU" OFF \
@@ -566,7 +566,7 @@ while $RUN_MENU_AGAIN; do
                                       "7" "Read Serial Dynon Skyview" \
                                       "8" "Read Serial Garmin G3x" \
                                       "9" "Read NMEA GPS data" \
-                                      "10" "Test Stratux and iLevil WiFi connection" \
+                                      "10" "Read GDL90 over WiFi from Dynon, Stratux or iLevil" \
                                       "11" "I2C Test (Pi only)" \
                                       2>&1 1>&3)
                     exit_status=$?
@@ -596,7 +596,7 @@ while $RUN_MENU_AGAIN; do
                             7) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/serial_read.py -s" ;;
                             8) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/serial_read.py -g" ;;
                             9) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/nmea_gps.py -a" ;;
-                            10) FULL_COMMAND="$RUN_PREFIX $TRONVIEW_DIR/util/tests/test_stratux_wifi.sh" ;;
+                            10) FULL_COMMAND="$RUN_PREFIX $TRONVIEW_DIR/util/tests/wifi_read.sh" ;;
                             11) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/tests/i2c_test.py" ;;
                         esac
                         echo "Running: $FULL_COMMAND"

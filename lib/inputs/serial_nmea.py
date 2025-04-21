@@ -69,10 +69,11 @@ class serial_nmea(Input):
         self.EOL = 10
         self.gpsData = GPSData()
         self.navData = NavData()
-        self.targetData = TargetData()
+        #self.targetData = TargetData()
 
         # set the target data data to the first item in the list.
-        self.targetData = shared.Dataship.targetData[0]
+        #if (len(shared.Dataship.targetData) == 0):
+            #self.targetData = shared.Dataship.targetData[0]
 
     def safe_float(self, value, default=0.0):
         """Safely convert a string to float, returning default if empty or invalid."""
@@ -237,8 +238,8 @@ class serial_nmea(Input):
                         self.gpsData.Lon = lon
                         #self.gpsData.Mag_Decl = float(magvar)
                         # set source lat/lon/alt. this is what is used to calculate distance to target.
-                        self.targetData.src_lat = self.gpsData.Lat
-                        self.targetData.src_lon = self.gpsData.Lon
+                        #self.targetData.src_lat = self.gpsData.Lat
+                        #self.targetData.src_lon = self.gpsData.Lon
                         # Handle empty ground speed and true track values
                         self.gpsData.GndSpeed = self.safe_float(gs)
                         self.gpsData.GndTrack = self.safe_float(truetrack)
@@ -290,9 +291,9 @@ class serial_nmea(Input):
                         self.gpsData.SatsTracked = self.safe_int(satnum)
                         # Handle empty altitude value
                         self.gpsData.Alt = int(round(self.safe_float(gpsalt)))
-                        self.targetData.src_lat = self.gpsData.Lat
-                        self.targetData.src_lon = self.gpsData.Lon
-                        self.targetData.src_alt = self.gpsData.Alt
+                        #self.targetData.src_lat = self.gpsData.Lat
+                        #self.targetData.src_lon = self.gpsData.Lon
+                        #self.targetData.src_alt = self.gpsData.Alt
                         if(quality == "1"):
                             self.gpsData.GPSStatus = 2
                             self.gpsData.GPSWAAS = False
@@ -318,8 +319,8 @@ class serial_nmea(Input):
 
                         self.gpsData.Lat = lat
                         self.gpsData.Lon = lon
-                        self.targetData.src_lat = self.gpsData.Lat
-                        self.targetData.src_lon = self.gpsData.Lon
+                        #self.targetData.src_lat = self.gpsData.Lat
+                        #self.targetData.src_lon = self.gpsData.Lon
 
                         if(mode == "D"):
                             self.gpsData.GPSWAAS = True

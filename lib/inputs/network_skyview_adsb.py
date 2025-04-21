@@ -23,7 +23,7 @@ from ..common.dataship.dataship_gps import GPSData
 from ..common.dataship.dataship_air import AirData
 from ..common.dataship.dataship_targets import TargetData, Target
 from ._input import Input
-from ..common import shared
+from lib.common import shared
 from . import _input_file_utils
 
 
@@ -39,6 +39,7 @@ class network_skyview_adsb(Input):
         self.targetData_index = 0
         self.targetData = None
         self.dataship = None
+        self.ownership = False
 
     def initInput(self, num, dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
@@ -73,11 +74,13 @@ class network_skyview_adsb(Input):
 
         # create a empty gps object.
         self.gpsData = GPSData()
-        self.gpsData.name = self.name
-        self.gps_index = len(dataship.gpsData)  # Start at 0
-        self.gpsData.id = "skyview_gps_adsb"
-        print("new skyview gps "+str(self.gps_index)+": "+str(self.gpsData))
+        #self.gpsData.name = self.name
+        #self.gps_index = len(dataship.gpsData)  # Start at 0
+        #self.gpsData.id = "skyview_gps_adsb"
+        #print("new skyview gps "+str(self.gps_index)+": "+str(self.gpsData))
         dataship.gpsData.append(self.gpsData)
+        if len(shared.Dataship.gpsData) > 0:
+            self.gpsData = shared.Dataship.gpsData[0]
 
         # create a empty targets object.
         self.targetData = TargetData()
@@ -225,7 +228,7 @@ class network_skyview_adsb(Input):
                     '''
                     if dataship.debug_mode>0: print("\nGDL 90 Owership message")
                     if(len(msg)==32):
-
+                        self.ownership=True
                         # save gps data coming from traffic source..
                         latLongIncrement = 180.0 / (2**23) # == 0.0000001490116119384765625
                         src_lat = _signed24(msg[6:]) * latLongIncrement
@@ -359,6 +362,12 @@ class network_skyview_adsb(Input):
                     if dataship.debug_mode>0:
                         print("\n   skyview message unkown id:"+str(msg[1])+" "+str(msg[2])+" "+str(msg[3])+" len:"+str(len(msg))+"\n")
                         if dataship.debug_mode>1: print(str(msg))
+            if self.ownership==False:
+                # copy gps data to target source.
+                self.targetData.src_lat = self.gpsData.Lat
+                self.targetData.src_lon = self.gpsData.Lon
+                self.targetData.src_alt = self.gpsData.Alt
+
             return dataship
         
         except ValueError as e :
