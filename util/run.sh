@@ -582,7 +582,10 @@ while $RUN_MENU_AGAIN; do
                                     cp $TRONVIEW_DIR/config_example.cfg $TRONVIEW_DIR/config.cfg
                                fi
                                ;;
-                            3) 
+                            3) FULL_COMMAND="$RUN_PREFIX python3 $TRONVIEW_DIR/util/menu/faa_register.py --download-only"
+                               SKIP_PAUSE=false
+                               ;;
+                            4) 
                                # check if ccze is installed.. if not use just less
                                if command -v ccze &> /dev/null; then
                                     FULL_COMMAND="$RUN_PREFIX cat $TRONVIEW_DIR/data/console_logs/last-console.log | ccze -A | less -R"
