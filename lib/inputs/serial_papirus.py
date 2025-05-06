@@ -65,17 +65,18 @@ class serial_papirus(Input):
         self.msg_bad = 0
         self.nmea_buffer = ""  # Add buffer for NMEA messages
 
+    client_cloud = mqtt.Client()
     print("Waiting 20 seconds to ensure Pi is fully booted")
     sleep(2)  # Wait for bootup to complete
 
 ############  For receiving mqtt messages
-    def on_connect_cloud(client, userdata, flags, rc):
+    def on_connect_cloud(client_cloud, userdata, flags, rc):
         print("Connected to cloud mosquito broker with result code " + str(rc))
         client_cloud.subscribe("1TM")
 
     def on_connect_lcl(client, userdata, flags, rc):
         print("Connected to local mosquito broker with result code " + str(rc))
-        client_lcl.subscribe("1TM")
+        #client_lcl.subscribe("1TM")
 
     def on_message(client, userdata, message):
         nothing = 0                             # do nothing to save time
@@ -97,7 +98,7 @@ class serial_papirus(Input):
     broker_address_cloud = "broker.mqtt.cool"
     print("creating new MQTT Client instances")
 
-    client_cloud = mqtt.Client() #create new instance
+    #client_cloud = mqtt.Client() #create new instance
     client_cloud.on_message = on_message #attach function to callback
     client_cloud.on_connect = on_connect_cloud
     client_cloud.connect(broker_address_cloud, 1883, 60)
