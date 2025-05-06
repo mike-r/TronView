@@ -40,6 +40,28 @@ import paho.mqtt.client as mqtt #import the client
 import sys
 import os
 import socket
+from ._input import Input
+from lib import hud_utils
+from . import _utils
+import struct
+from lib.common.dataship.dataship import Dataship
+from lib.common.dataship.dataship_analog import AnalogData
+
+class serial_skyview(Input):
+    def __init__(self):
+        self.name = "papirus"
+        self.version = 1.0
+        self.inputtype = "serial"
+        self.EOL = 10
+        self.imuData = AnalogData()
+        self.navData = NavData()
+        self.engineData = EngineData()
+        self.fuelData = FuelData()
+        self.gpsData = GPSData()
+        self.airData = AirData()
+        self.msg_unknown = 0
+        self.msg_bad = 0
+        self.nmea_buffer = ""  # Add buffer for NMEA messages
 
 print("Waiting 20 seconds to ensure Pi is fully booted")
 sleep(20)  # Wait for bootup to complete
@@ -96,23 +118,10 @@ client_cloud.publish("1TM", "Message from serial_PaPiRus.py to the Cloud")
 
 #########################################
 
-
-sleep(2)       # Wait for the USB ports to activate
-
-# Define serial link to Dynon HDX via RS-232 USB Adapter
-dynon_serial = serial.Serial(
-    port='/dev/ttyUSB0',
-    baudrate=9600,
-    parity=serial.PARITY_NONE,
-    stopbits=serial.STOPBITS_ONE,
-    bytesize=serial.EIGHTBITS,
-    timeout=1
-)
-
 # Define serial link to PaPaRus display Pi via OTG cable to PiZero
 papirus_serial = serial.Serial(
     baudrate=9600,
-    port=  '/dev/ttyAMA0',
+    port=  '/dev/ttyACM0',
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
@@ -135,9 +144,6 @@ max_print       = 10
 print("Welcome to N221TM's Raspberry Pi", sep=' ', end='\n\n\n')
 print("Starting loop to read data from Dynon HDX:")
 print()
-
-dynon_serial.flushInput()                             # Assume starting in mid stream so clear out the buffer
-dynon_bytes = dynon_serial.read_until(b'\r\n', None)  # Input from HDX will be a byte stream
 
 try:
     gw = os.popen("ip -4 route show default").read().split()
@@ -166,65 +172,11 @@ except Exception as e:
 print("To  Papirus:", papirus_str)
 
 while True:
-    tx_count = tx_count + 1
-    dynon_bytes = dynon_serial.read_until(b'\r\n', None)   # Input from HDX will be a byte stream
-    if loop_count < max_print:  print('dynon_bytes: ', dynon_bytes)
-    try:
-        dynon_str = dynon_bytes.decode("ascii")
-    except ValueError:
-        print("must have received non ascii trash")
-    # Dynon uses ASCII encoding not utf-8.
-
 #    print('Input test string from Dynon:')                  # For Testing take input from console
 #    dynon_str = input()
 
 #    print(dynon_str)
 #    print()
-
-    if dynon_str.startswith('!1'):                          # Dynon Skyview ADAHRS  Data
-        if dynon_str[23:27].isnumeric():
-            IAS = float(dynon_str[23:27]) /10
-            if old_IAS != IAS:                              # Speed changed
-                if loop_count < max_print:  print('IAS:         {0:5.1f}'.format(IAS), 'kts')
-                pub = "IAS," + dynon_str[23:27]
-                client_cloud.publish("1TM", pub)                      # Send to the mqtt cloud
-                client_lcl.publish("1TM", pub)                  # Send to the local mqtt broker
-                old_IAS = IAS
-                update = True
-        else: print('Trash for ,IAS:', dynon_str[23:27])
-    elif dynon_str.startswith('!2'):                          # Dynon Skyview NAV/Autopilot Data
-        pass
-    elif dynon_str.startswith('!3'):                        # Dynon Skkyview EMS  Data
-        if dynon_str[44:47].isnumeric():
-            fuel_remain = float(dynon_str[44:47]) / 10
-            if old_fuel_remain != fuel_remain:
-                if loop_count < max_print:  print('Fuel Remaining:', '{0:4.1f}' .format(fuel_remain))
-                pub = "Fuel," + dynon_str[44:47]
-                client_cloud.publish("1TM", pub)
-                client_lcl.publish("1TM", pub)
-                old_fuel_remain = fuel_remain
-                update = True
-        if dynon_str[142:146].isnumeric():
-            smoke = float(dynon_str[142:146]) /10
-            if old_smoke != smoke:
-                if loop_count < max_print:  print('Smoke Level:     {0:3.1f}'.format(smoke), 'Gallons')
-                pub = "Smoke," + dynon_str[142:146]
-                client_cloud.publish("1TM", pub)
-                client_lcl.publish("1TM", pub)
-                old_smoke = smoke
-                update = True
-        else: print('Trash for Smoke Level:', dynon_str[141:147])  # Includes "+" and "G"
-        if dynon_str[154:158].isnumeric():
-            pub = "Flaps," + dynon_str[154:158]
-            client_lcl.publish("1TM", pub)
-            if old_flap_pos != flap_position:
-                flap_position = int(dynon_str[154:158])
-                if loop_count < max_print:
-                    print('Flaps at:       ', ' {0:,}'.format(flap_position), 'Degrees Down', sep=' ', end='\n\n\n')
-                client_cloud.publish("1TM", pub)
-                old_flap_pos = flap_position
-                update = True
-        else:  print('Flaps:         ', dynon_str[153:158])
         if dynon_str[57:62].isnumeric():
             hobbs = float(dynon_str[57:62]) /10
             if old_hobbs != hobbs:
@@ -252,10 +204,6 @@ while True:
 #        client_lcl.loop_stop()  #stop the loop
 
 #	##############################################################
-
-    else:
-        print('Unexpected data from Dynon:', dynon_str, sep=' ', end='\n\n\n')
-        update = False
 
 # Build text string to send to PaPiRus display pi
     if update or tx_count > 10:
