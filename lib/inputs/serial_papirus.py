@@ -70,11 +70,9 @@ class serial_papirus(Input):
     sleep(2)  # Wait for bootup to complete
 
 ############  For receiving mqtt messages
-    def on_connect_cloud(client_cloud, userdata, flags, rc):
+    def on_connect_cloud(client, userdata, flags, rc):
         print("Connected to cloud mosquito broker with result code " + str(rc))
-        sleep(2)
-        print("Subscribing to topic 1TM")
-        client_cloud.subscribe("1TM")
+        print("client: ", client)
 
     def on_connect_lcl(client, userdata, flags, rc):
         print("Connected to local mosquito broker with result code " + str(rc))
@@ -159,6 +157,9 @@ class serial_papirus(Input):
         print ("IP:", ipaddr, " GW:", gateway, " Host:", host)
     except:
         print("Error: Unable to get IP address")
+        
+    print("Subscribing to topic 1TM")
+    client_cloud.subscribe("1TM")
 
     pub = "Host, " + host + "  IP Address, " + ipaddr
     client_cloud.publish("1TM", pub)
