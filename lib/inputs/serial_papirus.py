@@ -72,7 +72,6 @@ class serial_papirus(Input):
 ############  For receiving mqtt messages
     def on_connect_cloud(client, userdata, flags, rc):
         print("Connected to cloud mosquito broker with result code " + str(rc))
-        print("client: ", client)
 
     def on_message(client, userdata, message):
         nothing = 0                             # do nothing to save time
@@ -98,8 +97,6 @@ class serial_papirus(Input):
 
     print()
     sleep(2)
-
-    client_cloud.publish("1TM", "Message from serial_PaPiRus.py to the Cloud")
 
 #########################################
 
@@ -141,22 +138,32 @@ class serial_papirus(Input):
     except:
         print("Error: Unable to get IP address")
 
+    if client_cloud.is_connected() == False:
+        sleep(5)
     print("Subscribing to topic 1TM")
     client_cloud.subscribe("1TM")
-
     pub = "Host, " + host + "  IP Address, " + ipaddr
-    client_cloud.publish("1TM", pub)
+    try:
+        client_cloud.publish("1TM", "Message from serial_PaPiRus.py to the Cloud")
+        client_cloud.publish("1TM", pub)
+    except Exception as e:
+        print(e)
+        print("Unexpected error in publish to cloud: ", e)
 
 #  Send one dummy message to PaPiRus display pi to signal that comms are OK
 #  and to test the serial link
     papirus_str = "!41" + "+0231G" + "13590" + "312" + '\r\n'
     papirus_bytes = papirus_str.encode()
-    try:
-        papirus_serial.write(papirus_bytes)         # Send data to PaPiRus
-    except Exception as e:
-        print(e)
-        print("Unexpected error in write to PaPiRus: ", e)
-    print("To  Papirus:", papirus_str)
+
+    while True:
+        try:
+            papirus_serial.write(papirus_bytes)         # Send data to PaPiRus
+        except Exception as e:
+            print(e)
+            print("Unexpected error in write to PaPiRus: ", e)
+        print("To  Papirus:", papirus_str)
+        sleep(5)
+        print("Dummy message sent to PaPiRus display")
 
     sys.exit(0)  # Exit the program after sending the dummy message
     #  ##############################################################
