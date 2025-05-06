@@ -36,7 +36,6 @@ if isRunningOnMac == True:
 # Fork of modification is from: https://github.com/kiddigital/automation-hat
 
 import automationhat
-import paho.mqtt.client as mqtt
 
 
 ###  sleep(20)    # Wait for boot-up to complete
@@ -80,7 +79,7 @@ class automationhat(Input):
         else:
             self.isPlaybackMode = False
 
-        self.adc = Adafruit_ADS1x15.ADS1115()
+        #self.adc = Adafruit_ADS1x15.ADS1115()
 
         dataship.analog.Name = "automation_hat"
         self.Amplify = 6.144/32767
@@ -95,11 +94,6 @@ class automationhat(Input):
 
     def closeInput(self,dataship: Dataship):
         print("automation_hat close")
-
-
-
-
-
 
 # Set Automation Hat inputs HIGH.
 automationhat.input.one.resistor(automationhat.PULL_UP)
@@ -159,7 +153,6 @@ deadman_time = 0
 
 def on_connect(client, userdata, flags, rc):
     print("Connected to local mosquito broker with result code " + str(rc))
-    client_lcl.subscribe("1TM")
 
 def on_message(client, userdata, msg):
     print("Message from mqtt: " + str(msg.payload.decode()))
@@ -197,13 +190,8 @@ def on_disconnect(client, userdata, rc):
 
 # timer = Timer(1, timer_callback, timer_callback_args=(1))
 
-client_lcl = mqtt.Client()
-client_lcl.on_connect = on_connect
-client_lcl.on_disconnect = on_disconnect
-client_lcl.on_message = on_message
-client_lcl.connect("localhost", 1883, 60)
+
 print("Starting Loop")
-client_lcl.loop_start() #start the loop
 
 mqtt_data[3] = False
 mqtt_data[4] = time()       # Start deadman timer
@@ -224,7 +212,6 @@ while True:
         if loop_count < max_print:  print('Smoke Level:     {0:3.1f}'.format(smoke_gal), 'Gallons')
         pub = 'Smoke,  {0:3.1f}'.format(smoke_gal)
 #        client_cloud.publish("1TM", pub)
-        client_lcl.publish("1TM", pub)
         old_smoke = smoke_gal_int
 
 
