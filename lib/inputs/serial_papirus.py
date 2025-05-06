@@ -74,10 +74,6 @@ class serial_papirus(Input):
         print("Connected to cloud mosquito broker with result code " + str(rc))
         print("client: ", client)
 
-    def on_connect_lcl(client, userdata, flags, rc):
-        print("Connected to local mosquito broker with result code " + str(rc))
-        #client_lcl.subscribe("1TM")
-
     def on_message(client, userdata, message):
         nothing = 0                             # do nothing to save time
         print("message received: " ,str(message.payload.decode("utf-8")))
@@ -85,16 +81,11 @@ class serial_papirus(Input):
         print("message qos=",message.qos)
         print("message retain flag=",message.retain)
 
-    def on_disconnect_lcl(client, userdata, rc):
-        if rc != 0:
-            print(client, " Unexpected disconnection from local mosquito broker.")
-
     def on_disconnect_cloud(client, userdata, rc):
         if rc != 0:
             print(client, " Unexpected disconnection from cloud mosquito broker.")
 
 ########################################
-    broker_address_lcl   = "localhost"
     broker_address_cloud = "broker.mqtt.cool"
     print("creating new MQTT Client instances")
 
@@ -105,17 +96,9 @@ class serial_papirus(Input):
     client_cloud.loop_start() #start the loop
     client_cloud.on_disconnect = on_disconnect_cloud
 
-    client_lcl = mqtt.Client()
-    client_lcl.on_message = on_message #attach function to callback
-    #client_lcl.connect(broker_address_lcl,  1883, 60)
-    client_lcl.loop_start() #start the loop
-    client_lcl.on_connect = on_connect_lcl
-    client_lcl.on_disconnect = on_disconnect_lcl
-
     print()
     sleep(2)
 
-    #client_lcl.publish("1TM", "Message from serial_PaPiRus.py to Local Host")
     client_cloud.publish("1TM", "Message from serial_PaPiRus.py to the Cloud")
 
 #########################################
@@ -157,13 +140,12 @@ class serial_papirus(Input):
         print ("IP:", ipaddr, " GW:", gateway, " Host:", host)
     except:
         print("Error: Unable to get IP address")
-        
+
     print("Subscribing to topic 1TM")
     client_cloud.subscribe("1TM")
 
     pub = "Host, " + host + "  IP Address, " + ipaddr
     client_cloud.publish("1TM", pub)
-    #client_lcl.publish("1TM", pub)
 
 #  Send one dummy message to PaPiRus display pi to signal that comms are OK
 #  and to test the serial link
@@ -193,25 +175,10 @@ class serial_papirus(Input):
                 if loop_count < max_print:  print('Hobbs:         {0:6.1f}' .format(hobbs), 'Hours')
                 pub= "Hobbs," +  dynon_str[57:62]
                 client_cloud.publish("1TM", pub)
-                #client_lcl.publish("1TM", pub)
                 old_hobbs = hobbs
                 update = True
         else: print('Trash for Hobbs:', dynon_str[57:62])
         if loop_count < max_print:  print()
-
-#  ##############################################################
-#        client.will_set("1TM", "Disconnected without calling disconnect")
-#        client_cloud.on_disconnect = on_disconnect
-#        client_cloud.loop_start() #start the loop
-#        time.sleep(1)      # wait
-#        client_cloud.loop_stop()  #stop the loop
-
-#        client_lcl.on_disconnect = on_disconnect
-#        client_lcl.loop_start() #start the loop
-#        time.sleep(1)      # wait
-#        client_lcl.loop_stop()  #stop the loop
-
-#	##############################################################
 
 # Build text string to send to PaPiRus display pi
         if update or tx_count > 10:
@@ -230,7 +197,6 @@ class serial_papirus(Input):
             update = False
         tx_count = 0
         loop_count = loop_count + 1
-    #client_lcl.loop_stop()    #stop the loop
     client_cloud.loop_stop()  #stop the loop
     sleep(1)
 
