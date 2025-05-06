@@ -66,7 +66,7 @@ class serial_papirus(Input):
         self.nmea_buffer = ""  # Add buffer for NMEA messages
 
     print("Waiting 20 seconds to ensure Pi is fully booted")
-    sleep(20)  # Wait for bootup to complete
+    sleep(2)  # Wait for bootup to complete
 
 ############  For receiving mqtt messages
     def on_connect_cloud(client, userdata, flags, rc):
@@ -106,7 +106,7 @@ class serial_papirus(Input):
 
     client_lcl = mqtt.Client()
     client_lcl.on_message = on_message #attach function to callback
-    client_lcl.connect(broker_address_lcl,  1883, 60)
+    #client_lcl.connect(broker_address_lcl,  1883, 60)
     client_lcl.loop_start() #start the loop
     client_lcl.on_connect = on_connect_lcl
     client_lcl.on_disconnect = on_disconnect_lcl
@@ -114,7 +114,7 @@ class serial_papirus(Input):
     print()
     sleep(2)
 
-    client_lcl.publish("1TM", "Message from serial_PaPiRus.py to Local Host")
+    #client_lcl.publish("1TM", "Message from serial_PaPiRus.py to Local Host")
     client_cloud.publish("1TM", "Message from serial_PaPiRus.py to the Cloud")
 
 #########################################
@@ -159,7 +159,7 @@ class serial_papirus(Input):
 
     pub = "Host, " + host + "  IP Address, " + ipaddr
     client_cloud.publish("1TM", pub)
-    client_lcl.publish("1TM", pub)
+    #client_lcl.publish("1TM", pub)
 
 #  Send one dummy message to PaPiRus display pi to signal that comms are OK
 #  and to test the serial link
@@ -176,7 +176,7 @@ class serial_papirus(Input):
     #  ##############################################################
     #  ##############################################################
 
-    
+
     while True:
         print('Input test string from Dynon:')                  # For Testing take input from console
         dynon_str = input()
@@ -189,7 +189,7 @@ class serial_papirus(Input):
                 if loop_count < max_print:  print('Hobbs:         {0:6.1f}' .format(hobbs), 'Hours')
                 pub= "Hobbs," +  dynon_str[57:62]
                 client_cloud.publish("1TM", pub)
-                client_lcl.publish("1TM", pub)
+                #client_lcl.publish("1TM", pub)
                 old_hobbs = hobbs
                 update = True
         else: print('Trash for Hobbs:', dynon_str[57:62])
@@ -226,7 +226,7 @@ class serial_papirus(Input):
             update = False
         tx_count = 0
         loop_count = loop_count + 1
-    client_lcl.loop_stop()    #stop the loop
+    #client_lcl.loop_stop()    #stop the loop
     client_cloud.loop_stop()  #stop the loop
     sleep(1)
 
