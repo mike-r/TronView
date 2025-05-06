@@ -72,6 +72,8 @@ class serial_papirus(Input):
 ############  For receiving mqtt messages
     def on_connect_cloud(client_cloud, userdata, flags, rc):
         print("Connected to cloud mosquito broker with result code " + str(rc))
+        sleep(2)
+        print("Subscribing to topic 1TM")
         client_cloud.subscribe("1TM")
 
     def on_connect_lcl(client, userdata, flags, rc):
