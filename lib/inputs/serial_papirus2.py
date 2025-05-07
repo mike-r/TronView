@@ -135,14 +135,15 @@ class serial_papirus2(Module):
             x = 0
             while x != ord('!') and x != ord('$'):  # Look for !  or $ start characters
                 t = self.ser.read(1)
+                print("Len(t) = ", len(t))
                 if len(t) != 0:
                     x = ord(t)
                 else:
                     if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
                         self.ser.seek(0)
                     return dataship
-        except serial.SerialException as e:
-            print("Serial exception: ", e)
+        except:
+            print("Serial exception: ", sys.exc_info()[0])
             return dataship 
 
 #  Version 1.0 testing
