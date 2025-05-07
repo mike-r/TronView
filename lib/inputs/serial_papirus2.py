@@ -135,45 +135,47 @@ class serial_papirus2(Module):
     def readMessage(self, dataship: Dataship):
         if dataship.errorFoundNeedToExit:
             return dataship
-        try:
             # Read until we find a message start character ($ or !)
-            x = 0
-            while x != ord('!') and x != ord('$'):  # Look for !  or $ start characters
-                t = self.ser.read(1)
-                print("Len(t) = ", len(t))
-                print("TargetData: src_alt = ", self.targetData.src_alt)
-                print("TargetData: src_gps = ", self.targetData.src_gps)
-                print("TargetData: Src_alt Type = ", type(self.targetData.src_alt))
-                sleep(3)
-        except:
-            print("Serial Read exception: ", sys.exc_info()[0])
-# Build text string to send to PaPiRus display pi
-        if self.update or self.tx_count > 10:
-            if self.targetData.src_alt != None:
-                hobbs_str = self.targetData.src_alt
-            else:
-                hobbs_str = "10234"
-            smoke_str = "+0234G"      #   "+nnnnG"
-            fuel_remain_str = "678"
-            papirus_str = '!41' + smoke_str + hobbs_str + fuel_remain_str + '\r\n'
-            if self.loop_count < 10:  print("To  Papirus:", papirus_str)
-            papirus_bytes = papirus_str.encode()
-            print(papirus_bytes)
+        x = 0
+        while x != ord('!') and x != ord('$'):  # Look for !  or $ start characters
             try:
-                self.ser.write(papirus_bytes)         # Send data to PaPiRus
-            except Exception as e:
-                print(e)
-                print("Unexpected error in write to PaPiRus: ", e)
-            #self.update = False
-        self.tx_count = 0
-        self.loop_count = self.loop_count + 1
+                t = self.ser.read(1)
+            except:
+                print("Serial Read exception: ", sys.exc_info()[0])
+        
+            print("Len(t) = ", len(t))
+            print("TargetData: src_alt = ", self.targetData.src_alt)
+            print("TargetData: src_gps = ", self.targetData.src_gps)
+            print("TargetData: Src_alt Type = ", type(self.targetData.src_alt))
+            sleep(5)
 
-        if len(t) != 0:
-            x = ord(t)
-        else:
-            if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
-                self.ser.seek(0)
-            return dataship
+# Build text string to send to PaPiRus display pi
+            if self.update or self.tx_count > 10:
+                if self.targetData.src_alt != None:
+                    hobbs_str = self.targetData.src_alt
+                else:
+                    hobbs_str = "10234"
+                smoke_str = "+0234G"      #   "+nnnnG"
+                fuel_remain_str = "678"
+                papirus_str = '!41' + smoke_str + hobbs_str + fuel_remain_str + '\r\n'
+                if self.loop_count < 10:  print("To  Papirus:", papirus_str)
+                papirus_bytes = papirus_str.encode()
+                print(papirus_bytes)
+                try:
+                    self.ser.write(papirus_bytes)         # Send data to PaPiRus
+                except Exception as e:
+                    print(e)
+                    print("Unexpected error in write to PaPiRus: ", e)
+                #self.update = False
+            self.tx_count = 20
+            self.loop_count = self.loop_count + 1
+
+            if len(t) != 0:
+                x = ord(t)
+            else:
+                if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
+                    self.ser.seek(0)
+                return dataship
 
         return dataship 
 
