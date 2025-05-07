@@ -94,7 +94,7 @@ class automationHat(Module):
 
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
-        self.initMqtt(self,dataship)
+        self.initMqtt(dataship)
         if(self.PlayFile!=None and self.PlayFile!=False):
             pass
         else:
@@ -123,7 +123,7 @@ class automationHat(Module):
         if len(shared.Dataship.imuData) > 0:
             self.imuData = shared.Dataship.imuData[0]
 
-    def initMqtt(self,dataship: Dataship):
+    def initMqtt(self, dataship: Dataship):
         # Initialize MQTT client
         print("Initializing MQTT client...")
         self.mqtt_client_cloud = mqtt.Client()
