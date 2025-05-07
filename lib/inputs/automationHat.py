@@ -159,12 +159,12 @@ class automationHat(Module):
                 print("Serial Read exception: ", sys.exc_info()[0])
             if dataship.debug_mode>0:
                 print("Len(t) = ", len(t))
-                print("TargetData: src_alt = ", self.targetData.src_alt)
+                print("AirData: IAS = ", self.airData.IAS)
                 print("TargetData: src_gps = ", self.targetData.src_gps)
                 sleep(2)
 
 # Build text string to send to PaPiRus display pi
-            if self.update or self.tx_count > 10:
+            if self.tx_count > 10:
                 if self.airData.IAS != None:
                     if self.airData.IAS != self.old_IAS:
                         self.old_IAS = self.airData.IAS
