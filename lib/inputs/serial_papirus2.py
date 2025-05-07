@@ -152,7 +152,8 @@ class serial_papirus2(Module):
 # Build text string to send to PaPiRus display pi
             if self.update or self.tx_count > 10:
                 if self.targetData.src_alt != None:
-                    hobbs_str = str(self.targetData.src_alt)
+                    targetData_str = str(self.targetData.src_alt)
+                    hobbs_str = targetData_str.zfill(5)  # Pad with leading zeros to 5 digits
                     print("hobbs_str = ", hobbs_str)
                 else:
                     hobbs_str = "10234"
