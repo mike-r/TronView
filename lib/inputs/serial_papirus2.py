@@ -67,7 +67,7 @@ class serial_papirus2(Module):
         self.icon_scale = hud_utils.readConfigInt("TrafficScope", "icon_scale", 10)
         self.details_offset = hud_utils.readConfigInt("TrafficScope", "details_offset", 5)
         self.targetDetails = {} # keep track of details about each target. like the x,y position on the screen. and if they are selected.
-        self.update = False
+        self.update = True
         self.tx_count = 0
 
         # Add smoothing configuration
@@ -146,7 +146,7 @@ class serial_papirus2(Module):
         except:
             print("Serial Read exception: ", sys.exc_info()[0])
 # Build text string to send to PaPiRus display pi
-        if update or tx_count > 10:
+        if self.update or self.tx_count > 10:
             if self.targetData.src_alt != None:
                 hobbs_str = self.targetData.src_alt
             else:
@@ -154,7 +154,7 @@ class serial_papirus2(Module):
             smoke_str = "+0234G"      #   "+nnnnG"
             fuel_remain_str = "678"
             papirus_str = '!41' + smoke_str + hobbs_str + fuel_remain_str + '\r\n'
-            if loop_count < 10:  print("To  Papirus:", papirus_str)
+            if self.loop_count < 10:  print("To  Papirus:", papirus_str)
             papirus_bytes = papirus_str.encode()
             print(papirus_bytes)
             try:
@@ -162,9 +162,9 @@ class serial_papirus2(Module):
             except Exception as e:
                 print(e)
                 print("Unexpected error in write to PaPiRus: ", e)
-            update = False
-        tx_count = 0
-        loop_count = loop_count + 1
+            #self.update = False
+        self.tx_count = 0
+        self.loop_count = self.loop_count + 1
 
         if len(t) != 0:
             x = ord(t)
