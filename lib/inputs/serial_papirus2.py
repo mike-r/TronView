@@ -53,7 +53,7 @@ import time
 from lib.common import shared
 
 
-class serialPaPiRus(Module):
+class serial_papirus2(Module):
     # called only when object is first created.
     def __init__(self):
         Module.__init__(self)
@@ -93,7 +93,7 @@ class serialPaPiRus(Module):
             pass
         else:
             #self.efis_data_format = hud_utils.readConfig(self.name, "format", "none")
-            self.efis_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyS0")
+            self.efis_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyUSB0")
             self.efis_data_baudrate = hud_utils.readConfigInt(
                 self.name, "baudrate", 9600
             )
@@ -131,5 +131,12 @@ class serialPaPiRus(Module):
 
         print("TargetData: src_alt = ", self.targetData.src_alt)
         print("TargetData: src_gps = ", self.targetData.src_gps)
+
+    # close this data input 
+    def closeInput(self,dataship: Dataship):
+        if self.isPlaybackMode:
+            self.ser.close()
+        else:
+            self.ser.close()
 
     print("Did it work?")
