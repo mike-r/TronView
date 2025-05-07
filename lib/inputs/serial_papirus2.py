@@ -152,7 +152,8 @@ class serial_papirus2(Module):
 # Build text string to send to PaPiRus display pi
             if self.update or self.tx_count > 10:
                 if self.targetData.src_alt != None:
-                    hobbs_str = self.targetData.src_alt
+                    hobbs_str = str(self.targetData.src_alt)
+                    print("hobbs_str = ", hobbs_str)
                 else:
                     hobbs_str = "10234"
                 smoke_str = "+0234G"      #   "+nnnnG"
