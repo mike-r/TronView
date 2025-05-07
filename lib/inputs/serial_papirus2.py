@@ -34,6 +34,7 @@ import paho.mqtt.client as mqtt #import the client
 import sys
 import os
 import socket
+from ._input import Input
 from lib.modules._module import Module
 from lib import hud_graphics
 from lib import hud_utils
@@ -65,7 +66,6 @@ class serialPaPiRus(Module):
         self.draw_icon = hud_utils.readConfigBool("TrafficScope", "draw_icon", True)
         self.icon_scale = hud_utils.readConfigInt("TrafficScope", "icon_scale", 10)
         self.details_offset = hud_utils.readConfigInt("TrafficScope", "details_offset", 5)
-
         self.targetDetails = {} # keep track of details about each target. like the x,y position on the screen. and if they are selected.
 
         # Add smoothing configuration
@@ -85,7 +85,37 @@ class serialPaPiRus(Module):
         self.airData = AirData()
         self.selectedTarget = None
         self.selectedTargetID = None
-        self.setScaleInMiles()
+
+    def initInput(self,num,dataship: Dataship):
+        Input.initInput( self,num, dataship )  # call parent init Input.
+        
+        if(self.PlayFile!=None and self.PlayFile!=False):
+            pass
+        else:
+            #self.efis_data_format = hud_utils.readConfig(self.name, "format", "none")
+            self.efis_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyS0")
+            self.efis_data_baudrate = hud_utils.readConfigInt(
+                self.name, "baudrate", 9600
+            )
+
+            # open serial connection.
+            self.ser = serial.Serial(
+                port=self.efis_data_port,
+                baudrate=self.efis_data_baudrate,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE,
+                bytesize=serial.EIGHTBITS,
+                timeout=1
+            )
+
+        # create a empty imu object.
+        self.imuData = IMUData()
+        self.imuData.name = "stratux_papirus_imu"
+        self.imu_index = len(dataship.imuData)  # Start at 0
+        self.imuData.id = "stratux_papirus_imu"+str(self.imu_index)
+        dataship.imuData.append(self.imuData)
+        self.last_read_time = time.time()
+
 
         # set the target data and gps data to the first item in the list.
         if len(shared.Dataship.targetData) > 0:
@@ -97,9 +127,9 @@ class serialPaPiRus(Module):
 
 
 #  Version 1.0 testing
-print("serial_PaPiRus.py Version 1.0.Testing")
+        print("serial_PaPiRus.py Version 1.0.Testing")
 
-print("TargetData: src_alt = ", TargetData.src_alt)
-print("TargetData: src_gps = ", TargetData.src_gps)
+        print("TargetData: src_alt = ", self.targetData.src_alt)
+        print("TargetData: src_gps = ", self.targetData.src_gps)
 
-print("Did it work?")
+    print("Did it work?")
