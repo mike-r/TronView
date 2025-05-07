@@ -69,6 +69,8 @@ class serial_papirus2(Module):
         self.targetDetails = {} # keep track of details about each target. like the x,y position on the screen. and if they are selected.
         self.update = True
         self.tx_count = 0
+        self.loop_count = 0
+        self.isPlaybackMode = False
 
         # Add smoothing configuration
         self.enable_smoothing = hud_utils.readConfigBool("TrafficScope", "enable_smoothing", True)
