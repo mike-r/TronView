@@ -67,6 +67,8 @@ class serial_papirus2(Module):
         self.icon_scale = hud_utils.readConfigInt("TrafficScope", "icon_scale", 10)
         self.details_offset = hud_utils.readConfigInt("TrafficScope", "details_offset", 5)
         self.targetDetails = {} # keep track of details about each target. like the x,y position on the screen. and if they are selected.
+        self.update = False
+        self.tx_count = 0
 
         # Add smoothing configuration
         self.enable_smoothing = hud_utils.readConfigBool("TrafficScope", "enable_smoothing", True)
@@ -105,7 +107,8 @@ class serial_papirus2(Module):
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
                 bytesize=serial.EIGHTBITS,
-                timeout=3
+                timeout=3,
+                write_timeout=0
             )
 
         # create a empty imu object.
@@ -138,22 +141,49 @@ class serial_papirus2(Module):
                 print("Len(t) = ", len(t))
                 print("TargetData: src_alt = ", self.targetData.src_alt)
                 print("TargetData: src_gps = ", self.targetData.src_gps)
+                print("TargetData: Src_alt Type = ", type(self.targetData.src_alt))
                 sleep(3)
-                if len(t) != 0:
-                    x = ord(t)
-                else:
-                    if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
-                        self.ser.seek(0)
-                    return dataship
         except:
-            print("Serial exception: ", sys.exc_info()[0])
-            return dataship 
+            print("Serial Read exception: ", sys.exc_info()[0])
+# Build text string to send to PaPiRus display pi
+        if update or tx_count > 10:
+            if self.targetData.src_alt != None:
+                hobbs_str = self.targetData.src_alt
+            else:
+                hobbs_str = "10234"
+            smoke_str = "+0234G"      #   "+nnnnG"
+            fuel_remain_str = "678"
+            papirus_str = '!41' + smoke_str + hobbs_str + fuel_remain_str + '\r\n'
+            if loop_count < 10:  print("To  Papirus:", papirus_str)
+            papirus_bytes = papirus_str.encode()
+            print(papirus_bytes)
+            try:
+                self.ser.write(papirus_bytes)         # Send data to PaPiRus
+            except Exception as e:
+                print(e)
+                print("Unexpected error in write to PaPiRus: ", e)
+            update = False
+        tx_count = 0
+        loop_count = loop_count + 1
+
+        if len(t) != 0:
+            x = ord(t)
+        else:
+            if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
+                self.ser.seek(0)
+            return dataship
+
+        return dataship 
 
 #  Version 1.0 testing
         print("serial_PaPiRus.py Version 1.0.Testing")
 
         print("TargetData: src_alt = ", self.targetData.src_alt)
         print("TargetData: src_gps = ", self.targetData.src_gps)
+
+
+
+
 
     # close this data input 
     def closeInput(self,dataship: Dataship):
