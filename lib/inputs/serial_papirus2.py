@@ -57,7 +57,7 @@ class serial_papirus2(Module):
     # called only when object is first created.
     def __init__(self):
         Module.__init__(self)
-        self.name = "Serial_PaPiRus"  # set name
+        self.name = "Serial_PaPiRus2"  # set name
         self.show_callsign = False
         self.show_details = False
         self.scope_scale = 0
@@ -105,7 +105,7 @@ class serial_papirus2(Module):
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
                 bytesize=serial.EIGHTBITS,
-                timeout=1
+                timeout=3
             )
 
         # create a empty imu object.
@@ -136,6 +136,9 @@ class serial_papirus2(Module):
             while x != ord('!') and x != ord('$'):  # Look for !  or $ start characters
                 t = self.ser.read(1)
                 print("Len(t) = ", len(t))
+                print("TargetData: src_alt = ", self.targetData.src_alt)
+                print("TargetData: src_gps = ", self.targetData.src_gps)
+                sleep(3)
                 if len(t) != 0:
                     x = ord(t)
                 else:
