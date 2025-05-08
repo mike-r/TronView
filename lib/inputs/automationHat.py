@@ -117,7 +117,7 @@ class automationHat(Module):
                 timeout=3,
                 write_timeout=0
             )
-            self.ser.write("This is a test".encode())
+            self.ser.write("\r\nThis is a test\r\n".encode())
             print("Serial port opened: ", self.efis_data_port)
 
 
@@ -165,6 +165,8 @@ class automationHat(Module):
             return dataship
             # Read until we find a message start character (!)
         x = 0
+        pub = "Starting to read serial data"
+        self.mqtt_client_cloud.publish("1TM", pub) 
         while x != ord('!'):  # Look for "!" start character
             try:
                 pass
