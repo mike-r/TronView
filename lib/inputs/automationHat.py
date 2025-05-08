@@ -68,7 +68,6 @@ class automationHat(Module):
         self.show_details = False
         self.targetDetails = {} # keep track of details about each target.
         self.update = True
-        self.tx_count = 0
         self.loop_count = 0
         self.isPlaybackMode = False
         self.old_src_alt = -100
@@ -102,27 +101,30 @@ class automationHat(Module):
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
         self.initMqtt(dataship)
+        self.initAutomationHat(dataship)
         if(self.PlayFile!=None and self.PlayFile!=False):
             pass
         else:
-            #self.efis_data_format = hud_utils.readConfig(self.name, "format", "none")
-            self.efis_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyUSB0")
-            self.efis_data_baudrate = hud_utils.readConfigInt(
+            self.papirus_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyUSB0")
+            self.papirus_data_baudrate = hud_utils.readConfigInt(
                 self.name, "baudrate", 9600
             )
 
             # open serial connection.
-            self.ser = serial.Serial(
-                port=self.efis_data_port,
-                baudrate=self.efis_data_baudrate,
+            try:
+                self.ser = serial.Serial(
+                port=self.papirus_data_port,
+                baudrate=self.papirus_data_baudrate,
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
                 bytesize=serial.EIGHTBITS,
                 timeout=3,
                 write_timeout=0
-            )
-            self.ser.write("\r\nThis is a test\r\n".encode())
-            print("Serial port opened: ", self.efis_data_port)
+                )
+                self.ser.write("\r\nFrom AutomationHat\r\n".encode())
+                print("Serial port opened: ", self.papirus_data_port)
+            except serial.SerialException as e:
+                print("Error opening serial port: ", e)
 
 
         # set the target data and gps data to the first item in the list.
@@ -143,13 +145,39 @@ class automationHat(Module):
     def initMqtt(self, dataship: Dataship):
         # Initialize MQTT client
         print("Initializing MQTT client...")
-        self.mqtt_client_cloud = mqtt.Client()
-        self.mqtt_client_cloud.on_connect = self.on_connect
-        self.mqtt_client_cloud.on_message = self.on_message
+        try:
+            self.mqtt_client_cloud = mqtt.Client()
+            self.mqtt_client_cloud.on_connect = self.on_connect
+            self.mqtt_client_cloud.on_message = self.on_message
+            self.mqtt_client_cloud.connect(self.mqtt_broker_address_cloud, 1883, 60)
+            self.mqtt_client_cloud.loop_start()
+        except Exception as e:
+            print("Error initializing MQTT client: ", e)
 
-        # Connect to the MQTT broker
-        self.mqtt_client_cloud.connect(self.mqtt_broker_address_cloud, 1883, 60)
-        self.mqtt_client_cloud.loop_start()
+    def initAutomationHat(self, dataship: Dataship):
+        # Initialize Automation Hat
+        print("Initializing Automation Hat...")
+        try:
+            # Set up Automation Hat inputs and outputs
+            automationhat.light.power.write(1)
+            automationhat.digital.write(1, 0)  # Set output 1 to low
+            automationhat.digital.write(2, 0)  # Set output 2 to low
+            automationhat.digital.write(3, 0)  # Set output 3 to low
+            automationhat.analog.read(1)       # Read from analog input 1
+        # Set Automation Hat inputs HIGH.
+            automationhat.input.one.resistor(automationhat.PULL_UP)
+            automationhat.input.two.resistor(automationhat.PULL_UP)
+            automationhat.input.three.resistor(automationhat.PULL_UP)
+        # Startup with all relays turned off.
+            automationhat.relay.one.off()
+            automationhat.relay.two.off()
+            automationhat.relay.three.off()
+
+            print("Automation Hat initialized successfully.")
+        except Exception as e:
+            print("Error initializing Automation Hat: ", e)
+
+    #############################################
 
     def on_connect(self, client, userdata, flags, rc):
         print("mqtt client connected with result code " + str(rc))
@@ -168,66 +196,55 @@ class automationHat(Module):
         if dataship.errorFoundNeedToExit:
             print("Error found, exiting readMessage")
             return dataship
-            # Read until we find a message start character (!)
-        x = 0
-        pub = "Starting to read serial data, loop_count: " + str(self.loop_count)
-        self.mqtt_client_cloud.publish("1TM", pub) 
-        while x != ord('!'):  # Look for "!" start character
-            if dataship.errorFoundNeedToExit:
-                return dataship
-            if dataship.debug_mode==0:
-                print("AirData: IAS = ", self.airData.IAS)
-                print("EngineData: OilPress = ", self.engineData.OilPress)
-                print("FuelData: FuelRemaining = ", self.fuelData.FuelRemain)
-                print("EngineData: FuelFlow = ", self.engineData.FuelFlow)
-                print("FuelData: FuelLevel Left Tank = ", self.fuelData.FuelLevels[0])
-            sleep(2)
+
+        if self.loop_count < 3:
+            pub = "readMessage method, loop_count: " + str(self.loop_count)
+            self.mqtt_client_cloud.publish("1TM", pub)
 
 # Build text string to send to PaPiRus display pi
-            self.tx_count = 0
-            if self.tx_count < 10:
-                if self.airData.IAS != None:
-                    self.update = False
-                    if self.airData.IAS != self.old_IAS:
-                        self.old_IAS = self.airData.IAS
-                        self.update = True
-                if self.engineData.OilPress != None:
-                    if self.engineData.OilPress != self.old_OilPress:
-                        self.old_OilPress = self.engineData.OilPress
-                        self.update = True
-                if self.fuelData.FuelRemain != None:
-                    new_FuelRemain = self.fuelData.FuelRemain / 10.0
-                    if new_FuelRemain != self.old_FuelRemain:
-                        self.old_FuelRemain = new_FuelRemain
-                        self.update = True
-                    new_FuelLevel = self.fuelData.FuelLevels[0] / 10.0
-                    if new_FuelLevel != self.old_FuelLevel:
-                        self.old_FuelLevel = new_FuelLevel
-                        self.update = True
-                    if self.update:
-                        self.airData_IAS_str = str(self.airData.IAS).zfill(5)
-                        self.engineData_OilPress_str = str(self.engineData.OilPress).zfill(3)
-                        self.fuelData_FuelRemain_str = str(self.fuelData.FuelRemain).zfill(4)
-                        self.fuelData_FuelLevel_str = str(self.fuelData.FuelLevels[0]).zfill(3)
-                        # Build the string to send to the display
-                    if dataship.debug_mode==0:
-                        print("airData_IAS_str = ", self.airData_IAS_str)
-                        print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
-                        print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
-                        print("engineData_OilPress_str = ", self.engineData_OilPress_str)
-                    papirus_str = '!41' + self.airData_IAS_str + self.engineData_OilPress_str + self.fuelData_FuelRemain_str + '\r\n'
-                    papirus_bytes = papirus_str.encode()
-                    print(papirus_bytes)
-                    try:
-                        self.ser.write(papirus_bytes)         # Send data to PaPiRus
-                    except Exception as e:
-                        print(e)
-                        print("Unexpected error in write to PaPiRus: ", e)
-                else:
-                    pass
-                    #print("No change in data to send to PaPiRus")
-            x = ord('!')
-            self.tx_count = 20
+
+        if self.airData.IAS != None:
+            self.update = False
+            if self.airData.IAS != self.old_IAS:
+                self.old_IAS = self.airData.IAS
+                self.update = True
+        if self.engineData.OilPress != None:
+            if self.engineData.OilPress != self.old_OilPress:
+                self.old_OilPress = self.engineData.OilPress
+                self.update = True
+        if self.fuelData.FuelRemain != None:
+            new_FuelRemain = self.fuelData.FuelRemain * 10
+            if new_FuelRemain != self.old_FuelRemain:
+                self.old_FuelRemain = new_FuelRemain
+                self.update = True
+        new_FuelLevel = self.fuelData.FuelLevels[0] * 10
+        if new_FuelLevel != self.old_FuelLevel:
+            self.old_FuelLevel = new_FuelLevel
+            self.update = True
+        if self.update:
+            self.airData_IAS_str = str(self.airData.IAS).zfill(5)
+            self.engineData_OilPress_str = str(self.engineData.OilPress).zfill(2)
+            self.fuelData_FuelRemain_str = str(new_FuelRemain).zfill(3)
+            self.fuelData_FuelLevel_str = str(new_FuelLevel).zfill(3)
+            # Build the string to send to the display
+        if dataship.debug_mode==0:
+            print("airData_IAS_str = ", self.airData_IAS_str)
+            print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
+            print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
+            print("engineData_OilPress_str = ", self.engineData_OilPress_str)
+        papirus_str = '!41' + self.airData_IAS_str + self.engineData_OilPress_str + self.fuelData_FuelRemain_str + '\r\n'
+        papirus_bytes = papirus_str.encode()
+        print(papirus_bytes)
+        try:
+            self.ser.write(papirus_bytes)         # Send data to PaPiRus
+        except Exception as e:
+            print(e)
+            print("Unexpected error in write to PaPiRus: ", e)
+        try:
+            self.mqqt.client_cloud.publish("1TM", papirus_str)
+        except Exception as e:
+            print(e)
+            print("Unexpected error in publish to MQTT: ", e)
         self.loop_count = self.loop_count + 1
         print("end of readMessage, loop_count: ", self.loop_count)
         return dataship
