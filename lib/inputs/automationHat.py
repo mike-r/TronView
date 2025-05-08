@@ -182,6 +182,7 @@ class automationHat(Module):
                 sleep(2)
 
 # Build text string to send to PaPiRus display pi
+            self.tx_count = 0
             if self.tx_count > 10:
                 if self.airData.IAS != None and self.engineData.OilPress != None and self.fuelData.FuelRemain != None:
                     self.update = False
