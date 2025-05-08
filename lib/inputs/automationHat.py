@@ -168,18 +168,15 @@ class automationHat(Module):
         pub = "Starting to read serial data"
         self.mqtt_client_cloud.publish("1TM", pub) 
         while x != ord('!'):  # Look for "!" start character
-            try:
-                pass
-                #t = self.ser.read(1)  # Read one byte from attached serial port
-            except:
-                print("Serial Read exception: ", sys.exc_info()[0])
+            if dataship.errorFoundNeedToExit:
+                return dataship
             if dataship.debug_mode>0:
                 print("AirData: IAS = ", self.airData.IAS)
                 print("EngineData: OilPress = ", self.engineData.OilPress)
                 print("FuelData: FuelRemaining = ", self.fuelData.FuelRemain)
                 print("EngineData: FuelFlow = ", self.engineData.FuelFlow)
                 print("FuelData: FuelLevel Left Tank = ", self.fuelData.FuelLevels[0])
-                sleep(2)
+            sleep(2)
 
 # Build text string to send to PaPiRus display pi
             self.tx_count = 0
