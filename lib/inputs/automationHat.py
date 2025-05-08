@@ -117,6 +117,9 @@ class automationHat(Module):
                 timeout=3,
                 write_timeout=0
             )
+            self.ser.write("This is a test".encode())
+            print("Serial port opened: ", self.efis_data_port)
+
 
         # set the target data and gps data to the first item in the list.
         if len(shared.Dataship.targetData) > 0:
