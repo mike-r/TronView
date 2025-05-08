@@ -147,7 +147,7 @@ class automationHat(Module):
     def on_connect(self, client, userdata, flags, rc):
         print("mqtt client connected with result code " + str(rc))
         # Subscribe to the topic
-        self.client.subscribe("1TM")
+        self.mqtt_client_cloud.subscribe("1TM")
         print("mqtt client subscribed to topic: 1TM")
 
     def on_message(self, client, userdata, msg):
@@ -174,7 +174,7 @@ class automationHat(Module):
                 print("FuelData: FuelRemaining = ", self.fuelData.FuelRemain)
                 print("EngineData: FuelFlow = ", self.engineData.FuelFlow)
                 print("FuelData: FuelLevel Left Tank = ", self.fuelData.FuelLevels[0])
-                sleep(0.1)
+                sleep(2)
 
 # Build text string to send to PaPiRus display pi
             if self.tx_count > 10:
@@ -213,10 +213,10 @@ class automationHat(Module):
                     except Exception as e:
                         print(e)
                         print("Unexpected error in write to PaPiRus: ", e)
-                    update = False
+                else:
+                    print("No change in data to send to PaPiRus")
             self.tx_count = 20
             self.loop_count = self.loop_count + 1
-
         return dataship 
 
     # close this data input 
