@@ -72,7 +72,10 @@ class automationHat(Module):
         self.loop_count = 0
         self.isPlaybackMode = False
         self.old_src_alt = -100
-        self.old_IAS = 10
+        self.old_IAS = 0
+        self.old_OilPress = 0
+        self.old_FuelRemain = 0
+        self.old_FuelLevel = 0
         self.mqtt_broker_address_cloud = "broker.mqtt.cool"
         self.Mqtt_broker_address_local = "localhost"
 
@@ -161,61 +164,64 @@ class automationHat(Module):
         x = 0
         while x != ord('!'):  # Look for "!" start character
             try:
-                t = self.ser.read(1)  # Read one byte from attached serial port
+                pass
+                #t = self.ser.read(1)  # Read one byte from attached serial port
             except:
                 print("Serial Read exception: ", sys.exc_info()[0])
             if dataship.debug_mode>0:
                 print("AirData: IAS = ", self.airData.IAS)
                 print("EngineData: OilPress = ", self.engineData.OilPress)
                 print("FuelData: FuelRemaining = ", self.fuelData.FuelRemain)
-                #print("FuelData: FuelFlow = ", self.fuelData.FuelFlow)
                 print("EngineData: FuelFlow = ", self.engineData.FuelFlow)
                 print("FuelData: FuelLevel Left Tank = ", self.fuelData.FuelLevels[0])
-                sleep(0.2)
+                sleep(0.1)
 
 # Build text string to send to PaPiRus display pi
             if self.tx_count > 10:
-                if self.airData.IAS != None:
+                if self.airData.IAS != None and self.engineData.OilPress != None and self.fuelData.FuelRemain != None:
+                    self.update = False
                     if self.airData.IAS != self.old_IAS:
                         self.old_IAS = self.airData.IAS
                         self.update = True
-                    else:
-                        self.update = False
-                    airData_IAS_str = str(self.airData.IAS)
-                    hobbs_str = airData_IAS_str.zfill(5)  # Pad with leading zeros to 5 digits
-                    if dataship.debug_mode>0: print("hobbs_str = ", hobbs_str)
-                else:
-                    hobbs_str = "10234"
-                smoke_str = "+0234G"      #   "+nnnnG"
-                fuel_remain_str = "678"
-                papirus_str = '!41' + smoke_str + hobbs_str + fuel_remain_str + '\r\n'
-                if self.loop_count < 10:  print("To  Papirus:", papirus_str)
-                papirus_bytes = papirus_str.encode()
-                print(papirus_bytes)
-                try:
-                    self.ser.write(papirus_bytes)         # Send data to PaPiRus
-                except Exception as e:
-                    print(e)
-                    print("Unexpected error in write to PaPiRus: ", e)
-                #self.update = False
+                    if self.engineData.OilPress != self.old_OilPress:
+                        self.old_OilPress = self.engineData.OilPress
+                        self.update = True
+                    new_FuelRemain = self.fuelData.FuelRemain / 10.0
+                    if new_FuelRemain != self.old_FuelRemain:
+                        self.old_FuelRemain = new_FuelRemain
+                        self.update = True
+                    new_FuelLevel = self.fuelData.FuelLevels[0] / 10.0
+                    if new_FuelLevel != self.old_FuelLevel:
+                        self.old_FuelLevel = new_FuelLevel
+                        self.update = True
+                    if self.update:
+                        airData_IAS_str = str(self.airData.IAS).zfill(5)
+                        engineData_OilPress_str = str(self.engineData.OilPress).zfill(3)
+                        fuelData_FuelRemain_str = str(self.fuelData.FuelRemain).zfill(4)
+                        fuelData_FuelLevel_str = str(self.fuelData.FuelLevels[0]).zfill(3)
+                        # Build the string to send to the display
+                    if dataship.debug_mode>0:
+                        print("airData_IAS_str = ", airData_IAS_str)
+                        print("fuelData_FuelRemain_str = ", fuelData_FuelRemain_str)
+                        print("fuelData_FuelLevel_str = ", fuelData_FuelLevel_str)
+                        print("engineData_OilPress_str = ", engineData_OilPress_str)
+                    papirus_str = '!41' + airData_IAS_str + engineData_OilPress_str + fuelData_FuelRemain_str + '\r\n'
+                    papirus_bytes = papirus_str.encode()
+                    print(papirus_bytes)
+                    try:
+                        self.ser.write(papirus_bytes)         # Send data to PaPiRus
+                    except Exception as e:
+                        print(e)
+                        print("Unexpected error in write to PaPiRus: ", e)
+                    update = False
             self.tx_count = 20
             self.loop_count = self.loop_count + 1
 
-            if len(t) != 0:
-                x = ord(t)
-            else:
-                if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
-                    self.ser.seek(0)
-                return dataship
-        print("Found start character: ", x)
         return dataship 
 
     # close this data input 
     def closeInput(self,dataship: Dataship):
-        if self.isPlaybackMode:
-            self.ser.close()
-        else:
-            self.ser.close()
+        self.ser.close()
 
 
 # vi: modeline tabstop=8 expandtab shiftwidth=4 softtabstop=4 syntax=python
