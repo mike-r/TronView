@@ -226,6 +226,7 @@ class automationHat(Module):
                 else:
                     pass
                     #print("No change in data to send to PaPiRus")
+            x = ord('!')
             self.tx_count = 20
         self.loop_count = self.loop_count + 1
         print("end of readMessage, loop_count: ", self.loop_count)
