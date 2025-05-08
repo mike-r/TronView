@@ -217,7 +217,8 @@ class automationHat(Module):
                         print(e)
                         print("Unexpected error in write to PaPiRus: ", e)
                 else:
-                    print("No change in data to send to PaPiRus")
+                    pass
+                    #print("No change in data to send to PaPiRus")
             self.tx_count = 20
             self.loop_count = self.loop_count + 1
         return dataship 
