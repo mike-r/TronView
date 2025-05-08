@@ -122,6 +122,13 @@ class automationHat(Module):
             self.gpsData = shared.Dataship.gpsData[0]
         if len(shared.Dataship.imuData) > 0:
             self.imuData = shared.Dataship.imuData[0]
+        if len(shared.Dataship.engineData) > 0:
+            self.engineData = shared.Dataship.engineData[0]
+        if len(shared.Dataship.fuelData) > 0:
+            self.fuelData = shared.Dataship.fuelData[0]
+        if len(shared.Dataship.airData) > 0:
+            self.airData = shared.Dataship.airData[0]
+
 
     def initMqtt(self, dataship: Dataship):
         # Initialize MQTT client
@@ -154,14 +161,17 @@ class automationHat(Module):
         x = 0
         while x != ord('!'):  # Look for "!" start character
             try:
-                t = self.ser.read(1)
+                t = self.ser.read(1)  # Read one byte from attached serial port
             except:
                 print("Serial Read exception: ", sys.exc_info()[0])
             if dataship.debug_mode>0:
-                print("Len(t) = ", len(t))
                 print("AirData: IAS = ", self.airData.IAS)
-                print("TargetData: src_gps = ", self.targetData.src_gps)
-                sleep(2)
+                print("EngineData: OilPress = ", self.engineData.OilPress)
+                print("FuelData: FuelRemaining = ", self.fuelData.FuelRemaining)
+                print("FuelData: FuelFlow = ", self.fuelData.FuelFlow)
+                print("EngineData: FuelFlow = ", self.engineData.FuelFlow)
+                print("FuelData: FuelLevel Left Tank = ", self.fuelData.FuelLevels[0])
+                sleep(0.2)
 
 # Build text string to send to PaPiRus display pi
             if self.tx_count > 10:
@@ -200,16 +210,6 @@ class automationHat(Module):
         print("Found start character: ", x)
         return dataship 
 
-#  Version 1.0 testing
-        print("serial_PaPiRus.py Version 1.0.Testing")
-
-        print("TargetData: src_alt = ", self.targetData.src_alt)
-        print("TargetData: src_gps = ", self.targetData.src_gps)
-
-
-
-
-
     # close this data input 
     def closeInput(self,dataship: Dataship):
         if self.isPlaybackMode:
@@ -217,4 +217,6 @@ class automationHat(Module):
         else:
             self.ser.close()
 
-    print("Did it work?")
+
+# vi: modeline tabstop=8 expandtab shiftwidth=4 softtabstop=4 syntax=python
+
