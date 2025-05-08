@@ -166,6 +166,7 @@ class automationHat(Module):
     ## Function: readMessage
     def readMessage(self, dataship: Dataship):
         if dataship.errorFoundNeedToExit:
+            print("Error found, exiting readMessage")
             return dataship
             # Read until we find a message start character (!)
         x = 0
@@ -174,7 +175,7 @@ class automationHat(Module):
         while x != ord('!'):  # Look for "!" start character
             if dataship.errorFoundNeedToExit:
                 return dataship
-            if dataship.debug_mode>0:
+            if dataship.debug_mode==0:
                 print("AirData: IAS = ", self.airData.IAS)
                 print("EngineData: OilPress = ", self.engineData.OilPress)
                 print("FuelData: FuelRemaining = ", self.fuelData.FuelRemain)
@@ -209,7 +210,7 @@ class automationHat(Module):
                         self.fuelData_FuelRemain_str = str(self.fuelData.FuelRemain).zfill(4)
                         self.fuelData_FuelLevel_str = str(self.fuelData.FuelLevels[0]).zfill(3)
                         # Build the string to send to the display
-                    if dataship.debug_mode>0:
+                    if dataship.debug_mode==0:
                         print("airData_IAS_str = ", self.airData_IAS_str)
                         print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
                         print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
@@ -227,9 +228,9 @@ class automationHat(Module):
                     #print("No change in data to send to PaPiRus")
             self.tx_count = 20
         self.loop_count = self.loop_count + 1
+        print("end of readMessage, loop_count: ", self.loop_count)
         return dataship
      
-
     # close this data input 
     def closeInput(self,dataship: Dataship):
         self.ser.close()
