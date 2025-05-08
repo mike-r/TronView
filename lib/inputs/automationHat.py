@@ -78,6 +78,10 @@ class automationHat(Module):
         self.old_FuelLevel = 0
         self.mqtt_broker_address_cloud = "broker.mqtt.cool"
         self.Mqtt_broker_address_local = "localhost"
+        self.airData_IAS_str = "00000"
+        self.fuelData_FuelRemain_str = "0000"
+        self.fuelData_FuelLevel_str = "000"
+        self.engineData_OilPress_str = "000"
 
         # Add smoothing configuration
         self.enable_smoothing = True
@@ -165,7 +169,7 @@ class automationHat(Module):
             return dataship
             # Read until we find a message start character (!)
         x = 0
-        pub = "Starting to read serial data"
+        pub = "Starting to read serial data, loop_count: " + str(self.loop_count)
         self.mqtt_client_cloud.publish("1TM", pub) 
         while x != ord('!'):  # Look for "!" start character
             if dataship.errorFoundNeedToExit:
@@ -180,15 +184,17 @@ class automationHat(Module):
 
 # Build text string to send to PaPiRus display pi
             self.tx_count = 0
-            if self.tx_count > 10:
-                if self.airData.IAS != None and self.engineData.OilPress != None and self.fuelData.FuelRemain != None:
+            if self.tx_count < 10:
+                if self.airData.IAS != None:
                     self.update = False
                     if self.airData.IAS != self.old_IAS:
                         self.old_IAS = self.airData.IAS
                         self.update = True
+                if self.engineData.OilPress != None:
                     if self.engineData.OilPress != self.old_OilPress:
                         self.old_OilPress = self.engineData.OilPress
                         self.update = True
+                if self.fuelData.FuelRemain != None:
                     new_FuelRemain = self.fuelData.FuelRemain / 10.0
                     if new_FuelRemain != self.old_FuelRemain:
                         self.old_FuelRemain = new_FuelRemain
@@ -198,17 +204,17 @@ class automationHat(Module):
                         self.old_FuelLevel = new_FuelLevel
                         self.update = True
                     if self.update:
-                        airData_IAS_str = str(self.airData.IAS).zfill(5)
-                        engineData_OilPress_str = str(self.engineData.OilPress).zfill(3)
-                        fuelData_FuelRemain_str = str(self.fuelData.FuelRemain).zfill(4)
-                        fuelData_FuelLevel_str = str(self.fuelData.FuelLevels[0]).zfill(3)
+                        self.airData_IAS_str = str(self.airData.IAS).zfill(5)
+                        self.engineData_OilPress_str = str(self.engineData.OilPress).zfill(3)
+                        self.fuelData_FuelRemain_str = str(self.fuelData.FuelRemain).zfill(4)
+                        self.fuelData_FuelLevel_str = str(self.fuelData.FuelLevels[0]).zfill(3)
                         # Build the string to send to the display
                     if dataship.debug_mode>0:
-                        print("airData_IAS_str = ", airData_IAS_str)
-                        print("fuelData_FuelRemain_str = ", fuelData_FuelRemain_str)
-                        print("fuelData_FuelLevel_str = ", fuelData_FuelLevel_str)
-                        print("engineData_OilPress_str = ", engineData_OilPress_str)
-                    papirus_str = '!41' + airData_IAS_str + engineData_OilPress_str + fuelData_FuelRemain_str + '\r\n'
+                        print("airData_IAS_str = ", self.airData_IAS_str)
+                        print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
+                        print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
+                        print("engineData_OilPress_str = ", self.engineData_OilPress_str)
+                    papirus_str = '!41' + self.airData_IAS_str + self.engineData_OilPress_str + self.fuelData_FuelRemain_str + '\r\n'
                     papirus_bytes = papirus_str.encode()
                     print(papirus_bytes)
                     try:
@@ -220,8 +226,9 @@ class automationHat(Module):
                     pass
                     #print("No change in data to send to PaPiRus")
             self.tx_count = 20
-            self.loop_count = self.loop_count + 1
-        return dataship 
+        self.loop_count = self.loop_count + 1
+        return dataship
+     
 
     # close this data input 
     def closeInput(self,dataship: Dataship):
