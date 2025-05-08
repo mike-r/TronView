@@ -167,8 +167,8 @@ class automationHat(Module):
             if dataship.debug_mode>0:
                 print("AirData: IAS = ", self.airData.IAS)
                 print("EngineData: OilPress = ", self.engineData.OilPress)
-                print("FuelData: FuelRemaining = ", self.fuelData.FuelRemaining)
-                print("FuelData: FuelFlow = ", self.fuelData.FuelFlow)
+                print("FuelData: FuelRemaining = ", self.fuelData.FuelRemain)
+                #print("FuelData: FuelFlow = ", self.fuelData.FuelFlow)
                 print("EngineData: FuelFlow = ", self.engineData.FuelFlow)
                 print("FuelData: FuelLevel Left Tank = ", self.fuelData.FuelLevels[0])
                 sleep(0.2)
