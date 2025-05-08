@@ -203,6 +203,8 @@ class automationHat(Module):
 
 # Build text string to send to PaPiRus display pi
 
+        new_FuelLevel = 0
+        new_FuelRemain = 0
         if self.airData.IAS != None:
             self.update = False
             if self.airData.IAS != self.old_IAS:
