@@ -243,7 +243,7 @@ class automationHat(Module):
             print(e)
             print("Unexpected error in write to PaPiRus: ", e)
         try:
-            self.mqqt.client_cloud.publish("1TM", papirus_str)
+            self.mqtt_client_cloud.publish("1TM", papirus_str)
         except Exception as e:
             print(e)
             print("Unexpected error in publish to MQTT: ", e)
