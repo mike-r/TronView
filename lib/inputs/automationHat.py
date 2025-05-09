@@ -71,16 +71,17 @@ class automationHat(Module):
         self.loop_count = 0
         self.isPlaybackMode = False
         self.old_src_alt = -100
-        self.old_IAS = 0
+        self.old_hobbs_time = 0
         self.old_OilPress = 0
         self.old_FuelRemain = 0
         self.old_FuelLevel = 0
         self.mqtt_broker_address_cloud = "broker.mqtt.cool"
         self.Mqtt_broker_address_local = "localhost"
-        self.airData_IAS_str = "00000"
+        self.engineData_hobbs_time_str = "00000"
         self.fuelData_FuelRemain_str = "0000"
         self.fuelData_FuelLevel_str = "000"
         self.engineData_OilPress_str = "000"
+        self.analogData_smoke_remain_str = "0000"
 
         # Add smoothing configuration
         self.enable_smoothing = True
@@ -243,7 +244,7 @@ class automationHat(Module):
             print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
             print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
             print("engineData_OilPress_str = ", self.engineData_OilPress_str)
-        papirus_str = '!41' + self.airData_IAS_str + self.engineData_OilPress_str + self.fuelData_FuelRemain_str + '\r\n'
+        papirus_str = '!41+' + self.analogData_smoke_remain_str + "G" + self.engineData_hobbs_time_str + self.fuelData_FuelRemain_str + '\r\n'
         papirus_bytes = papirus_str.encode()
         print(papirus_bytes)
         try:
@@ -251,7 +252,7 @@ class automationHat(Module):
         except Exception as e:
             print(e)
             print("Unexpected error in write to PaPiRus: ", e)
-        if self.loop_count < 3:
+        if self.loop_count == 13:
             try:
                 self.mqtt_client_cloud.publish("1TM", papirus_str)
             except Exception as e:
