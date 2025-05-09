@@ -205,27 +205,31 @@ class automationHat(Module):
 
         new_FuelLevel = 0
         new_FuelRemain = 0
+        self.update = False
+        new_IAS = 0
         if self.airData.IAS != None:
-            self.update = False
-            if self.airData.IAS != self.old_IAS:
-                self.old_IAS = self.airData.IAS
+            new_IAS = self.airData.IAS
+            if new_IAS != self.old_IAS:
+                self.old_IAS = new_IAS
                 self.update = True
+        new_OilPress = 0
         if self.engineData.OilPress != None:
-            if self.engineData.OilPress != self.old_OilPress:
-                self.old_OilPress = self.engineData.OilPress
+            new_OilPress = self.engineData.OilPress
+            if new_OilPress != self.old_OilPress:
+                self.old_OilPress = new_OilPress
                 self.update = True
-        if self.fuelData.FuelRemain != None:
-            new_FuelRemain = self.fuelData.FuelRemain * 10
-            if new_FuelRemain != self.old_FuelRemain:
-                self.old_FuelRemain = new_FuelRemain
-                self.update = True
+        new_FuelRemain = self.fuelData.FuelRemain * 10
+        if new_FuelRemain != self.old_FuelRemain:
+            self.old_FuelRemain = new_FuelRemain
+            self.update = True
         new_FuelLevel = self.fuelData.FuelLevels[0] * 10
         if new_FuelLevel != self.old_FuelLevel:
             self.old_FuelLevel = new_FuelLevel
             self.update = True
+
         if self.update:
-            self.airData_IAS_str = str(int(self.airData.IAS)).zfill(5)
-            self.engineData_OilPress_str = str(int(self.engineData.OilPress)).zfill(2)
+            self.airData_IAS_str = str(int(new_IAS)).zfill(5)
+            self.engineData_OilPress_str = str(int(new_OilPress)).zfill(2)
             self.fuelData_FuelRemain_str = str(int(new_FuelRemain)).zfill(3)
             self.fuelData_FuelLevel_str = str(int(new_FuelLevel)).zfill(3)
             # Build the string to send to the display
