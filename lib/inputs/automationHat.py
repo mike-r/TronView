@@ -218,14 +218,18 @@ class automationHat(Module):
             if new_OilPress != self.old_OilPress:
                 self.old_OilPress = new_OilPress
                 self.update = True
-        new_FuelRemain = self.fuelData.FuelRemain * 10
-        if new_FuelRemain != self.old_FuelRemain:
-            self.old_FuelRemain = new_FuelRemain
-            self.update = True
-        new_FuelLevel = self.fuelData.FuelLevels[0] * 10
-        if new_FuelLevel != self.old_FuelLevel:
-            self.old_FuelLevel = new_FuelLevel
-            self.update = True
+        new_FuelRemain = 0
+        if self.fuelData.FuelRemain != None:
+            new_FuelRemain = self.fuelData.FuelRemain * 10
+            if new_FuelRemain != self.old_FuelRemain:
+                self.old_FuelRemain = new_FuelRemain
+                self.update = True
+        new_FuelLevel = 0
+        if self.fuelData.FuelLevels[0] != None:
+            new_FuelLevel = self.fuelData.FuelLevels[0] * 10
+            if new_FuelLevel != self.old_FuelLevel:
+                self.old_FuelLevel = new_FuelLevel
+                self.update = True
 
         if self.update:
             self.airData_IAS_str = str(int(new_IAS)).zfill(5)
