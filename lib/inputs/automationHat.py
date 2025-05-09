@@ -224,10 +224,10 @@ class automationHat(Module):
             self.old_FuelLevel = new_FuelLevel
             self.update = True
         if self.update:
-            self.airData_IAS_str = str(self.airData.IAS).zfill(5)
-            self.engineData_OilPress_str = str(self.engineData.OilPress).zfill(2)
-            self.fuelData_FuelRemain_str = str(new_FuelRemain).zfill(3)
-            self.fuelData_FuelLevel_str = str(new_FuelLevel).zfill(3)
+            self.airData_IAS_str = str(int(self.airData.IAS)).zfill(5)
+            self.engineData_OilPress_str = str(int(self.engineData.OilPress)).zfill(2)
+            self.fuelData_FuelRemain_str = str(int(new_FuelRemain)).zfill(3)
+            self.fuelData_FuelLevel_str = str(int(new_FuelLevel)).zfill(3)
             # Build the string to send to the display
         if dataship.debug_mode==0:
             print("airData_IAS_str = ", self.airData_IAS_str)
