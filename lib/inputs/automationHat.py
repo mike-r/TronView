@@ -197,21 +197,22 @@ class automationHat(Module):
             print("Error found, exiting readMessage")
             return dataship
 
-        if self.loop_count < 3:
+        if self.loop_count == 3:
             pub = "readMessage method, loop_count: " + str(self.loop_count)
             self.mqtt_client_cloud.publish("1TM", pub)
 
 # Build text string to send to PaPiRus display pi
 
+        self.update = False
         new_FuelLevel = 0
         new_FuelRemain = 0
-        self.update = False
-        new_IAS = 0
-        if self.airData.IAS != None:
-            new_IAS = self.airData.IAS
-            if new_IAS != self.old_IAS:
-                self.old_IAS = new_IAS
+        new_hobbs_time = 0
+        if self.engineData.hobbs_time != None:
+            new_hobbs_time = self.engineData.hobbs_time *10
+            if new_hobbs_time != self.old_hobbs_time:
+                self.old_hobbs_time = new_hobbs_time
                 self.update = True
+
         new_OilPress = 0
         if self.engineData.OilPress != None:
             new_OilPress = self.engineData.OilPress
@@ -232,13 +233,13 @@ class automationHat(Module):
                 self.update = True
 
         if self.update:
-            self.airData_IAS_str = str(int(new_IAS)).zfill(5)
+            self.engineData_hobbs_time_str = str(int(new_hobbs_time)).zfill(5)
             self.engineData_OilPress_str = str(int(new_OilPress)).zfill(2)
             self.fuelData_FuelRemain_str = str(int(new_FuelRemain)).zfill(3)
             self.fuelData_FuelLevel_str = str(int(new_FuelLevel)).zfill(3)
             # Build the string to send to the display
         if dataship.debug_mode==0:
-            print("airData_IAS_str = ", self.airData_IAS_str)
+            print("engineData_hobbs_time_str = ", self.engineData_hobbs_time_str)
             print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
             print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
             print("engineData_OilPress_str = ", self.engineData_OilPress_str)
@@ -250,11 +251,12 @@ class automationHat(Module):
         except Exception as e:
             print(e)
             print("Unexpected error in write to PaPiRus: ", e)
-        try:
-            self.mqtt_client_cloud.publish("1TM", papirus_str)
-        except Exception as e:
-            print(e)
-            print("Unexpected error in publish to MQTT: ", e)
+        if self.loop_count < 3:
+            try:
+                self.mqtt_client_cloud.publish("1TM", papirus_str)
+            except Exception as e:
+                print(e)
+                print("Unexpected error in publish to MQTT: ", e)
         self.loop_count = self.loop_count + 1
         print("end of readMessage, loop_count: ", self.loop_count)
         return dataship
