@@ -3,8 +3,9 @@
 #################################################
 # IO to and from a Pimoroni AutomationHat which has three SPDT relays, three 12-bit ADC inputs
 # three sinking outputs and lots of cool status leds.  The hat is mounted on the Pi 5 via the
-# GPIO pins.  The Automation Hat is used to increase the number of analog inputs when the EFIS
-# is maxed out.  Smoke tank level and cowl flap control or other devices on the aircraft.
+# GPIO pins.  The Automation Hat is used to increase the number of analog and digital inputs 
+# when the EFIS is maxed out.  
+# It will be first used to read the airplane's smoke tank level.
 # 
 # This module will also send data via RS-232 Serial to a PaPiRus e-Paper display.
 # There is a mqtt message broker and client which may be used in the future to
@@ -20,12 +21,20 @@
 # To check I2C devices:        sudo i2cdetect -y 0
 # To check MQTT status:        sudo systemctl status mosquitto
 
-# To install and setup the MQTT Broker:
+# To install and setup the MQTT Broker on the Pi:
+#  sudo apt update
+#  sudo apt upgrade
 #  sudo apt install mosquitto mosquitto-clients
 #  sudo systemctl enable mosquitto
 
 # To install MQTT library in Python
 #   sudo pip3 install paho-mqtt
+
+# To install AutomationHat code:
+#   curl https://get.pimoroni.com/automationhat | bash
+
+# Requires modification to /usr/lib/python3/dist-packages/automationhat/__init__.py
+# Fork of modification is from: https://github.com/kiddigital/automation-hat
 
 # Write Serial data to PaPiRus Pi
 # Format of data stream is:
@@ -81,6 +90,7 @@ class automationHat(Module):
         self.fuelData_FuelRemain_str = "0000"
         self.fuelData_FuelLevel_str = "000"
         self.engineData_OilPress_str = "000"
+        self.a0 = 0
 
         # Add smoothing configuration
         self.enable_smoothing = True
@@ -160,14 +170,14 @@ class automationHat(Module):
         try:
             # Set up Automation Hat inputs and outputs
             automationhat.light.power.write(1)
-            automationhat.digital.write(1, 0)  # Set output 1 to low
-            automationhat.digital.write(2, 0)  # Set output 2 to low
-            automationhat.digital.write(3, 0)  # Set output 3 to low
-            automationhat.analog.read(1)       # Read from analog input 1
+            #automationhat.digital.write(1, 0)  # Set output 1 to low
+            #automationhat.digital.write(2, 0)  # Set output 2 to low
+            #automationhat.digital.write(3, 0)  # Set output 3 to low
+            self.a0 = automationhat.analog[0].read()      # Read from analog input 1
         # Set Automation Hat inputs HIGH.
-            automationhat.input.one.resistor(automationhat.PULL_UP)
-            automationhat.input.two.resistor(automationhat.PULL_UP)
-            automationhat.input.three.resistor(automationhat.PULL_UP)
+            #automationhat.input.one.resistor(automationhat.PULL_UP)
+            #automationhat.input.two.resistor(automationhat.PULL_UP)
+            #automationhat.input.three.resistor(automationhat.PULL_UP)
         # Startup with all relays turned off.
             automationhat.relay.one.off()
             automationhat.relay.two.off()
@@ -197,9 +207,29 @@ class automationHat(Module):
             print("Error found, exiting readMessage")
             return dataship
 
+        a0 = automationhat.analog[0].read()  # Read from analog input 1
         if self.loop_count < 3:
             pub = "readMessage method, loop_count: " + str(self.loop_count)
             self.mqtt_client_cloud.publish("1TM", pub)
+            pub = "a0: " + str(a0)
+            self.mqtt_client_cloud.publish("1TM", pub)
+            print("analog_0: ", a0)
+        # Read the analog input value and convert to gallons
+        # Convert the value to gallons (assuming 0.016 - 5.06V corresponds to 0-5 gallons)
+        if a0 > 0.016:
+            a0 = a0 - 0.016
+        else:
+            a0 = 0.016
+        a0 = (a0 / (5.06-0.016)) * 5
+        a0 = round(a0, 1)  # Round to 1 decimal places
+        print("Smoke Oil Level: ", a0, " gallons")
+        self.smokeGallons_str = str(int(a0*10)).zfill(4)  # Format as 4 digits with leading zeros
+        # Send the value to the MQTT broker
+        try:
+            self.mqtt_client_cloud.publish("1TM", self.smokeGallons_str)
+        except Exception as e:
+            print(e)
+            print("Unexpected error in publish to MQTT: ", e)
 
 # Build text string to send to PaPiRus display pi
 
@@ -242,7 +272,7 @@ class automationHat(Module):
             print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
             print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
             print("engineData_OilPress_str = ", self.engineData_OilPress_str)
-        papirus_str = '!41' + self.airData_IAS_str + self.engineData_OilPress_str + self.fuelData_FuelRemain_str + '\r\n'
+        papirus_str = '!41+' + self.smokeGallons_str + 'G' + self.engineData_OilPress_str + self.fuelData_FuelRemain_str + '\r\n'
         papirus_bytes = papirus_str.encode()
         print(papirus_bytes)
         try:
