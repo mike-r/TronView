@@ -44,7 +44,7 @@
 # "fff"      is the Total Fuel Remaining in tents of gallons
 
 import serial
-from time import sleep
+from time import time
 import paho.mqtt.client as mqtt #import the client
 import automationhat
 import sys
@@ -92,6 +92,8 @@ class automationHat(Module):
         self.engineData_OilPress_str = "000"
         self.analogData_smoke_remain_str = "0000"
         self.a0 = 0
+        self.start_time = time.time()
+        self.papirus_str = ""
 
         # Add smoothing configuration
         self.enable_smoothing = True
@@ -209,28 +211,17 @@ class automationHat(Module):
             return dataship
 
         self.a0 = automationhat.analog[0].read()  # Read from analog input 1
-        if self.loop_count == 3:
-            pub = "readMessage method, loop_count: " + str(self.loop_count)
-            self.mqtt_client_cloud.publish("1TM", pub)
-            pub = "a0: " + str(a0)
-            self.mqtt_client_cloud.publish("1TM", pub)
-            print("analog_0: ", a0)
+
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (assuming 0.016 - 5.06V corresponds to 0-5 gallons)
-        if a0 > 0.016:
-            a0 = a0 - 0.016
+        if self.a0 > 0.016:
+            self.a0 = self.a0 - 0.016
         else:
-            a0 = 0.016
-        a0 = (a0 / (5.06-0.016)) * 5
-        a0 = round(a0, 1)  # Round to 1 decimal places
-        print("Smoke Oil Level: ", a0, " gallons")
-        self.analogData_smoke_remain_str = str(int(a0*10)).zfill(4)  # Format as 4 digits with leading zeros
-        # Send the value to the MQTT broker
-        try:
-            self.mqtt_client_cloud.publish("1TM", self.analogData_smoke_remain_str)
-        except Exception as e:
-            print(e)
-            print("Unexpected error in publish to MQTT: ", e)
+            self.a0 = 0.016
+
+        if dataship.debug_mode>0: print("Smoke Oil Level: ", self.a0, " gallons")
+        self.analogData_smoke_remain_str = str(int(self.a0*10)).zfill(4)    # Format as 4 digits with leading zeros
+        if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " gallons")
 
 # Build text string to send to PaPiRus display pi
 
@@ -269,27 +260,31 @@ class automationHat(Module):
             self.fuelData_FuelRemain_str = str(int(new_FuelRemain)).zfill(3)
             self.fuelData_FuelLevel_str = str(int(new_FuelLevel)).zfill(3)
             # Build the string to send to the display
-        if dataship.debug_mode==0:
+        if dataship.debug_mode > 0 and time.time() - self.start_time > 5:
             print("engineData_hobbs_time_str = ", self.engineData_hobbs_time_str)
             print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
             print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
             print("engineData_OilPress_str = ", self.engineData_OilPress_str)
-        papirus_str = '!41+' + self.analogData_smoke_remain_str + "G" + self.engineData_hobbs_time_str + self.fuelData_FuelRemain_str + '\r\n'
-        papirus_bytes = papirus_str.encode()
-        print(papirus_bytes)
-        try:
-            self.ser.write(papirus_bytes)         # Send data to PaPiRus
-        except Exception as e:
-            print(e)
-            print("Unexpected error in write to PaPiRus: ", e)
-        if self.loop_count == 13:
+        if time.time() - self.start_time > 20:
+            self.start_time = time.time()
+            # Send the data to the PaPiRus display
+            self.papirus_str = "!41+" + self.analogData_smoke_remain_str + "G" + self.engineData_hobbs_time_str + self.fuelData_FuelRemain_str + '\r\n'
+            papirus_bytes = self.papirus_str.encode()
+            print("papirus_bytes: ", papirus_bytes)
             try:
-                self.mqtt_client_cloud.publish("1TM", papirus_str)
+                self.ser.write(papirus_bytes)         # Send data to PaPiRus
+            except Exception as e:
+                print(e)
+                print("Unexpected error in write to PaPiRus: ", e)
+
+            try:
+                self.mqtt_client_cloud.publish("1TM", self.papirus_str)
+                print("papirus_str: ", self.papirus_str)
             except Exception as e:
                 print(e)
                 print("Unexpected error in publish to MQTT: ", e)
         self.loop_count = self.loop_count + 1
-        print("end of readMessage, loop_count: ", self.loop_count)
+        if dataship.debug_mode >0: print("end of readMessage, loop_count: ", self.loop_count)
         return dataship
      
     # close this data input 
