@@ -139,8 +139,14 @@ class automationHat(Module):
             except serial.SerialException as e:
                 print("Error opening serial port: ", e)
 
+        # create analog data object.
+        self.analogData = AnalogData()
+        self.analogData.name = self.name
+        self.index = len(dataship.analogData)
+        self.analogData.id = self.name + "_" + str(self.index)
+        dataship.analogData.append(self.analogData)
 
-        # set the target data and gps data to the first item in the list.
+        # set the data to the first item in the list.
         if len(shared.Dataship.targetData) > 0:
             self.targetData = shared.Dataship.targetData[0]
         if len(shared.Dataship.gpsData) > 0:
@@ -153,6 +159,10 @@ class automationHat(Module):
             self.fuelData = shared.Dataship.fuelData[0]
         if len(shared.Dataship.airData) > 0:
             self.airData = shared.Dataship.airData[0]
+        if len(shared.Dataship.analogData) > 0:
+            self.analogData = shared.Dataship.analogData[0]
+
+        # Set up MQTT client
 
 
     def initMqtt(self, dataship: Dataship):
@@ -218,7 +228,7 @@ class automationHat(Module):
             self.a0 = self.a0 - 0.016
         else:
             self.a0 = 0.016
-
+        self.analogData.Data[0] = self.a0
         if dataship.debug_mode>0: print("Smoke Oil Level: ", self.a0, " gallons")
         self.analogData_smoke_remain_str = str(int(self.a0*10)).zfill(4)    # Format as 4 digits with leading zeros
         if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " gallons")
