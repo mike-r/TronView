@@ -130,6 +130,12 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     which python3
 fi
 
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "Activating venv at: /home/zap/.venv/bin/activate"
+    source "/home/zap/.venv/bin/activate"
+    which python3
+fi
+
 # kill any running python3 processes
 #$RUN_PREFIX pkill -f 'python3'
 
@@ -310,6 +316,7 @@ while $RUN_MENU_AGAIN; do
                                 "network_skyview_adsb" "Dynon Skyview ADSB Network" OFF \
                                 "serial_skyview" "Dynon Skyview Serial" OFF \
                                 "network_skyview" "Dynon Skyview Network" OFF \
+                                "automationHat" "Automation Hat I/O Board" OFF\
                                 "meshtastic" "Meshtastic Serial" OFF \
                                 "gyro_i2c_bno055" "BNO055 IMU i2c (Pi only)" OFF \
                                 "gyro_i2c_bno055" "2nd BNO055 IMU i2c (Pi only)" OFF \
