@@ -31,7 +31,13 @@
 #   sudo pip3 install paho-mqtt
 
 # To install AutomationHat code:
-#   curl https://get.pimoroni.com/automationhat | bash
+# git clone https://github.com/pimoroni/automation-hat
+# cd automation-hat
+# ./install.sh
+#
+# pip freeze > requirments.txt
+# python3 -m pip install -r requirments.txt  --break-system-packages
+
 
 # Requires modification to /usr/lib/python3/dist-packages/automationhat/__init__.py
 # Fork of modification is from: https://github.com/kiddigital/automation-hat
