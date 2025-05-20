@@ -178,6 +178,7 @@ class automationHat(Module):
             self.mqtt_client_cloud = mqtt.Client()
             self.mqtt_client_cloud.on_connect = self.on_connect
             self.mqtt_client_cloud.on_message = self.on_message
+            self.mqtt_client_cloud.on_disconnect = self.on_disconnect
             self.mqtt_client_cloud.connect(self.mqtt_broker_address_cloud, 1883, 60)
             self.mqtt_client_cloud.loop_start()
         except Exception as e:
@@ -213,6 +214,12 @@ class automationHat(Module):
         # Subscribe to the topic
         self.mqtt_client_cloud.subscribe("1TM")
         print("mqtt client subscribed to topic: 1TM")
+        automationhat.light.comms.write(1)
+
+    def on_disconnect(client, userdata, rc):
+        if rc != 0:
+            print(client, " Unexpected disconnection from cloud mosquito broker.")
+        automationhat.light.comms.write(0)
 
     def on_message(self, client, userdata, msg):
         # Handle incoming messages
