@@ -36,7 +36,9 @@
 # ./install.sh
 #
 # pip freeze > requirments.txt
-# python3 -m pip install -r requirments.txt  --break-system-packages
+#    Must install as superuser to be able to run the AutomationHat code as superuser.
+# sudo python3 -m pip install -r requirments.txt  --break-system-packages
+# sudo pip3 install automationhat --break-system-packages
 
 
 # Requires modification to /usr/lib/python3/dist-packages/automationhat/__init__.py
@@ -91,7 +93,7 @@ class automationHat(Module):
         self.old_FuelRemain = 0
         self.old_FuelLevel = 0
         self.mqtt_broker_address_cloud = "broker.mqtt.cool"
-        self.Mqtt_broker_address_local = "localhost"
+        self.mqtt_broker_address_local = "localhost"
         self.engineData_hobbs_time_str = "00000"
         self.fuelData_FuelRemain_str = "0000"
         self.fuelData_FuelLevel_str = "000"
@@ -100,6 +102,7 @@ class automationHat(Module):
         self.a0 = 0
         self.start_time = time.time()
         self.papirus_str = ""
+        self.mqtt_cloud = False
 
         # Add smoothing configuration
         self.enable_smoothing = True
@@ -179,10 +182,22 @@ class automationHat(Module):
             self.mqtt_client_cloud.on_connect = self.on_connect
             self.mqtt_client_cloud.on_message = self.on_message
             self.mqtt_client_cloud.on_disconnect = self.on_disconnect
-            self.mqtt_client_cloud.connect(self.mqtt_broker_address_cloud, 1883, 60)
+            self.mqtt_client_cloud.connect_async(self.mqtt_broker_address_cloud, 1883, 60)
             self.mqtt_client_cloud.loop_start()
         except Exception as e:
-            print("Error initializing MQTT client: ", e)
+            print("Error initializing MQTT cloud client: ", e)
+            self.mqtt_cloud = False
+            
+        try:
+            self.mqtt_client_local = mqtt.Client()
+            #self.mqtt_client_local.on_connect = self.on_connect
+            #self.mqtt_client_local.on_message = self.on_message
+            #self.mqtt_client_local.on_disconnect = self.on_disconnect
+            self.mqtt_client_local.connect_async(self.mqtt_broker_address_local, 1883, 60)
+            self.mqtt_client_local.loop_start()
+        except Exception as e:
+            print("Error initializing MQTT local client: ", e)
+
 
     def initAutomationHat(self, dataship: Dataship):
         # Initialize Automation Hat
@@ -214,12 +229,15 @@ class automationHat(Module):
         # Subscribe to the topic
         self.mqtt_client_cloud.subscribe("1TM")
         print("mqtt client subscribed to topic: 1TM")
+        self.mqtt_cloud = True
         automationhat.light.comms.write(1)
 
-    def on_disconnect(client, userdata, rc):
+    def on_disconnect(self, client, userdata, rc):
         if rc != 0:
             print(client, " Unexpected disconnection from cloud mosquito broker.")
         automationhat.light.comms.write(0)
+        self.mqtt_cloud = False
+
 
     def on_message(self, client, userdata, msg):
         # Handle incoming messages
@@ -231,19 +249,28 @@ class automationHat(Module):
     def readMessage(self, dataship: Dataship):
         if dataship.errorFoundNeedToExit:
             print("Error found, exiting readMessage")
+            self.mqtt_client_local.disconnect()
+            self.mqtt_client_cloud.disconnect()
+            self.mqtt_client_local.loop_stop()
+            self.mqtt_client_cloud.loop_stop()
             return dataship
 
         self.a0 = automationhat.analog[0].read()  # Read from analog input 1
 
         # Read the analog input value and convert to gallons
-        # Convert the value to gallons (assuming 0.016 - 5.06V corresponds to 0-5 gallons)
-        if self.a0 > 0.016:
-            self.a0 = self.a0 - 0.016
+        # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
+        self.analogData.Data[0] = self.a0   #Store actual voltage value in Dataship
+
+        if self.a0 > 0.250:
+            self.a0 = self.a0 - 0.250
+            automationhat.light.warn.write(0)
         else:
-            self.a0 = 0.016
-        self.analogData.Data[0] = self.a0
-        if dataship.debug_mode>0: print("Smoke Oil Level: ", self.a0, " gallons")
-        self.analogData_smoke_remain_str = str(int(self.a0*10)).zfill(4)    # Format as 4 digits with leading zeros
+            self.a0 = 0.250     # Wire or sensor probably broken, set level to zero
+            automationhat.light.warn.write(1)
+        # Convert analog voltage to gallons:
+        self.smokeLevel = 5 * self.a0 / 3.75
+        if dataship.debug_mode>0: print("Smoke Oil Level: ", self.smokeLevel, " gallons")
+        self.analogData_smoke_remain_str = str(int(self.smokeLevel*10)).zfill(4)    # Format as 4 digits with leading zeros
         if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " gallons")
 
 # Build text string to send to PaPiRus display pi
@@ -300,12 +327,21 @@ class automationHat(Module):
                 print(e)
                 print("Unexpected error in write to PaPiRus: ", e)
 
-            try:
-                self.mqtt_client_cloud.publish("1TM", self.papirus_str)
-                print("papirus_str: ", self.papirus_str)
-            except Exception as e:
-                print(e)
-                print("Unexpected error in publish to MQTT: ", e)
+            if self.mqtt_cloud:
+                try:
+                    self.mqtt_client_cloud.publish("1TM", self.papirus_str)
+                    print("papirus_str: ", self.papirus_str)
+                except Exception as e:
+                    print(e)
+                    print("Unexpected error in publish to MQTT: ", e)
+            else:
+                try:
+                    self.mqtt_client_local.publish("1TM", self.papirus_str)
+                    print("papirus_str: ", self.papirus_str)
+                except Exception as e:
+                    print(e)
+                    print("Unexpected error in publish to MQTT: ", e)
+                
         self.loop_count = self.loop_count + 1
         if dataship.debug_mode >0: print("end of readMessage, loop_count: ", self.loop_count)
         return dataship
@@ -313,7 +349,10 @@ class automationHat(Module):
     # close this data input 
     def closeInput(self,dataship: Dataship):
         self.ser.close()
-
+        self.mqtt_client_cloud.disconnect()
+        self.mqtt_client_local.disconnect()
+        self.mqtt_client_cloud.loop_stop()
+        self.mqtt_client_local.loop_stop()
 
 # vi: modeline tabstop=8 expandtab shiftwidth=4 softtabstop=4 syntax=python
 
