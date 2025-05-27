@@ -3,7 +3,7 @@
 # Network WiFi or ethernet udp input source
 # Skyview ADS-B data in GDL-90 format
 
-# 03/22/2025 Zap  Based on Topher 2019 stratux_wifi.py and serial_skyview.py
+# 05/2025 Zap  Based on Topher 2019 stratux_wifi.py and serial_skyview.py
 
 
 import struct
@@ -74,10 +74,10 @@ class network_skyview_adsb(Input):
 
         # create a empty gps object.
         self.gpsData = GPSData()
-        #self.gpsData.name = self.name
-        #self.gps_index = len(dataship.gpsData)  # Start at 0
-        #self.gpsData.id = "skyview_gps_adsb"
-        #print("new skyview gps "+str(self.gps_index)+": "+str(self.gpsData))
+        self.gpsData.name = self.name
+        self.gps_index = len(dataship.gpsData)  # Start at 0
+        self.gpsData.id = "skyview_gps_adsb"
+        print("new skyview gps "+str(self.gps_index)+": "+str(self.gpsData))
         dataship.gpsData.append(self.gpsData)
         if len(shared.Dataship.gpsData) > 0:
             self.gpsData = shared.Dataship.gpsData[0]
@@ -129,7 +129,7 @@ class network_skyview_adsb(Input):
                     if dataship.debug_mode>1: print("Skyview ADS-B file reset")
         else:
             try:
-                #Attempt to receive up to 1024 bytes of data
+                # Attempt to receive up to 1024 bytes of data
                 #if dataship.debug_mode>0: print("Trying to read 1024 bytes")
                 recv_data = self.ser.recvfrom(1024)
                 data = bytearray(recv_data[0])
