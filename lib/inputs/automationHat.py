@@ -299,6 +299,9 @@ class automationHat(Module):
             if new_OilPress != self.old_OilPress:
                 self.old_OilPress = new_OilPress
                 self.update = True
+        if self.a0 > 4.50: engine_status_str = "r"  # test high oil pressure
+
+                
         new_FuelRemain = 0
         if self.fuelData.FuelRemain != None:
             new_FuelRemain = self.fuelData.FuelRemain * 10
