@@ -46,10 +46,11 @@
 
 # Write Serial data to PaPiRus Pi
 # Format of data stream is:
-# !41+ssssGhhhhhfff
+# !41+ssssGhhhhhfffr
 # "+ssssG"   is the amount of smoke oil remaining in tenths of gallons
 # "hhhhh"    is the Total Time (Hobbs Time) in tenths of hours from Dynon EMS
 # "fff"      is the Total Fuel Remaining in tents of gallons
+# "r"       is engine status, r= running, r= stopped
 
 import serial
 from time import time
@@ -261,12 +262,16 @@ class automationHat(Module):
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
         self.analogData.Data[0] = self.a0   #Store actual voltage value in Dataship
 
+        if self.a0 < 0.250 or self.a0 > 4.000:  # Check for broken wire or bad sensor
+            automationhat.light.warn.write(1)
+        else:
+            automationhat.light.warn.write(0)
+            
         if self.a0 > 0.250:
             self.a0 = self.a0 - 0.250
-            automationhat.light.warn.write(0)
         else:
-            self.a0 = 0.250     # Wire or sensor probably broken, set level to zero
-            automationhat.light.warn.write(1)
+            self.a0 = 0.250     # Wire or sensor probably broken, set level to zero gallons
+            
         # Convert analog voltage to gallons:
         self.smokeLevel = 5 * self.a0 / 3.75
         if dataship.debug_mode>0: print("Smoke Oil Level: ", self.smokeLevel, " gallons")
@@ -286,7 +291,10 @@ class automationHat(Module):
                 self.update = True
 
         new_OilPress = 0
+        engine_status_str = "s"  # Default to stopped
         if self.engineData.OilPress != None:
+            if self.engineData.OilPress > 15: engine_status_str = "r"  # running
+            else: engine_status_str = "s"  # stopped
             new_OilPress = self.engineData.OilPress
             if new_OilPress != self.old_OilPress:
                 self.old_OilPress = new_OilPress
@@ -318,7 +326,7 @@ class automationHat(Module):
         if time.time() - self.start_time > 20:
             self.start_time = time.time()
             # Send the data to the PaPiRus display
-            self.papirus_str = "!41+" + self.analogData_smoke_remain_str + "G" + self.engineData_hobbs_time_str + self.fuelData_FuelRemain_str + '\r\n'
+            self.papirus_str = "!41+" + self.analogData_smoke_remain_str + "G" + self.engineData_hobbs_time_str + self.fuelData_FuelRemain_str + engine_status_str + '\r\n'
             papirus_bytes = self.papirus_str.encode()
             print("papirus_bytes: ", papirus_bytes)
             try:
