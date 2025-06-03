@@ -205,7 +205,7 @@ class automationHat(Module):
         print("Initializing Automation Hat...")
         try:
             # Set up Automation Hat inputs and outputs
-            automationhat.light.power.write(1)
+            if automationhat.is_automation_hat: automationhat.light.power.write(1)
             #automationhat.digital.write(1, 0)  # Set output 1 to low
             #automationhat.digital.write(2, 0)  # Set output 2 to low
             #automationhat.digital.write(3, 0)  # Set output 3 to low
@@ -215,9 +215,10 @@ class automationHat(Module):
             #automationhat.input.two.resistor(automationhat.PULL_UP)
             #automationhat.input.three.resistor(automationhat.PULL_UP)
         # Startup with all relays turned off.
-            automationhat.relay.one.off()
-            automationhat.relay.two.off()
-            automationhat.relay.three.off()
+            if automationhat.is_automation_hat: 
+                automationhat.relay.one.off()
+                automationhat.relay.two.off()
+                automationhat.relay.three.off()
 
             print("Automation Hat initialized successfully.")
         except Exception as e:
@@ -231,12 +232,12 @@ class automationHat(Module):
         self.mqtt_client_cloud.subscribe("1TM")
         print("mqtt client subscribed to topic: 1TM")
         self.mqtt_cloud = True
-        automationhat.light.comms.write(1)
+        if automationhat.is_automation_hat: automationhat.light.comms.write(1)
 
     def on_disconnect(self, client, userdata, rc):
         if rc != 0:
             print(client, " Unexpected disconnection from cloud mosquito broker.")
-        automationhat.light.comms.write(0)
+        if automationhat.is_automation_hat: automationhat.light.comms.write(0)
         self.mqtt_cloud = False
 
 
@@ -263,9 +264,9 @@ class automationHat(Module):
         self.analogData.Data[0] = self.a0   #Store actual voltage value in Dataship
 
         if self.a0 < 0.250 or self.a0 > 4.000:  # Check for broken wire or bad sensor
-            automationhat.light.warn.write(1)
+            if automationhat.is_automation_hat: automationhat.light.warn.write(1)
         else:
-            automationhat.light.warn.write(0)
+            if automationhat.is_automation_hat: automationhat.light.warn.write(0)
             
         if self.a0 > 0.250:
             self.a0 = self.a0 - 0.250
