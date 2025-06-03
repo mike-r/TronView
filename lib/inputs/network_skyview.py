@@ -61,7 +61,7 @@ class network_skyview(Input):
                                     socket.SOCK_DGRAM) #UDP
                              
             #Bind to any available address on port *portNum*
-            print("using UDP port:"+str(self.udpport))
+            print("using UDP port:"+str(self.udpport)+" for Skyview data")
             self.ser.bind(("",self.udpport))
             
             #Prevent the socket from blocking until it receives all the data it wants
