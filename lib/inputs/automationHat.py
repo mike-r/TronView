@@ -28,7 +28,7 @@
 #  sudo systemctl enable mosquitto
 
 # To install MQTT library in Python
-#   sudo pip3 install paho-mqtt
+#  sudo pip3 install paho-mqtt --break-system-packages
 
 # To install AutomationHat code:
 # git clone https://github.com/pimoroni/automation-hat
