@@ -26,6 +26,13 @@
 #  sudo apt upgrade
 #  sudo apt install mosquitto mosquitto-clients
 #  sudo systemctl enable mosquitto
+# To allow anonymous access:
+#  sudo nano /etc/mosquitto/mosquitto.conf
+# Add the following lines to the end of the file:
+#    allow_anonymous true
+#    listener 1883 0.0.0.0
+# Restart Mosquitto service to apply changes:
+#  sudo service mosquitto restart
 
 # To install MQTT library in Python
 #  sudo pip3 install paho-mqtt --break-system-packages
@@ -190,9 +197,9 @@ class automationHat(Module):
             
         try:
             self.mqtt_client_local = mqtt.Client()
-            #self.mqtt_client_local.on_connect = self.on_connect
-            #self.mqtt_client_local.on_message = self.on_message
-            #self.mqtt_client_local.on_disconnect = self.on_disconnect
+            self.mqtt_client_local.on_connect = self.on_connect
+            self.mqtt_client_local.on_message = self.on_message
+            self.mqtt_client_local.on_disconnect = self.on_disconnect
             self.mqtt_client_local.connect_async(self.mqtt_broker_address_local, 1883, 60)
             self.mqtt_client_local.loop_start()
         except Exception as e:
