@@ -186,9 +186,9 @@ class automationHat(Module):
         print("Initializing MQTT client...")
         try:
             self.mqtt_client_cloud = mqtt.Client()
-            self.mqtt_client_cloud.on_connect = self.on_connect
+            self.mqtt_client_cloud.on_connect = self.cloud_on_connect
             self.mqtt_client_cloud.on_message = self.on_message
-            self.mqtt_client_cloud.on_disconnect = self.on_disconnect
+            self.mqtt_client_cloud.on_disconnect = self.cloud_on_disconnect
             self.mqtt_client_cloud.connect_async(self.mqtt_broker_address_cloud, 1883, 60)
             self.mqtt_client_cloud.loop_start()
         except Exception as e:
@@ -197,9 +197,9 @@ class automationHat(Module):
             
         try:
             self.mqtt_client_local = mqtt.Client()
-            self.mqtt_client_local.on_connect = self.on_connect
+            self.mqtt_client_local.on_connect = self.local_on_connect
             self.mqtt_client_local.on_message = self.on_message
-            self.mqtt_client_local.on_disconnect = self.on_disconnect
+            self.mqtt_client_local.on_disconnect = self.local_on_disconnect
             self.mqtt_client_local.connect_async(self.mqtt_broker_address_local, 1883, 60)
             self.mqtt_client_local.loop_start()
         except Exception as e:
@@ -232,20 +232,29 @@ class automationHat(Module):
 
     #############################################
 
-    def on_connect(self, client, userdata, flags, rc):
-        print("mqtt client connected with result code " + str(rc))
+    def cloud_on_connect(self, client, userdata, flags, rc):
+        print("mqtt cloud client connected with result code " + str(rc))
         # Subscribe to the topic
         self.mqtt_client_cloud.subscribe("1TM")
-        print("mqtt client subscribed to topic: 1TM")
+        print("mqtt cloud client subscribed to topic: 1TM")
         self.mqtt_cloud = True
         if automationhat.is_automation_hat(): automationhat.light.comms.write(1)
+        
+    def local_on_connect(self, client, userdata, flags, rc):
+        print("mqtt local client connected with result code " + str(rc))
+        # Subscribe to the topic
+        self.mqtt_client_local.subscribe("1TM")
+        print("mqtt local client subscribed to topic: 1TM")
 
-    def on_disconnect(self, client, userdata, rc):
+    def cloud_on_disconnect(self, client, userdata, rc):
         if rc != 0:
             print(client, " Unexpected disconnection from cloud mosquito broker.")
         if automationhat.is_automation_hat(): automationhat.light.comms.write(0)
         self.mqtt_cloud = False
 
+    def local_on_disconnect(self, client, userdata, rc):
+        if rc != 0:
+            print(client, " Unexpected disconnection from local mosquito broker.")
 
     def on_message(self, client, userdata, msg):
         # Handle incoming messages
@@ -348,17 +357,16 @@ class automationHat(Module):
             if self.mqtt_cloud:
                 try:
                     self.mqtt_client_cloud.publish("1TM", self.papirus_str)
-                    print("papirus_str: ", self.papirus_str)
+                    print("papirus_str to mqtt cloud: ", self.papirus_str)
                 except Exception as e:
                     print(e)
                     print("Unexpected error in publish to MQTT: ", e)
-            else:
-                try:
-                    self.mqtt_client_local.publish("1TM", self.papirus_str)
-                    print("papirus_str: ", self.papirus_str)
-                except Exception as e:
-                    print(e)
-                    print("Unexpected error in publish to MQTT: ", e)
+            try:
+                self.mqtt_client_local.publish("1TM", self.papirus_str)
+                print("papirus_str to mqtt local: ", self.papirus_str)
+            except Exception as e:
+                print(e)
+                print("Unexpected error in publish to MQTT: ", e)
                 
         self.loop_count = self.loop_count + 1
         if dataship.debug_mode >0: print("end of readMessage, loop_count: ", self.loop_count)
