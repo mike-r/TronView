@@ -314,7 +314,7 @@ class automationHat(Module):
         new_hobbs_time = 0
         
         if self.smokeLevel != self.old_smokeLevel:
-            print("Smoke Level changed: ", self.smokeLevel, " gallons")
+            if dataship.debug_mode>0: print("Smoke Level changed: ", self.smokeLevel, " gallons")
             self.old_smokeLevel = self.smokeLevel
             self.update = True
         
@@ -357,18 +357,19 @@ class automationHat(Module):
             self.engineData_OilPress_str = str(int(new_OilPress)).zfill(2)
             self.fuelData_FuelRemain_str = str(int(new_FuelRemain)).zfill(3)
             self.fuelData_FuelLevel_str = str(int(new_FuelLevel)).zfill(3)
-            # Build the string to send to the display
-        if dataship.debug_mode > 0 and time.time() - self.start_time > 5:
-            print("engineData_hobbs_time_str = ", self.engineData_hobbs_time_str)
-            print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
-            print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
-            print("engineData_OilPress_str = ", self.engineData_OilPress_str)
-        if time.time() - self.start_time > 5 and self.update:   # Send data every 5 seconds at the most.
+            
+        # Build the string to send to the display
+        if time.time() - self.start_time > 10 and self.update:   # Send data every 10 seconds at the most.
+            if dataship.debug_mode > 0:
+                print("engineData_hobbs_time_str = ", self.engineData_hobbs_time_str)
+                print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
+                print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
+                print("engineData_OilPress_str = ", self.engineData_OilPress_str)
             self.start_time = time.time()
             # Send the data to the PaPiRus display
             self.papirus_str = "!41+" + self.analogData_smoke_remain_str + "G" + self.engineData_hobbs_time_str + self.fuelData_FuelRemain_str + engine_status_str + '\r\n'
             papirus_bytes = self.papirus_str.encode()
-            print("papirus_bytes: ", papirus_bytes)
+            if dataship.debug_mode>0: print("papirus_bytes: ", papirus_bytes)
             try:
                 self.ser.write(papirus_bytes)         # Send data to PaPiRus
             except Exception as e:
@@ -378,13 +379,13 @@ class automationHat(Module):
             if self.mqtt_cloud:
                 try:
                     self.mqtt_client_cloud.publish("1TM", self.papirus_str)
-                    print("papirus_str to mqtt cloud: ", self.papirus_str)
+                    if dataship.debug_mode>0: print("papirus_str to mqtt cloud: ", self.papirus_str)
                 except Exception as e:
                     print(e)
                     print("Unexpected error in publish to MQTT: ", e)
             try:
                 self.mqtt_client_local.publish("1TM", self.papirus_str)
-                print("papirus_str to mqtt local: ", self.papirus_str)
+                if dataship.debug_mode>0: print("papirus_str to mqtt local: ", self.papirus_str)
             except Exception as e:
                 print(e)
                 print("Unexpected error in publish to MQTT: ", e)
