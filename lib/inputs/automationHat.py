@@ -295,12 +295,19 @@ class automationHat(Module):
         self.analogData_smoke_remain_str = str(int(self.smokeLevel*10)).zfill(4)    # Format as 4 digits with leading zeros
         if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " gallons")
 
+
 # Build text string to send to PaPiRus display pi
 
         self.update = False
         new_FuelLevel = 0
         new_FuelRemain = 0
         new_hobbs_time = 0
+        
+        if self.smokeLevel != self.old_smokeLevel:
+            print("Smoke Level changed: ", self.smokeLevel, " gallons")
+            self.old_smokeLevel = self.smokeLevel
+            self.update = True
+        
         if self.engineData.hobbs_time != None:
             new_hobbs_time = self.engineData.hobbs_time *10
             if new_hobbs_time != self.old_hobbs_time:
@@ -322,10 +329,6 @@ class automationHat(Module):
             engine_status_str = "r"  # running
         elif self.a0 < 0.50:
             engine_status_str = "s"  # stopped
-            
-        if self.smokeLevel != self.old_smokeLevel:
-            self.old_smokeLevel = self.smokeLevel
-            self.update = True
             
         new_FuelRemain = 0
         if self.fuelData.FuelRemain != None:
