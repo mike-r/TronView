@@ -119,6 +119,7 @@ class automationHat(Module):
         self.ApplySmoothing = 1
         self.SmoothingAVGMaxCount = 10
         self.smoothingA = []
+        self.debug_mode = 0
         
         # Add tracking of previous positions
         self.target_positions = {}          # Store previous positions for smoothing
@@ -262,7 +263,7 @@ class automationHat(Module):
 
     def on_message(self, client, userdata, msg):
         # Handle incoming messages
-        print("mqtt Received message: " + str(msg.payload))
+        if self.debug_mode>0: print("mqtt Received message: " + str(msg.payload))
         # Process the message as needed
 
     #############################################
@@ -275,6 +276,8 @@ class automationHat(Module):
             self.mqtt_client_local.loop_stop()
             self.mqtt_client_cloud.loop_stop()
             return dataship
+
+        self.debug_mode = dataship.debug_mode   # Set debug mode from dataship for received mqtt messages
 
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
