@@ -66,6 +66,7 @@ import automationhat
 import sys
 import os
 import socket
+import statistics
 from ._input import Input
 from lib.modules._module import Module
 from lib import hud_graphics
@@ -115,8 +116,9 @@ class automationHat(Module):
         self.mqtt_cloud = False
 
         # Add smoothing configuration
-        self.enable_smoothing = True
-        self.smoothing_factor = 0.15
+        self.ApplySmoothing = 1
+        self.SmoothingAVGMaxCount = 10
+        self.smoothingA = []
         
         # Add tracking of previous positions
         self.target_positions = {}          # Store previous positions for smoothing
@@ -274,11 +276,17 @@ class automationHat(Module):
             self.mqtt_client_cloud.loop_stop()
             return dataship
 
-        self.a0 = automationhat.analog[0].read()  # Read from analog input 1
-
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
-        self.analogData.Data[0] = self.a0   #Store actual voltage value in Dataship
+        self.a0 = automationhat.analog[0].read()  # Read from analog input 1
+        if(self.ApplySmoothing):
+            self.smoothingA.append(self.a0)  # Append the current value to the smoothing list
+            if(len(self.smoothingA)>self.SmoothingAVGMaxCount): self.smoothingA.pop(0)
+            self.a0 = statistics.mean(self.smoothingA)  # Calculate the average of the last N values
+        else:
+            #else don't apply smoothing.
+            pass
+        self.analogData.Data[0] = self.a0
 
         if self.a0 < 0.250 or self.a0 > 4.000:  # Check for broken wire or bad sensor
             if automationhat.is_automation_hat(): automationhat.light.warn.write(1)
