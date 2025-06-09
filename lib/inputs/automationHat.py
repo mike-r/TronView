@@ -108,6 +108,7 @@ class automationHat(Module):
         self.fuelData_FuelLevel_str = "000"
         self.engineData_OilPress_str = "000"
         self.analogData_smoke_remain_str = "0000"
+        self.engine_status_str = "s"  # Default to stopped
         self.a0 = 0
         self.start_time = time.time()
         self.papirus_str = ""
@@ -287,7 +288,7 @@ class automationHat(Module):
         if self.a0 > 0.250:
             self.a0 = self.a0 - 0.250
         else:
-            self.a0 = 0.250     # Wire or sensor probably broken, set level to zero gallons
+            self.a0 = 0     # Wire or sensor probably broken, set level to zero
             
         # Convert analog voltage to gallons:
         self.smokeLevel = 5 * self.a0 / 3.75
@@ -315,7 +316,6 @@ class automationHat(Module):
                 self.update = True
 
         new_OilPress = 0
-        engine_status_str = "s"  # Default to stopped
         if self.engineData.OilPress != None:
             if self.engineData.OilPress > 15: engine_status_str = "r"  # running
             else: engine_status_str = "s"  # stopped
@@ -326,9 +326,9 @@ class automationHat(Module):
                 
         # Test code to fake engine status
         if self.a0 > 3.750:
-            engine_status_str = "r"  # running
-        elif self.a0 < 0.50:
             engine_status_str = "s"  # stopped
+        else:
+            engine_status_str = "r"  # running
             
         new_FuelRemain = 0
         if self.fuelData.FuelRemain != None:
