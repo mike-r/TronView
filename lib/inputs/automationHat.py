@@ -355,7 +355,7 @@ class automationHat(Module):
             print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
             print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
             print("engineData_OilPress_str = ", self.engineData_OilPress_str)
-        if time.time() - self.start_time > 20 or self.update:
+        if time.time() - self.start_time > 5 and self.update:   # Send data every 5 seconds at the most.
             self.start_time = time.time()
             # Send the data to the PaPiRus display
             self.papirus_str = "!41+" + self.analogData_smoke_remain_str + "G" + self.engineData_hobbs_time_str + self.fuelData_FuelRemain_str + engine_status_str + '\r\n'
