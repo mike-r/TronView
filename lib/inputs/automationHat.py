@@ -292,6 +292,7 @@ class automationHat(Module):
             
         # Convert analog voltage to gallons:
         self.smokeLevel = 5 * self.a0 / 3.75
+        self.smokeLevel = round(self.smokeLevel, 1)  # Round to 1 decimal place
         if dataship.debug_mode>0: print("Smoke Oil Level: ", self.smokeLevel, " gallons")
         self.analogData_smoke_remain_str = str(int(self.smokeLevel*10)).zfill(4)    # Format as 4 digits with leading zeros
         if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " gallons")
@@ -325,7 +326,7 @@ class automationHat(Module):
                 self.update = True
                 
         # Test code to fake engine status
-        if self.a0 > 3.750:
+        if self.smokeLevel > 5:
             engine_status_str = "s"  # stopped
         else:
             engine_status_str = "r"  # running
@@ -354,7 +355,7 @@ class automationHat(Module):
             print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
             print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
             print("engineData_OilPress_str = ", self.engineData_OilPress_str)
-        if time.time() - self.start_time > 20:
+        if time.time() - self.start_time > 20 or self.update:
             self.start_time = time.time()
             # Send the data to the PaPiRus display
             self.papirus_str = "!41+" + self.analogData_smoke_remain_str + "G" + self.engineData_hobbs_time_str + self.fuelData_FuelRemain_str + engine_status_str + '\r\n'
