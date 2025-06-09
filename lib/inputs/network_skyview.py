@@ -9,6 +9,7 @@
 import struct
 import time
 import socket
+import select
 import traceback
 import time
 from lib import hud_utils
@@ -61,7 +62,7 @@ class network_skyview(Input):
                                     socket.SOCK_DGRAM) #UDP
                              
             #Bind to any available address on port *portNum*
-            print("using UDP port:"+str(self.udpport)+" for Skyview data")
+            print("Using UDP port:"+str(self.udpport)+" for Skyview data")
             self.ser.bind(("",self.udpport))
             
             #Prevent the socket from blocking until it receives all the data it wants
@@ -180,21 +181,22 @@ class network_skyview(Input):
                     self.ser.seek(0)
                     if dataship.debug_mode>0: print("Skyview file reset")
         else:
-            try:
-                #Attempt to receive up to 1024 bytes of data
-                #if dataship.debug_mode>0: print("Trying to read 1024 bytes")
-                rec_data = self.ser.recvfrom(1024)
-                data = bytearray(rec_data[0])
-                if dataship.debug_mode>0: print("Skyview Data received, first byte: "+str(data[0]))
-                return data
-            except socket.timeout:
-                #print("Socket timeout")
-                pass
-            except socket.error:
-                #If no data is received, you get here, but it's not an error
-                #Ignore and continue
-                #print("Socket error")
-                pass
+            # Live mode: Wait for data on UDP socket
+            readable, _, _ = select.select([self.ser], [], [], 0.1) # Timeout 0.1s
+            if self.ser in readable:
+                try:
+                    #Attempt to receive up to 1024 bytes of data
+                    #if dataship.debug_mode>0: print("Trying to read 1024 bytes")
+                    rec_data, addr = self.ser.recvfrom(1024)
+                    data = bytearray(rec_data[0])
+                    if dataship.debug_mode>0: print("Skyview Data received, first byte: "+str(data[0]))
+                    return data
+                except socket.timeout:
+                    #print("Socket timeout")
+                    pass
+                except socket.error as e:
+                    print(f"network_skyview socket error on recvfrom: {e}") # Log error for debugging
+                    pass
         return bytes(0)
 
     #############################################

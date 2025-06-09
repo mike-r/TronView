@@ -12,6 +12,7 @@ import socket
 import re
 import traceback
 import time
+import select
 from geographiclib.geodesic import Geodesic
 import datetime
 from lib import hud_utils
@@ -63,7 +64,7 @@ class network_skyview_adsb(Input):
                                     socket.SOCK_DGRAM) #UDP
                              
             #Bind to any available address on port *portNum*
-            print("using UDP port:"+str(self.udpport)+" for Skyview ADS-B input")
+            print("Using UDP port:"+str(self.udpport)+" for Skyview ADS-B input")
             self.ser.bind(("",self.udpport))
             
             #Prevent the socket from blocking until it receives all the data it wants
@@ -128,21 +129,24 @@ class network_skyview_adsb(Input):
                     self.ser.seek(0)
                     if dataship.debug_mode>1: print("Skyview ADS-B file reset")
         else:
-            try:
-                # Attempt to receive up to 1024 bytes of data
-                #if dataship.debug_mode>0: print("Trying to read 1024 bytes")
-                recv_data = self.ser.recvfrom(1024)
-                data = bytearray(recv_data[0])
-                if dataship.debug_mode>1 and data[0]==126: print("Skyview GDL-90 Data received")
-                return data
-            except socket.timeout:
-                #print("Socket timeout")
-                pass
-            except socket.error:
-                #If no data is received, you get here, but it's not an error
-                #Ignore and continue
-                #print("Socket error")
-                pass
+            # Live mode: Wait for data on UDP socket
+            readable, _, _ = select.select([self.ser], [], [], 0.1) # Timeout 0.1s
+            if self.ser in readable:
+                try:
+                    # Attempt to receive up to 1024 bytes of data
+                    #if dataship.debug_mode>0: print("Trying to read 1024 bytes")
+                    recv_data, addr = self.ser.recvfrom(1024)
+                    data = bytearray(recv_data[0])
+                    if dataship.debug_mode>1 and data[0]==126: print("Skyview GDL-90 Data received")
+                    return data
+                except socket.timeout:
+                    #print("Socket timeout")
+                    pass
+                except socket.error as e:
+                    #If no data is received, you get here, but it's not an error
+                    #Ignore and continue
+                    print(f"network_skyview socket error on recvfrom: {e}") # Log error for debugging
+                    pass
         return bytes(0)
 
     #############################################
