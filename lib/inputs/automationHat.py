@@ -100,6 +100,7 @@ class automationHat(Module):
         self.old_OilPress = 0
         self.old_FuelRemain = 0
         self.old_FuelLevel = 0
+        self.old_smokeLevel = 0.0
         self.mqtt_broker_address_cloud = "broker.mqtt.cool"
         self.mqtt_broker_address_local = "localhost"
         self.engineData_hobbs_time_str = "00000"
@@ -317,10 +318,14 @@ class automationHat(Module):
                 self.update = True
                 
         # Test code to fake engine status
-        if self.a0 > 4.50:
+        if self.a0 > 3.750:
             engine_status_str = "r"  # running
         elif self.a0 < 0.50:
             engine_status_str = "s"  # stopped
+            
+        if self.smokeLevel != self.old_smokeLevel:
+            self.old_smokeLevel = self.smokeLevel
+            self.update = True
             
         new_FuelRemain = 0
         if self.fuelData.FuelRemain != None:
