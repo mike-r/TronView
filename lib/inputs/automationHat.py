@@ -276,6 +276,9 @@ class automationHat(Module):
             self.mqtt_client_local.loop_stop()
             self.mqtt_client_cloud.loop_stop()
             return dataship
+        
+        if time.time() - self.start_time < 2:   # no need to read data faster than once per every 2 seconds.
+            return dataship
 
         self.debug_mode = dataship.debug_mode   # Set debug mode from dataship for received mqtt messages
 
