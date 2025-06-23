@@ -112,6 +112,7 @@ class automationHat(Module):
         self.engine_status_str = "s"  # Default to stopped
         self.a0 = 0
         self.start_time = time.time()
+        self.loop_time = time.time()  - 5 # Start loop_time 5 seconds in the past to allow first readMessage to run immediately.
         self.papirus_str = ""
         self.mqtt_cloud = False
 
@@ -276,9 +277,11 @@ class automationHat(Module):
             self.mqtt_client_local.loop_stop()
             self.mqtt_client_cloud.loop_stop()
             return dataship
-        
-        if time.time() - self.start_time < 2:   # no need to read data faster than once per every 2 seconds.
+
+        # print ("self.loop_time: ", self.loop_time, " time.time(): ", time.time())        
+        if time.time() - self.loop_time < 1:   # no need to read data faster than once per every 1 seconds.
             return dataship
+        self.loop_time = time.time()
 
         self.debug_mode = dataship.debug_mode   # Set debug mode from dataship for received mqtt messages
 
