@@ -154,11 +154,11 @@ class network_skyview(Input):
                     if t == b'!':     # May be a Dynon Skyview Message
                         if dataship.debug_mode>0: print("\n! ", end ="." )
                         t =  self.ser.read(1)
-                        if t == b'1': # Skyview ADHAES message with 74 bytes
+                        if t == b'1': # Skyview ADAHRS message with 74 bytes
                             data = bytearray(b'!1')
                             data.extend(self.ser.read(72))
                             if dataship.debug_mode>0:
-                                print("Skyview ADHAES message with 74 bytes")
+                                print("Skyview ADAHRS message with 74 bytes")
                                 if dataship.debug_mode>1: print(str(data))
                             return data
                         elif t == b'2': # Skyview NAV/AP message with 93 bytes
@@ -208,13 +208,13 @@ class network_skyview(Input):
         msg = self.getNextChunck(dataship)
         if len(msg) == 0: return dataship
         if dataship.debug_mode>0:
-            print("---------------network_skyview-------------------------------------\nNEW Chunk len:"+str(len(msg)))
+            print("--------------------network_skyview--------------------\nNEW Chunk len:"+str(len(msg)))
             print("msg[0:4]:", msg[0:4])
         if msg[0] == ord('!') and len(msg) == 392:  # set of 3 Skyview messages
             if msg[1] == ord('1'):
                 msg1 = msg[0:74]
                 if dataship.debug_mode>0:
-                    print("Decode Skyview Type 1; ADHAES message")
+                    print("Decode Skyview Type 1; ADAHRS message")
                     if dataship.debug_mode>1: print(msg1.hex())
                 dataship = self.processSingleSkyviewMessage(msg1,dataship)
             if msg[75] == ord('2'):
@@ -231,7 +231,7 @@ class network_skyview(Input):
             if msg[1]==ord('1') and len(msg)==74:
                 msg1 = msg[0:74]
                 if dataship.debug_mode>0:
-                    print("Decode Skyview Type 1; ADHAES message")
+                    print("Decode Skyview Type 1; ADAHRS message")
                     if dataship.debug_mode>1: print(msg1.hex())
             elif msg[1]==ord('2') and len(msg)==93:
                 msg2 = msg[0:93]
@@ -258,10 +258,10 @@ class network_skyview(Input):
             dataVer = dataVer.encode()
         try:
             if True:
-                if dataType == ord('1'):  # AHRS message
+                if dataType == ord('1'):  # ADAHRS message
                     if(isinstance(msg,str)):
                         msg = msg.encode() # if read from file then convert to bytes
-                        if dataship.debug_mode==2: print("ADHARS !1", msg)
+                        if dataship.debug_mode==2: print("ADAHRS !1", msg)
                     HH, MM, SS, FF, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel, AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
                          # Format string breakdown:
                          # 8s - System time (8 bytes)
