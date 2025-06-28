@@ -198,9 +198,9 @@ class serial_skyview(Input):
 
             if True:
                 #dataship.msg_last = msg
-                if dataType == b'1':  # AHRS message
+                if dataType == b'1':  # ADAHRS message
                     msg = self.ser.read(71)
-                    if dataship.debug_mode==2: print("ADHARS !1", msg)
+                    if dataship.debug_mode==2: print("ADAHRS !1", msg)
                     if(isinstance(msg,str)): msg = msg.encode() # if read from file then convert to bytes
                     HH, MM, SS, FF, pitch, roll, HeadingMAG, IAS, PresAlt, TurnRate, LatAccel, VertAccel, AOA, VertSpd, OAT, TAS, Baro, DA, WD, WS, Checksum, CRLF = struct.unpack(
                          # Format string breakdown:
@@ -275,7 +275,7 @@ class serial_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
-                    if dataship.debug_mode>0: print("Completed AHRS Message !1:")
+                    if dataship.debug_mode>0: print("Completed ADAHRS Message !1:")
 
                 elif dataType == b'2': #Dynon System message (nav,AP, etc)
                     self.navData.msg_count += 1
