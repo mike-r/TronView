@@ -51,6 +51,10 @@
 # Requires modification to /usr/lib/python3/dist-packages/automationhat/__init__.py
 # Fork of modification is from: https://github.com/kiddigital/automation-hat
 
+# Install Adafruit IO library:
+# sudo pip3 install adafruit-io --break-system-packages
+
+
 # Write Serial data to PaPiRus Pi
 # Format of data stream is:
 # !41+ssssGhhhhhfffr
@@ -137,7 +141,7 @@ class automationHat(Module):
         
         self.ADAFRUIT_IO_USERNAME = 'turbo182'
         self.ADAFRUIT_IO_KEY = '612394771da4803b0e28827e0164d3eda7fef163'
-        self.ADAFRUIT_IO_FEED_NAME = 'smoke_level'
+        self.ADAFRUIT_IO_FEED_NAME = 'smoke-level'
         self.AIO = Client(self.ADAFRUIT_IO_USERNAME, self.ADAFRUIT_IO_KEY)  # Initialize Adafruit IO client
         try:
             self.smokeLevel_feed = self.AIO.feeds(self.ADAFRUIT_IO_FEED_NAME)  # Get the feed for smoke level
