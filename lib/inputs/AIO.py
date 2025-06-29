@@ -93,11 +93,11 @@ class AIO(Module):
         
     def initAIO(self, dataship: Dataship):
         print("Initializing Adafruit IO...")
-        self.ADAFRUIT_IO_USERNAME = _input_file_utils.readConfigBool(self.name, "ADAFRUIT_IO_USERNAME")
-        self.ADAFRUIT_IO_KEY = _input_file_utils.readConfigBool(self.name, "ADAFRUIT_IO_KEY")
-        self.ADAFRUIT_FEED_ONE = _input_file_utils.readConfigBool(self.name, "ADAFRUIT_FEED_ONE")
-        self.ADAFRUIT_FEED_TWO = _input_file_utils.readConfigBool(self.name, "ADAFRUIT_FEED_TWO")
-        self.ADAFRUIT_FEED_THREE = _input_file_utils.readConfigBool(self.name, "ADAFRUIT_FEED_THREE")
+        self.ADAFRUIT_IO_USERNAME = _input_file_utils.readConfig(self.name, "ADAFRUIT_IO_USERNAME")
+        self.ADAFRUIT_IO_KEY = _input_file_utils.readConfig(self.name, "ADAFRUIT_IO_KEY")
+        self.ADAFRUIT_FEED_ONE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_ONE")
+        self.ADAFRUIT_FEED_TWO = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_TWO")
+        self.ADAFRUIT_FEED_THREE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_THREE")
 
         self.AIO = Client(self.ADAFRUIT_IO_USERNAME, self.ADAFRUIT_IO_KEY)  # Initialize Adafruit IO client
         try:
