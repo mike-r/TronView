@@ -7,6 +7,7 @@
 
 
 from time import time
+import time
 from ._input import Input
 from . import _input_file_utils
 from lib.modules._module import Module
