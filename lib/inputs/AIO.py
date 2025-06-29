@@ -23,7 +23,7 @@ from lib.common.dataship.dataship_analog import AnalogData
 from Adafruit_IO import Client, Feed, RequestError  # import Adafruit IO REST client.
 
 
-class adafruitIO(Module):
+class AIO(Module):
     # called only when object is first created.
     def __init__(self):
         Module.__init__(self)
