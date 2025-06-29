@@ -51,9 +51,6 @@
 # Requires modification to /usr/lib/python3/dist-packages/automationhat/__init__.py
 # Fork of modification is from: https://github.com/kiddigital/automation-hat
 
-# Install Adafruit IO library:
-# sudo pip3 install adafruit-io --break-system-packages
-
 
 # Write Serial data to PaPiRus Pi
 # Format of data stream is:
@@ -85,9 +82,7 @@ from lib.common.dataship.dataship_air import AirData
 from lib.common.dataship.dataship_analog import AnalogData
 import pygame
 import math
-import time
 from lib.common import shared
-from Adafruit_IO import Client, Feed, RequestError  # import Adafruit IO REST client.
 
 
 class automationHat(Module):
@@ -139,16 +134,6 @@ class automationHat(Module):
         self.selectedTarget = None
         self.selectedTargetID = None
         
-        self.ADAFRUIT_IO_USERNAME = 'turbo182'
-        self.ADAFRUIT_IO_KEY = '612394771da4803b0e28827e0164d3eda7fef163'
-        self.ADAFRUIT_IO_FEED_NAME = 'smoke-level'
-        self.AIO = Client(self.ADAFRUIT_IO_USERNAME, self.ADAFRUIT_IO_KEY)  # Initialize Adafruit IO client
-        try:
-            self.smokeLevel_feed = self.AIO.feeds(self.ADAFRUIT_IO_FEED_NAME)  # Get the feed for smoke level
-        except RequestError: # Doesn't exist, create a new feed
-            self.smokeLevel_feed = Feed(name=self.ADAFRUIT_IO_FEED_NAME)
-            self.AIO.create_feed(self.smokeLevel_feed)  # Create the feed if it doesn't exist
-
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
         self.initMqtt(dataship)
@@ -341,8 +326,6 @@ class automationHat(Module):
             if dataship.debug_mode>0: print("Smoke Level changed: ", self.smokeLevel, " gallons")
             self.old_smokeLevel = self.smokeLevel
             self.update = True
-            smLv ='%.2f'%(self.smokeLevel)
-            self.AIO.send_data(self.smokeLevel_feed.key, str(smLv))  # Send smoke level to Adafruit IO
 
         if self.engineData.hobbs_time != None:
             new_hobbs_time = self.engineData.hobbs_time *10
