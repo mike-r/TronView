@@ -406,48 +406,48 @@ class automationHat(Module):
                 print("Unexpected error in publish to MQTT: ", e)
             
             
-            if self.isAdafruitIOReachable(): print("Adafruit IO is reachable, sending data...")
-            print("engine_status_str: ", self.engine_status_str, " old_engine_status_str: ", self.old_engine_status_str)
+        if self.isAdafruitIOReachable(): print("Adafruit IO is reachable, sending data...")
+        print("engine_status_str: ", self.engine_status_str, " old_engine_status_str: ", self.old_engine_status_str)
                 
-            if self.engine_status_str == "s" and self.old_engine_status_str == "r" and self.isAdafruitIOReachable():
-                print("Initializing Adafruit IO...")
-                self.ADAFRUIT_IO_USERNAME = _input_file_utils.readConfig(self.name, "ADAFRUIT_IO_USERNAME")
-                self.ADAFRUIT_IO_KEY = _input_file_utils.readConfig(self.name, "ADAFRUIT_IO_KEY")
-                self.ADAFRUIT_FEED_ONE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_ONE")
-                self.ADAFRUIT_FEED_TWO = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_TWO")
-                self.ADAFRUIT_FEED_THREE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_THREE")
+        if self.engine_status_str == "s" and self.old_engine_status_str == "r" and self.isAdafruitIOReachable():
+            print("Initializing Adafruit IO...")
+            self.ADAFRUIT_IO_USERNAME = _input_file_utils.readConfig(self.name, "ADAFRUIT_IO_USERNAME")
+            self.ADAFRUIT_IO_KEY = _input_file_utils.readConfig(self.name, "ADAFRUIT_IO_KEY")
+            self.ADAFRUIT_FEED_ONE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_ONE")
+            self.ADAFRUIT_FEED_TWO = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_TWO")
+            self.ADAFRUIT_FEED_THREE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_THREE")
 
-                print ("Feed_One: ", self.ADAFRUIT_FEED_ONE)
-                print ("Feed_Two: ", self.ADAFRUIT_FEED_TWO)
-                print ("Feed_Three: ", self.ADAFRUIT_FEED_THREE)
+            print ("Feed_One: ", self.ADAFRUIT_FEED_ONE)
+            print ("Feed_Two: ", self.ADAFRUIT_FEED_TWO)
+            print ("Feed_Three: ", self.ADAFRUIT_FEED_THREE)
     
-                # Initialize AdaFruit IO client, feeds then send the data
-                self.AIO = Client(self.ADAFRUIT_IO_USERNAME, self.ADAFRUIT_IO_KEY)  # Initialize Adafruit IO client
-                print("Adafruit IO client initialized.")
-                try:
-                    self.ADAFRUIT_FEED_ONE = self.AIO.feeds(self.ADAFRUIT_FEED_ONE)
-                except RequestError: # Doesn't exist, create a new feed
-                    self.ADAFRUIT_FEED_ONE = Feed(name=self.ADAFRUIT_FEED_ONE)
-                    self.AIO.create_feed(self.ADAFRUIT_FEED_ONE)
+            # Initialize AdaFruit IO client, feeds then send the data
+            self.AIO = Client(self.ADAFRUIT_IO_USERNAME, self.ADAFRUIT_IO_KEY)  # Initialize Adafruit IO client
+            print("Adafruit IO client initialized.")
+            try:
+                self.ADAFRUIT_FEED_ONE = self.AIO.feeds(self.ADAFRUIT_FEED_ONE)
+            except RequestError: # Doesn't exist, create a new feed
+                self.ADAFRUIT_FEED_ONE = Feed(name=self.ADAFRUIT_FEED_ONE)
+                self.AIO.create_feed(self.ADAFRUIT_FEED_ONE)
 
-                try:
-                    self.ADAFRUIT_FEED_TWO = self.AIO.feeds(self.ADAFRUIT_FEED_TWO)
-                except RequestError: # Doesn't exist, create a new feed
-                    self.ADAFRUIT_FEED_TWO = Feed(name=self.ADAFRUIT_FEED_TWO)
-                    self.AIO.create_feed(self.ADAFRUIT_FEED_TWO)
+            try:
+                self.ADAFRUIT_FEED_TWO = self.AIO.feeds(self.ADAFRUIT_FEED_TWO)
+            except RequestError: # Doesn't exist, create a new feed
+                self.ADAFRUIT_FEED_TWO = Feed(name=self.ADAFRUIT_FEED_TWO)
+                self.AIO.create_feed(self.ADAFRUIT_FEED_TWO)
 
-                # Fuel Remaining:
-                fuelRemain = self.fuelData.FuelRemain
-                print("fuelRemain: ", fuelRemain)
-                self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(fuelRemain))
+            # Fuel Remaining:
+            fuelRemain = self.fuelData.FuelRemain
+            print("fuelRemain: ", fuelRemain)
+            self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(fuelRemain))
 
-                # Hobbs Time:
-                hobbsTime = self.engineData.hobbs_time 
-                print("hobbsTime: ", hobbsTime)
-                self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(hobbsTime))
+            # Hobbs Time:
+            hobbsTime = self.engineData.hobbs_time 
+            print("hobbsTime: ", hobbsTime)
+            self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(hobbsTime))
                     
-                # Smoke Level:
-                self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, self.analogData_smoke_remain_str)
+            # Smoke Level:
+            self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, self.analogData_smoke_remain_str)
 
         self.loop_count = self.loop_count + 1
         if dataship.debug_mode >0: print("end of readMessage, loop_count: ", self.loop_count)
@@ -456,6 +456,14 @@ class automationHat(Module):
     def isAdafruitIOReachable(self):
         url = "https://io.adafruit.com"
         return self.isUrlReachable(url)
+    
+    def isUrlReachable(self, url):
+        try:
+            response = urlopen(url)
+            return response.status == 200
+        except Exception as e:
+            print(f"Error checking URL {url}: {e}")
+            return False
      
     # close this data input 
     def closeInput(self,dataship: Dataship):
