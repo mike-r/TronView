@@ -107,6 +107,9 @@ class automationHat(Module):
         self.old_FuelRemain = 0
         self.old_FuelLevel = 0
         self.old_smokeLevel = 0.0
+        self.tv_feed_one = None
+        self.tv_feed_two = None
+        self.tv_feed_three = None
         self.mqtt_broker_address_cloud = "broker.mqtt.cool"
         self.mqtt_broker_address_local = "localhost"
         self.engineData_hobbs_time_str = "00000"
@@ -440,18 +443,35 @@ class automationHat(Module):
                 self.ADAFRUIT_FEED_THREE = Feed(name=self.ADAFRUIT_FEED_THREE)
                 self.AIO.create_feed(self.ADAFRUIT_FEED_THREE)
 
-            # Fuel Remaining:
-            fuelRemain = self.fuelData.FuelRemain
-            print("fuelRemain: ", fuelRemain)
-            self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(fuelRemain))
+            # AIO Feed One is the fuel remaining in gallons.
+            # Read the value from the config file and set it to self.fuelRemain
+            
+            tv_feed_one_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_ONE")
+            feed_one_str_exec = "self.tv_feed_one = self." + tv_feed_one_str
 
-            # Hobbs Time:
-            hobbsTime = self.engineData.hobbs_time 
-            print("hobbsTime: ", hobbsTime)
-            self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(hobbsTime))
-                    
-            # Smoke Level:
-            self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, self.analogData_smoke_remain_str)
+            exec(feed_one_str_exec)  # Evaluate the string to get the value
+
+            self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(self.tv_feed_one))
+
+            # AIO Feed Two is the Hobbs time in tenths of hours.
+            # Read the value from the config file and set it to self.hobbsTime
+            
+            tv_feed_two_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_TWO")
+            feed_two_str_exec = "self.tv_feed_two = self." + tv_feed_two_str
+            
+            exec(feed_two_str_exec)  # Evaluate the string to get the value
+            
+            self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(self.tv_feed_two))
+
+            # AIO Feed Three is the smoke level.
+            # Read the value from the config file and set it to self.smokeLevel
+
+            tv_feed_three_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_THREE")
+            feed_three_str_exec = "self.tv_feed_three = self." + tv_feed_three_str
+
+            exec(feed_three_str_exec)  # Evaluate the string to get the value
+            # self.tv_feed_three = self.tv_feed_three / 10.0  # Convert to gallons from tenths of gallons
+            self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, str(self.tv_feed_three))
 
         self.loop_count = self.loop_count + 1
         if dataship.debug_mode >0: print("end of readMessage, loop_count: ", self.loop_count)
