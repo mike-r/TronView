@@ -409,11 +409,11 @@ class automationHat(Module):
                 
         if self.engine_status_str == "s" and self.old_engine_status_str == "r" and self.isAdafruitIOReachable():
             print("Initializing Adafruit IO...")
-            self.ADAFRUIT_IO_USERNAME = _input_file_utils.readConfig(self.name, "ADAFRUIT_IO_USERNAME")
-            self.ADAFRUIT_IO_KEY = _input_file_utils.readConfig(self.name, "ADAFRUIT_IO_KEY")
-            self.ADAFRUIT_FEED_ONE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_ONE")
-            self.ADAFRUIT_FEED_TWO = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_TWO")
-            self.ADAFRUIT_FEED_THREE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_THREE")
+            self.ADAFRUIT_IO_USERNAME = _input_file_utils.readConfig("AIO", "ADAFRUIT_IO_USERNAME")
+            self.ADAFRUIT_IO_KEY = _input_file_utils.readConfig("AIO", "ADAFRUIT_IO_KEY")
+            self.ADAFRUIT_FEED_ONE = _input_file_utils.readConfig("AIO", "ADAFRUIT_FEED_ONE")
+            self.ADAFRUIT_FEED_TWO = _input_file_utils.readConfig("AIO", "ADAFRUIT_FEED_TWO")
+            self.ADAFRUIT_FEED_THREE = _input_file_utils.readConfig("AIO", "ADAFRUIT_FEED_THREE")
 
             print ("Feed_One: ", self.ADAFRUIT_FEED_ONE)
             print ("Feed_Two: ", self.ADAFRUIT_FEED_TWO)
