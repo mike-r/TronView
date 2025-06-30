@@ -433,6 +433,12 @@ class automationHat(Module):
             except RequestError: # Doesn't exist, create a new feed
                 self.ADAFRUIT_FEED_TWO = Feed(name=self.ADAFRUIT_FEED_TWO)
                 self.AIO.create_feed(self.ADAFRUIT_FEED_TWO)
+                
+            try:
+                self.ADAFRUIT_FEED_THREE = self.AIO.feeds(self.ADAFRUIT_FEED_THREE)
+            except RequestError: # Doesn't exist, create a new feed
+                self.ADAFRUIT_FEED_THREE = Feed(name=self.ADAFRUIT_FEED_THREE)
+                self.AIO.create_feed(self.ADAFRUIT_FEED_THREE)
 
             # Fuel Remaining:
             fuelRemain = self.fuelData.FuelRemain
