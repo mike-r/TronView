@@ -23,6 +23,7 @@ from lib.common.dataship.dataship_air import AirData
 from lib.common.dataship.dataship_analog import AnalogData
 from Adafruit_IO import Client, Feed, RequestError  # import Adafruit IO REST client.
 from lib.common import shared
+from urllib.request import urlopen
 
 class AIO(Module):
     # called only when object is first created.
@@ -108,20 +109,20 @@ class AIO(Module):
         print ("Feed_Two: ", self.ADAFRUIT_FEED_TWO)
         print ("Feed_Three: ", self.ADAFRUIT_FEED_THREE)
     
-        
-        self.AIO = Client(self.ADAFRUIT_IO_USERNAME, self.ADAFRUIT_IO_KEY)  # Initialize Adafruit IO client
-        print("Adafruit IO client initialized.")
-        try:
-            self.ADAFRUIT_FEED_ONE = self.AIO.feeds(self.ADAFRUIT_FEED_ONE)
-        except RequestError: # Doesn't exist, create a new feed
-            self.ADAFRUIT_FEED_ONE = Feed(name=self.ADAFRUIT_FEED_ONE)
-            self.AIO.create_feed(self.ADAFRUIT_FEED_ONE)
+        if self.isAdafruitIOReachable():
+            self.AIO = Client(self.ADAFRUIT_IO_USERNAME, self.ADAFRUIT_IO_KEY)  # Initialize Adafruit IO client
+            print("Adafruit IO client initialized.")
+            try:
+                self.ADAFRUIT_FEED_ONE = self.AIO.feeds(self.ADAFRUIT_FEED_ONE)
+            except RequestError: # Doesn't exist, create a new feed
+                self.ADAFRUIT_FEED_ONE = Feed(name=self.ADAFRUIT_FEED_ONE)
+                self.AIO.create_feed(self.ADAFRUIT_FEED_ONE)
 
-        try:
-            self.ADAFRUIT_FEED_TWO = self.AIO.feeds(self.ADAFRUIT_FEED_TWO)
-        except RequestError: # Doesn't exist, create a new feed
-            self.ADAFRUIT_FEED_TWO = Feed(name=self.ADAFRUIT_FEED_TWO)
-            self.AIO.create_feed(self.ADAFRUIT_FEED_TWO)
+            try:
+                self.ADAFRUIT_FEED_TWO = self.AIO.feeds(self.ADAFRUIT_FEED_TWO)
+            except RequestError: # Doesn't exist, create a new feed
+                self.ADAFRUIT_FEED_TWO = Feed(name=self.ADAFRUIT_FEED_TWO)
+                self.AIO.create_feed(self.ADAFRUIT_FEED_TWO)
 
     #############################################
     ## Function: readMessage
@@ -130,10 +131,6 @@ class AIO(Module):
         if dataship.errorFoundNeedToExit: return dataship
         if self.skipReadInput == True: return dataship
         
-        #self.smokeLevel = 3.14159
-        #smLv ='%.1f'%(self.smokeLevel)
-        #self.AIO.send_data(self.smokeLevel_feed.key, str(smLv))  # Send smoke level to Adafruit IO
-
         # Hobbs Time:
         if self.engineData.hobbs_time is None:
             print("Hobbs time not available ...yet.")
@@ -142,7 +139,8 @@ class AIO(Module):
             if hobbsTime != self.old_hobbs_time:
                 print("hobbsTime: ", hobbsTime)
                 self.old_hobbs_time = hobbsTime
-                self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(hobbsTime))
+                if self.isAdafruitIOReachable():
+                    self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(hobbsTime))
 
         # Fuel Remaining:
         if self.fuelData.FuelRemain is None:
@@ -152,6 +150,19 @@ class AIO(Module):
             if self.old_FuelRemain != fuelRemain:
                 self.old_FuelRemain = fuelRemain
                 print("fuelRemain: ", fuelRemain)
-                if fuelRemain > 0.1:  # Only send if fuel remaining is greater than 0.1 gallons
+                if fuelRemain > 0.1 and self.isAdafruitIOReachable():  # Only send if fuel remaining is greater than 0.1 gallons
                     self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(fuelRemain))
         return dataship
+    
+    def isUrlReachable(self, url):
+        try:
+            response = urlopen(url)
+            return response.status == 200
+        except Exception as e:
+            print(f"Error checking URL {url}: {e}")
+            return False
+        
+    def isAdafruitIOReachable(self):
+        url = "https://io.adafruit.com"
+        return self.isUrlReachable(url)
+    
