@@ -338,11 +338,12 @@ class automationHat(Module):
             if new_hobbs_time != self.old_hobbs_time:
                 self.old_hobbs_time = new_hobbs_time
                 self.update = True
-
+                
+        self.old_engine_status_str = self.engine_status_str  # Set old engine status to current status
         new_OilPress = 0
         if self.engineData.OilPress != None:
-            if self.engineData.OilPress > 15: engine_status_str = "r"  # running
-            else: engine_status_str = "s"  # stopped
+            if self.engineData.OilPress > 15: self.engine_status_str = "r"  # running
+            else: self.engine_status_str = "s"  # stopped
             new_OilPress = self.engineData.OilPress
             if new_OilPress != self.old_OilPress:
                 self.old_OilPress = new_OilPress
@@ -405,9 +406,6 @@ class automationHat(Module):
                 print(e)
                 print("Unexpected error in publish to MQTT: ", e)
             
-            
-        if self.isAdafruitIOReachable(): print("Adafruit IO is reachable, sending data...")
-        print("engine_status_str: ", self.engine_status_str, " old_engine_status_str: ", self.old_engine_status_str)
                 
         if self.engine_status_str == "s" and self.old_engine_status_str == "r" and self.isAdafruitIOReachable():
             print("Initializing Adafruit IO...")
