@@ -404,6 +404,10 @@ class automationHat(Module):
             except Exception as e:
                 print(e)
                 print("Unexpected error in publish to MQTT: ", e)
+            
+            
+            if self.isAdafruitIOReachable(): print("Adafruit IO is reachable, sending data...")
+            print("engine_status_str: ", self.engine_status_str, " old_engine_status_str: ", self.old_engine_status_str)
                 
             if self.engine_status_str == "s" and self.old_engine_status_str == "r" and self.isAdafruitIOReachable():
                 print("Initializing Adafruit IO...")
