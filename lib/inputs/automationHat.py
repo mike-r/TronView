@@ -450,7 +450,7 @@ class automationHat(Module):
             feed_one_str_exec = "self.tv_feed_one = self." + tv_feed_one_str
 
             exec(feed_one_str_exec)  # Evaluate the string to get the value
-
+            print("tv_feed_one: ", self.tv_feed_one)
             self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(self.tv_feed_one))
 
             # AIO Feed Two is the Hobbs time in tenths of hours.
@@ -460,7 +460,7 @@ class automationHat(Module):
             feed_two_str_exec = "self.tv_feed_two = self." + tv_feed_two_str
             
             exec(feed_two_str_exec)  # Evaluate the string to get the value
-            
+            print("tv_feed_two: ", self.tv_feed_two)
             self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(self.tv_feed_two))
 
             # AIO Feed Three is the smoke level.
@@ -468,9 +468,9 @@ class automationHat(Module):
 
             tv_feed_three_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_THREE")
             feed_three_str_exec = "self.tv_feed_three = self." + tv_feed_three_str
-
+            print("tv_feed_three_str: ", tv_feed_three_str)
             exec(feed_three_str_exec)  # Evaluate the string to get the value
-            # self.tv_feed_three = self.tv_feed_three / 10.0  # Convert to gallons from tenths of gallons
+
             self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, str(self.tv_feed_three))
 
         self.loop_count = self.loop_count + 1
