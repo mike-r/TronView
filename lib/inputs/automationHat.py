@@ -468,7 +468,7 @@ class automationHat(Module):
 
             tv_feed_three_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_THREE")
             feed_three_str_exec = "self.tv_feed_three = self." + tv_feed_three_str
-            print("tv_feed_three_str: ", tv_feed_three_str)
+            print("tv_feed_three: ", self.tv_feed_three)
             exec(feed_three_str_exec)  # Evaluate the string to get the value
 
             self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, str(self.tv_feed_three))
