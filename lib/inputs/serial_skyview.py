@@ -349,7 +349,7 @@ class serial_skyview(Input):
                     if APYawP != b'XXXXX': self.navData.AP_YawPos = Input.cleanInt(self,APYawP)
                     self.navData.AP_YawSlip = Input.cleanInt(self,APYawSlip)
                     if TransponderStatus == b'X':
-                        dataship.nav.XPDR_Status = 'OFF'
+                        self.navData.XPDR_Status = 'OFF'
                     elif TransponderStatus == b'0':
                         self.navData.XPDR_Status = 'SBY'
                     elif TransponderStatus == b'1':
