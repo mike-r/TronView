@@ -322,7 +322,7 @@ class automationHat(Module):
         if dataship.debug_mode>0: print("Smoke Oil Level: ", self.smokeLevel, " gallons")
         self.analogData_smoke_remain_str = str(int(self.smokeLevel*10)).zfill(4)    # Format as 4 digits with leading zeros
         if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " gallons")
-
+        self.analogData.Data[1] = self.smokeLevel  # Store the smoke level in the analog data object
 
 # Build text string to send to PaPiRus display pi
 
@@ -364,6 +364,7 @@ class automationHat(Module):
             if new_FuelRemain != self.old_FuelRemain:
                 self.old_FuelRemain = new_FuelRemain
                 self.update = True
+                
         new_FuelLevel = 0
         if self.fuelData.FuelLevels[0] != None:
             new_FuelLevel = self.fuelData.FuelLevels[0] * 10
