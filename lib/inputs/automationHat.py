@@ -102,11 +102,14 @@ class automationHat(Module):
         self.loop_count = 0
         self.isPlaybackMode = False
         self.old_src_alt = -100
-        self.old_hobbs_time = 0
-        self.old_OilPress = 0
-        self.old_FuelRemain = 0
-        self.old_FuelLevel = 0
-        self.old_smokeLevel = 0.0
+        self.old_hobbs_time = -10
+        self.old_OilPress = -10.0
+        self.old_FuelRemain = -10.0
+        self.old_FuelLevel = -10.0
+        self.old_smokeLevel = -10.0
+        self.new_hobbs_time = 0.0
+        self.new_FuelRemain = 0.0
+        self.new_OilPress = 0.0
         self.tv_feed_one = None
         self.tv_feed_two = None
         self.tv_feed_three = None
@@ -119,7 +122,9 @@ class automationHat(Module):
         self.analogData_smoke_remain_str = "0000"
         self.engine_status_str = "s"  # Default to stopped
         self.old_engine_status_str = "s"  # Default to stopped
-        self.a0 = 0
+        self.a0 = 0                         # Analog input 0.  Read from Automation Hat.  
+        self.di0 = 0                        # Digital input 0.  Set to 1 to indicate the Automation Hat is running.
+        #self.di1 = 0                        # Digital input 1.
         self.start_time = time.time()
         self.loop_time = time.time()  - 5 # Start loop_time 5 seconds in the past to allow first readMessage to run immediately.
         self.papirus_str = ""
@@ -230,7 +235,9 @@ class automationHat(Module):
             #automationhat.digital.write(1, 0)  # Set output 1 to low
             #automationhat.digital.write(2, 0)  # Set output 2 to low
             #automationhat.digital.write(3, 0)  # Set output 3 to low
-            self.a0 = automationhat.analog[0].read()      # Read from analog input 1
+            self.a0 = automationhat.analog[0].read()      # Read from analog input 0
+            self.di0 = automationhat.digital.read(0)  # Read digital input 0
+            #self.di1 = automationhat.digital.read(1)  # Read digital input 1
         # Set Automation Hat inputs HIGH.
             #automationhat.input.one.resistor(automationhat.PULL_UP)
             #automationhat.input.two.resistor(automationhat.PULL_UP)
@@ -287,8 +294,7 @@ class automationHat(Module):
             self.mqtt_client_cloud.loop_stop()
             return dataship
 
-        # print ("self.loop_time: ", self.loop_time, " time.time(): ", time.time())        
-        if time.time() - self.loop_time < 1:   # no need to read data faster than once per every 1 seconds.
+        if time.time() - self.loop_time < 3:   # no need to read data faster than once per every 3 seconds.
             return dataship
         self.loop_time = time.time()
 
@@ -327,9 +333,6 @@ class automationHat(Module):
 # Build text string to send to PaPiRus display pi
 
         self.update = False
-        new_FuelLevel = 0
-        new_FuelRemain = 0
-        new_hobbs_time = 0
         
         if self.smokeLevel != self.old_smokeLevel:
             if dataship.debug_mode>0: print("Smoke Level changed: ", self.smokeLevel, " gallons")
@@ -337,46 +340,38 @@ class automationHat(Module):
             self.update = True
 
         if self.engineData.hobbs_time != None:
-            new_hobbs_time = self.engineData.hobbs_time *10
-            if new_hobbs_time != self.old_hobbs_time:
-                self.old_hobbs_time = new_hobbs_time
+            self.new_hobbs_time = self.engineData.hobbs_time *10
+            if self.new_hobbs_time != self.old_hobbs_time:
+                self.old_hobbs_time = self.new_hobbs_time
                 self.update = True
                 
         self.old_engine_status_str = self.engine_status_str  # Set old engine status to current status
-        new_OilPress = 0
         if self.engineData.OilPress != None:
-            if self.engineData.OilPress > 15: self.engine_status_str = "r"  # running
+            if self.engineData.OilPress > 15 or self.di0 != 0: self.engine_status_str = "r"  # running
             else: self.engine_status_str = "s"  # stopped
-            new_OilPress = self.engineData.OilPress
-            if new_OilPress != self.old_OilPress:
-                self.old_OilPress = new_OilPress
+            self.new_OilPress = self.engineData.OilPress
+            if self.new_OilPress != self.old_OilPress:
+                self.old_OilPress = self.new_OilPress
                 self.update = True
-                
-        # Test code to fake engine status
-        if self.smokeLevel > 5:
-            self.engine_status_str = "s"  # stopped
-        else:
-            self.engine_status_str = "r"  # running
             
-        new_FuelRemain = 0
         if self.fuelData.FuelRemain != None:
-            new_FuelRemain = self.fuelData.FuelRemain * 10
-            if new_FuelRemain != self.old_FuelRemain:
-                self.old_FuelRemain = new_FuelRemain
+            self.new_FuelRemain = self.fuelData.FuelRemain * 10
+            if self.new_FuelRemain != self.old_FuelRemain:
+                self.old_FuelRemain = self.new_FuelRemain
                 self.update = True
                 
-        new_FuelLevel = 0
         if self.fuelData.FuelLevels[0] != None:
-            new_FuelLevel = self.fuelData.FuelLevels[0] * 10
-            if new_FuelLevel != self.old_FuelLevel:
-                self.old_FuelLevel = new_FuelLevel
+            self.new_FuelLevel = self.fuelData.FuelLevels[0] * 10
+            if self.new_FuelLevel != self.old_FuelLevel:
+                self.old_FuelLevel = self.new_FuelLevel
                 self.update = True
 
+        if time.time() - self.start_time > 30: self.update = True  # Force update every 30 seconds to ensure display is updated
         if self.update:
-            self.engineData_hobbs_time_str = str(int(new_hobbs_time)).zfill(5)
-            self.engineData_OilPress_str = str(int(new_OilPress)).zfill(2)
-            self.fuelData_FuelRemain_str = str(int(new_FuelRemain)).zfill(3)
-            self.fuelData_FuelLevel_str = str(int(new_FuelLevel)).zfill(3)
+            self.engineData_hobbs_time_str = str(int(self.new_hobbs_time)).zfill(5)
+            self.engineData_OilPress_str = str(int(self.new_OilPress)).zfill(2)
+            self.fuelData_FuelRemain_str = str(int(self.new_FuelRemain)).zfill(3)
+            self.fuelData_FuelLevel_str = str(int(self.new_FuelLevel)).zfill(3)
             
         # Build the string to send to the display
         if time.time() - self.start_time > 10 and self.update:   # Send data every 10 seconds at the most.
@@ -385,7 +380,10 @@ class automationHat(Module):
                 print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
                 print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
                 print("engineData_OilPress_str = ", self.engineData_OilPress_str)
+                
             self.start_time = time.time()
+            self.update = False
+            
             # Send the data to the PaPiRus display
             self.papirus_str = "!41+" + self.analogData_smoke_remain_str + "G" + self.engineData_hobbs_time_str + self.fuelData_FuelRemain_str + self.engine_status_str + '\r\n'
             papirus_bytes = self.papirus_str.encode()
@@ -410,7 +408,7 @@ class automationHat(Module):
                 print(e)
                 print("Unexpected error in publish to MQTT: ", e)
             
-                
+        # Update the analog data object with the latest values if the engine just shutdown.        
         if self.engine_status_str == "s" and self.old_engine_status_str == "r" and self.isAdafruitIOReachable():
             print("Initializing Adafruit IO...")
             self.ADAFRUIT_IO_USERNAME = _input_file_utils.readConfig("AIO", "ADAFRUIT_IO_USERNAME")
