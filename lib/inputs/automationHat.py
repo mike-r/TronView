@@ -231,13 +231,16 @@ class automationHat(Module):
         print("Initializing Automation Hat...")
         try:
             # Set up Automation Hat inputs and outputs
-            if automationhat.is_automation_hat(): automationhat.light.power.write(1)
+            if automationhat.is_automation_hat():
+                automationhat.light.power.write(0)
+                automationhat.light.comms.write(0)
+                automationhat.light.warn.write(0)
             #automationhat.digital.write(1, 0)  # Set output 1 to low
             #automationhat.digital.write(2, 0)  # Set output 2 to low
             #automationhat.digital.write(3, 0)  # Set output 3 to low
             self.a0 = automationhat.analog[0].read()      # Read from analog input 0
-            self.di0 = automationhat.digital.read(0)  # Read digital input 0
-            #self.di1 = automationhat.digital.read(1)  # Read digital input 1
+            self.di0 = automationhat.digital[0].read()  # Read digital input 0
+            self.di1 = automationhat.digital[1].read()  # Read digital input 1
         # Set Automation Hat inputs HIGH.
             #automationhat.input.one.resistor(automationhat.PULL_UP)
             #automationhat.input.two.resistor(automationhat.PULL_UP)
@@ -347,13 +350,18 @@ class automationHat(Module):
                 
         self.old_engine_status_str = self.engine_status_str  # Set old engine status to current status
         if self.engineData.OilPress != None:
-            if self.engineData.OilPress > 15 or self.di0 != 0: self.engine_status_str = "r"  # running
-            else: self.engine_status_str = "s"  # stopped
+            if self.engineData.OilPress > 15 or self.di0 != 0 or self.di1 != 0:
+                self.engine_status_str = "r"  # running
+                if dataship.debug_mode > 0: print("Engine is running, Oil Pressure: ", self.engineData.OilPress)
+                if automationhat.is_automation_hat(): automationhat.light.power.write(1)
+            else:
+                self.engine_status_str = "s"  # stopped
+                if automationhat.is_automation_hat(): automationhat.light.power.write(0)
             self.new_OilPress = self.engineData.OilPress
             if self.new_OilPress != self.old_OilPress:
                 self.old_OilPress = self.new_OilPress
                 self.update = True
-            
+          
         if self.fuelData.FuelRemain != None:
             self.new_FuelRemain = self.fuelData.FuelRemain * 10
             if self.new_FuelRemain != self.old_FuelRemain:
