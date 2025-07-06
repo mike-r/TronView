@@ -188,6 +188,17 @@ class network_skyview(Input):
                     #Attempt to receive up to 1024 bytes of data
                     #if dataship.debug_mode>0: print("Trying to read 1024 bytes")
                     rec_data, addr = self.ser.recvfrom(1024)
+                    if dataship.debug_mode>0: print("Received data from: "+str(addr))
+                    if len(rec_data) == 0:
+                        if dataship.debug_mode>0: print("No data received, returning empty bytes")
+                        return bytes(0)
+                    if dataship.debug_mode>0: 
+                        print("Received data length: "+str(len(rec_data)))
+                        print("Received data: ", rec_data)
+                        print("First byte: "+str(rec_data[0]))
+                    if rec_data[0] != ord('!'):
+                        if dataship.debug_mode>0: print("Not a Skyview message, first byte: "+str(rec_data[0]))
+                        return bytes(0)
                     data = bytearray(rec_data[0])
                     if dataship.debug_mode>0: print("Skyview Data received, first byte: "+str(data[0]))
                     return data
@@ -403,7 +414,9 @@ class network_skyview(Input):
                     self.navData.AP_YawForce = Input.cleanInt(self,APYawF)
                     if APYawP != b'XXXXX': self.navData.AP_YawPos = Input.cleanInt(self,APYawP)
                     self.navData.AP_YawSlip = Input.cleanInt(self,APYawSlip)
-                    if TransponderStatus == b'0':
+                    if TransponderStatus == b'X':
+                        self.navData.XPDR_Status = 'OFF'
+                    elif TransponderStatus == b'0':
                         self.navData.XPDR_Status = 'SBY'
                     elif TransponderStatus == b'1':
                         self.navData.XPDR_Status = 'GND'
