@@ -124,7 +124,7 @@ class automationHat(Module):
         self.old_engine_status_str = "s"  # Default to stopped
         self.a0 = 0                         # Analog input 0.  Read from Automation Hat.  
         self.di0 = 0                        # Digital input 0.  Set to 1 to indicate the Automation Hat is running.
-        #self.di1 = 0                        # Digital input 1.
+        self.di1 = 0                        # Digital input 1.
         self.start_time = time.time()
         self.loop_time = time.time()  - 5 # Start loop_time 5 seconds in the past to allow first readMessage to run immediately.
         self.papirus_str = ""
@@ -239,8 +239,11 @@ class automationHat(Module):
             #automationhat.digital.write(2, 0)  # Set output 2 to low
             #automationhat.digital.write(3, 0)  # Set output 3 to low
             self.a0 = automationhat.analog[0].read()      # Read from analog input 0
-            self.di0 = automationhat.digital[0].read()  # Read digital input 0
-            self.di1 = automationhat.digital[1].read()  # Read digital input 1
+            self.di0 = automationhat.input[0].read()  # Read digital input 0
+            self.di1 = automationhat.input[1].read()  # Read digital input 1
+            print("Automation Hat initialized with analog input 0: ", self.a0)
+            print("Digital input 0: ", self.di0)
+            print("Digital input 1: ", self.di1)
         # Set Automation Hat inputs HIGH.
             #automationhat.input.one.resistor(automationhat.PULL_UP)
             #automationhat.input.two.resistor(automationhat.PULL_UP)
