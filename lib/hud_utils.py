@@ -46,6 +46,12 @@ def readConfig(section, name, defaultValue=0, show_error=False,hideoutput=True) 
 def readConfigInt(section, name, defaultValue=0):
     return int(readConfig(section, name, defaultValue=defaultValue))
 
+
+#############################################
+## Function: readConfigFloat
+def readConfigFloat(section, name, defaultValue=0.0):
+    return float(readConfig(section, name, defaultValue=defaultValue))
+
 #############################################
 ## Function: readConfigBool
 def readConfigBool(section, name, defaultValue=False):
