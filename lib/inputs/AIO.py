@@ -29,52 +29,13 @@ class AIO(Module):
     # called only when object is first created.
     def __init__(self):
         Module.__init__(self)
-        self.name = "AIO"  # set name
-        self.show_callsign = False
-        self.show_details = False
-        self.targetDetails = {} # keep track of details about each target.
-        self.update = True
+        self.name = "AIO"  # set name        self.update = True
         self.loop_count = 0
-        self.isPlaybackMode = False
-        self.old_src_alt = -100
-        self.old_hobbs_time = 0
-        self.old_OilPress = 0
-        self.old_FuelRemain = 0
-        self.old_FuelLevel = 0
-        self.old_smokeLevel = 0.0
-        self.mqtt_broker_address_cloud = "broker.mqtt.cool"
-        self.mqtt_broker_address_local = "localhost"
-        self.engineData_hobbs_time_str = "00000"
-        self.fuelData_FuelRemain_str = "0000"
-        self.fuelData_FuelLevel_str = "000"
-        self.engineData_OilPress_str = "000"
-        self.analogData_smoke_remain_str = "0000"
         self.engine_status_str = "s"  # Default to stopped
-        self.a0 = 0
         self.start_time = time.time()
         self.loop_time = time.time()  - 5 # Start loop_time 5 seconds in the past to allow first readMessage to run immediately.
-        self.papirus_str = ""
-        self.mqtt_cloud = False
         self.shouldExit = False
 
-        # Add smoothing configuration
-        self.ApplySmoothing = 1
-        self.SmoothingAVGMaxCount = 10
-        self.smoothingA = []
-        self.debug_mode = 0
-        
-        # Add tracking of previous positions
-        self.target_positions = {}          # Store previous positions for smoothing
-        self.targetData = TargetData()
-        self.gpsData = GPSData()
-        self.imuData = IMUData()
-        self.analogData = AnalogData()
-        self.engineData = EngineData()
-        self.fuelData = FuelData()
-        self.airData = AirData()
-        self.selectedTarget = None
-        self.selectedTargetID = None
-        
         self.ADAFRUIT_IO_USERNAME = None
         self.ADAFRUIT_IO_KEY = None
         self.ADAFRUIT_FEED_ONE = None
@@ -89,11 +50,25 @@ class AIO(Module):
         self.dataship = dataship
         self.initAIO(dataship)
         
+        self.targetData = TargetData()
+        self.gpsData = GPSData()
+        self.imuData = IMUData()
+        self.analogData = AnalogData()
+        self.engineData = EngineData()
+        self.fuelData = FuelData()
+        self.airData = AirData()
+        
+        # Initialize shared data so any can be used for AIO.
         if len(shared.Dataship.fuelData) > 0:
             self.fuelData = shared.Dataship.fuelData[0]
         if len(shared.Dataship.engineData) > 0:
             self.engineData = shared.Dataship.engineData[0]
-        
+        if len(shared.Dataship.targetData) > 0:
+            self.targetData = shared.Dataship.targetData[0]
+        if len(shared.Dataship.imuData) > 0:
+            self.imuData = shared.Dataship.imuData[0]
+        if len(shared.Dataship.analogData) > 0:
+            self.analogData = shared.Dataship.analogData[0]
     def closeInput(self, dataShip:Dataship):
         pass
         
@@ -123,35 +98,47 @@ class AIO(Module):
             except RequestError: # Doesn't exist, create a new feed
                 self.ADAFRUIT_FEED_TWO = Feed(name=self.ADAFRUIT_FEED_TWO)
                 self.AIO.create_feed(self.ADAFRUIT_FEED_TWO)
+                
+            # AIO Feed One is the fuel remaining in gallons.
+            # Read the value from the config file and set it to self.fuelRemain
+            
+            tv_feed_one_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_ONE")
+            feed_one_str_exec = "self.tv_feed_one = self." + tv_feed_one_str
+            exec(feed_one_str_exec)  # Evaluate the string to get the value
+            print("tv_feed_one: ", self.tv_feed_one)
+            
+            # AIO Feed Two is the Hobbs time in tenths of hours.
+            # Read the value from the config file and set it to self.hobbsTime
+            
+            tv_feed_two_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_TWO")
+            feed_two_str_exec = "self.tv_feed_two = self." + tv_feed_two_str
+            exec(feed_two_str_exec)  # Evaluate the string to get the value
+            print("tv_feed_two: ", self.tv_feed_two)
+
+            # AIO Feed Three is the smoke level.
+            # Read the value from the config file and set it to self.smokeLevel
+
+            tv_feed_three_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_THREE")
+            feed_three_str_exec = "self.tv_feed_three = self." + tv_feed_three_str
+            exec(feed_three_str_exec)  # Evaluate the string to get the value
+            print("tv_feed_three: ", self.tv_feed_three)
+        else:
+            pass
+ 
 
     #############################################
     ## Function: readMessage
     def readMessage(self, dataship: Dataship):
         if self.shouldExit == True: dataship.errorFoundNeedToExit = True
         if dataship.errorFoundNeedToExit: return dataship
-        if self.skipReadInput == True: return dataship
         
-        # Hobbs Time:
-        if self.engineData.hobbs_time is None:
-            print("Hobbs time not available ...yet.")
+        if self.isAdafruitIOReachable():
+            self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(self.tv_feed_one))
+            self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(self.tv_feed_two))
+            self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, str(self.tv_feed_three))
         else:
-            hobbsTime = self.engineData.hobbs_time 
-            if hobbsTime != self.old_hobbs_time:
-                print("hobbsTime: ", hobbsTime)
-                self.old_hobbs_time = hobbsTime
-                if self.isAdafruitIOReachable():
-                    self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(hobbsTime))
-
-        # Fuel Remaining:
-        if self.fuelData.FuelRemain is None:
-            print("Fuel data not available ...yet.")
-        else:
-            fuelRemain = self.fuelData.FuelRemain
-            if self.old_FuelRemain != fuelRemain:
-                self.old_FuelRemain = fuelRemain
-                print("fuelRemain: ", fuelRemain)
-                if fuelRemain > 0.1 and self.isAdafruitIOReachable():  # Only send if fuel remaining is greater than 0.1 gallons
-                    self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(fuelRemain))
+            pass
+        time.sleep(10)
         return dataship
     
     def isUrlReachable(self, url):
