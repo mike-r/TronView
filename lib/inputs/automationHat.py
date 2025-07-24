@@ -52,14 +52,6 @@
 # Fork of modification is from: https://github.com/kiddigital/automation-hat
 
 
-# Write Serial data to PaPiRus Pi
-# Format of data stream is:
-# !41+ssssGhhhhhfffr
-# "+ssssG"   is the amount of smoke oil remaining in tenths of gallons
-# "hhhhh"    is the Total Time (Hobbs Time) in tenths of hours from Dynon EMS
-# "fff"      is the Total Fuel Remaining in tents of gallons
-# "r"       is engine status, r= running, r= stopped
-
 import serial
 from time import time
 from .import _input_file_utils
@@ -154,27 +146,6 @@ class automationHat(Module):
         self.initAutomationHat(dataship)
         if(self.PlayFile!=None and self.PlayFile!=False):
             pass
-        else:
-            self.papirus_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyUSB0")
-            self.papirus_data_baudrate = hud_utils.readConfigInt(
-                self.name, "baudrate", 9600
-            )
-
-            # open serial connection.
-            try:
-                self.ser = serial.Serial(
-                port=self.papirus_data_port,
-                baudrate=self.papirus_data_baudrate,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                bytesize=serial.EIGHTBITS,
-                timeout=3,
-                write_timeout=0
-                )
-                self.ser.write("\r\nFrom AutomationHat\r\n".encode())
-                print("Serial port opened: ", self.papirus_data_port)
-            except serial.SerialException as e:
-                print("Error opening serial port: ", e)
 
         # create analog data object.
         self.analogData = AnalogData()
@@ -336,46 +307,6 @@ class automationHat(Module):
         if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " gallons")
         self.analogData.Data[1] = self.smokeLevel  # Store the smoke level in the analog data object
 
-# Build text string to send to PaPiRus display pi
-
-        self.update = False
-        
-        if self.smokeLevel != self.old_smokeLevel:
-            if dataship.debug_mode>0: print("Smoke Level changed: ", self.smokeLevel, " gallons")
-            self.old_smokeLevel = self.smokeLevel
-            self.update = True
-
-        if self.engineData.hobbs_time != None:
-            self.new_hobbs_time = self.engineData.hobbs_time *10
-            if self.new_hobbs_time != self.old_hobbs_time:
-                self.old_hobbs_time = self.new_hobbs_time
-                self.update = True
-                
-        self.old_engine_status_str = self.engine_status_str  # Set old engine status to current status
-        if self.engineData.OilPress != None:
-            if self.engineData.OilPress > 15 or self.di0 != 0 or self.di1 != 0:
-                self.engine_status_str = "r"  # running
-                if dataship.debug_mode > 0: print("Engine is running, Oil Pressure: ", self.engineData.OilPress)
-                if automationhat.is_automation_hat(): automationhat.light.power.write(1)
-            else:
-                self.engine_status_str = "s"  # stopped
-                if automationhat.is_automation_hat(): automationhat.light.power.write(0)
-            self.new_OilPress = self.engineData.OilPress
-            if self.new_OilPress != self.old_OilPress:
-                self.old_OilPress = self.new_OilPress
-                self.update = True
-          
-        if self.fuelData.FuelRemain != None:
-            self.new_FuelRemain = self.fuelData.FuelRemain * 10
-            if self.new_FuelRemain != self.old_FuelRemain:
-                self.old_FuelRemain = self.new_FuelRemain
-                self.update = True
-                
-        if self.fuelData.FuelLevels[0] != None:
-            self.new_FuelLevel = self.fuelData.FuelLevels[0] * 10
-            if self.new_FuelLevel != self.old_FuelLevel:
-                self.old_FuelLevel = self.new_FuelLevel
-                self.update = True
 
         if time.time() - self.start_time > 30: self.update = True  # Force update every 30 seconds to ensure display is updated
         if self.update:
@@ -395,23 +326,6 @@ class automationHat(Module):
             self.start_time = time.time()
             self.update = False
             
-            # Send the data to the PaPiRus display
-            self.papirus_str = "!41+" + self.analogData_smoke_remain_str + "G" + self.engineData_hobbs_time_str + self.fuelData_FuelRemain_str + self.engine_status_str + '\r\n'
-            papirus_bytes = self.papirus_str.encode()
-            if dataship.debug_mode>0: print("papirus_bytes: ", papirus_bytes)
-            try:
-                self.ser.write(papirus_bytes)         # Send data to PaPiRus
-            except Exception as e:
-                print(e)
-                print("Unexpected error in write to PaPiRus: ", e)
-
-            if self.mqtt_cloud:
-                try:
-                    self.mqtt_client_cloud.publish("1TM", self.papirus_str)
-                    if dataship.debug_mode>0: print("papirus_str to mqtt cloud: ", self.papirus_str)
-                except Exception as e:
-                    print(e)
-                    print("Unexpected error in publish to MQTT: ", e)
             try:
                 self.mqtt_client_local.publish("1TM", self.papirus_str)
                 if dataship.debug_mode>0: print("papirus_str to mqtt local: ", self.papirus_str)
