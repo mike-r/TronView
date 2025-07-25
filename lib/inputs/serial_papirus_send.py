@@ -142,23 +142,11 @@ class serial_papirus_send(Module):
             self.tx_count = 20
             self.loop_count = self.loop_count + 1
 
-            if len(t) != 0:
-                x = ord(t)
-            else:
-                if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
-                    self.ser.seek(0)
-                return dataship
+            if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
+                self.ser.seek(0)
+            return dataship
 
         return dataship 
-
-#  Version 1.0 testing
-        print("serial_PaPiRus.py Version 1.0.Testing")
-
-        print("TargetData: src_alt = ", self.targetData.src_alt)
-        print("TargetData: src_gps = ", self.targetData.src_gps)
-
-
-
 
 
     # close this data input 
