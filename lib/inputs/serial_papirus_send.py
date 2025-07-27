@@ -49,6 +49,7 @@ class serial_papirus_send(Module):
         self.tx_count = 0
         self.loop_count = 0
         self.isPlaybackMode = False
+        self.tv_ipaddr_bytes = None
 
         self.targetData = TargetData()
         self.gpsData = GPSData()
@@ -57,6 +58,8 @@ class serial_papirus_send(Module):
         self.engineData = EngineData()
         self.fuelData = FuelData()
         self.airData = AirData()
+        
+        print("Welcome to TronView serial sender to a PaPiRus e-paper display on another RaPi`", sep=' ', end='\n\n\n') 
 
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
@@ -65,20 +68,18 @@ class serial_papirus_send(Module):
             pass
         else:
             #self.efis_data_format = hud_utils.readConfig(self.name, "format", "none")
-            self.efis_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyUSB0")
-            self.efis_data_baudrate = hud_utils.readConfigInt(
-                self.name, "baudrate", 9600
-            )
+            self.papirus_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyACM0")
+            self.papirus_data_baudrate = hud_utils.readConfigInt(self.name, "baudrate", 9600)
 
             # open serial connection to Pi Zero with PaPiRus display.
             self.ser = serial.Serial(
-                port=self.efis_data_port,
-                baudrate=self.efis_data_baudrate,
+                port=self.papirus_data_port,
+                baudrate=self.papirus_data_baudrate,
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
                 bytesize=serial.EIGHTBITS,
                 timeout=3,
-                write_timeout=0
+                write_timeout=5
             )
 
         # create a empty imu object.
@@ -98,26 +99,33 @@ class serial_papirus_send(Module):
         if len(shared.Dataship.imuData) > 0:
             self.imuData = shared.Dataship.imuData[0]
 
+        # Get the IP address of the TronView Pi
+        try:
+            gw = os.popen("ip -4 route show default").read().split()
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect((gw[2], 0))
+            tv_ipaddr = s.getsockname()[0]
+            gateway = gw[2]
+            host = socket.gethostname()
+            print ("IP:", tv_ipaddr, " GW:", gateway, " Host:", host)
+        except:
+            print("Error: Unable to get IP address")
+        # Send TronView Pi's IP Address with:
+        tv_ipaddr_str = "!51" + tv_ipaddr + "\r\n"
+        self.tv_ipaddr_bytes = tv_ipaddr_str.encode()
+        print("Sending PaPiRus message: ", tv_ipaddr_str)     
+        self.ser.write(self.tv_ipaddr_bytes)         # Send data to PaPiRus
+
     #############################################
     ## Function: readMessage
     def readMessage(self, dataship: Dataship):
         if dataship.errorFoundNeedToExit:
             return dataship
-            # Read until we find a message start character ($ or !)
-        x = 0
-        while x != ord('!'):
+            # Find the IP Address of the TronView Pi and send it to the PaPiRus display Pi.
+            # Then read data out of the Dataship and send it to the PaPiRus display.
             
-            try:
-                gw = os.popen("ip -4 route show default").read().split()
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect((gw[2], 0))
-                tv_ipaddr = s.getsockname()[0]
-                gateway = gw[2]
-                host = socket.gethostname()
-                print ("IP:", tv_ipaddr, " GW:", gateway, " Host:", host)
-            except:
-                print("Error: Unable to get IP address")
-                1
+        x = 0
+        while x != ord('!'):         
 
 # Build text string to send to PaPiRus display pi
             if self.update or self.tx_count > 10:
@@ -135,6 +143,9 @@ class serial_papirus_send(Module):
                 print(papirus_bytes)
                 try:
                     self.ser.write(papirus_bytes)         # Send data to PaPiRus
+                    sleep(.1)
+                    self.ser.write(self.tv_ipaddr_bytes)  # Send TV IP address to PaPiRus
+
                 except Exception as e:
                     print(e)
                     print("Unexpected error in write to PaPiRus: ", e)
