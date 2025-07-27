@@ -7,17 +7,8 @@
 # when the EFIS is maxed out.  
 # It will be first used to read the airplane's smoke tank level.
 # 
-# This module will also send data via RS-232 Serial to a PaPiRus e-Paper display.
-# There is a mqtt message broker and client which may be used in the future to
-# send and receive data via WiFi Vs RS-232.
-#
 # Zap 2025
 # 
-# /dev/ttyUSB0 is a USB to RS-232 converter to send and/or receive data.
-# /dev/ttyACM0 on Pi 3B, and Pi 5 is a micro-USB cable plugged into a Pi-Zero OTG port
-# /dev/ttyAMA0 for Pi-4
-
-# To check serial ports use:   dmesg | grep tty
 # To check I2C devices:        sudo i2cdetect -y 0
 # To check MQTT status:        sudo systemctl status mosquitto
 
@@ -52,7 +43,6 @@
 # Fork of modification is from: https://github.com/kiddigital/automation-hat
 
 
-import serial
 from time import time
 from .import _input_file_utils
 import sys

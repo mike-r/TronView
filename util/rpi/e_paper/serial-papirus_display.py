@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 2.3
-print("serial-papirus.py Version 2.3")
+#  Version 0.3c testing
+print("serial-papirus_display.py Version 0.3c.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -76,9 +76,9 @@ try:
 except:
     print("Error: Unable to get IP address")
 
-# Define serial link to Automationhat via USB OTG cable
+# Define serial link to TronView via USB OTG cable
 try:
-    automationhat_serial = serial.Serial(
+    tronview_serial = serial.Serial(
         port='/dev/ttyGS0',
         baudrate=9600,
         parity=serial.PARITY_NONE,
@@ -89,33 +89,38 @@ try:
 except serial.SerialException:
     print("Error: Unable to open serial port")
     exit()
-    
-aHat_ip_str = "waiting for aHat"
-if automationhat_serial.is_open:
+
+tronview_ipaddr = "TronView NoCom"  # Default value if TronView not connected
+if tronview_serial.is_open:
     wait_time = time.time()
     while True:
         if time.time() - wait_time > 60: break
-        automationhat_bytes = automationhat_serial.read_until(b'\r\n', None)
-        if len(automationhat_bytes) < 20:
-            print("Received: ", len(automationhat_bytes), " bytes from Automationhat, retrying...")
+        tronview_bytes = tronview_serial.read_until(b'\r\n', None)
+        if len(tronview_bytes) < 20:
+            print("Received: ", len(tronview_bytes), " bytes from TronView, retrying...")
             continue
-        
-        print("Received: ", len(automationhat_bytes), " bytes from Automationhat")
-        automationhat_str = automationhat_bytes.decode()
-        automationhat_str.strip()
-        print(automationhat_str)
+
+        print("Received: ", len(tronview_bytes), " bytes from TronView")
+        tronview_str = tronview_bytes.decode()
+        tronview_str.strip()
+        print(tronview_str)
         print()
-        if automationhat_bytes(1) == "5":
-            aHat_ip_str = automationhat_str[3:18]
+        if tronview_str[1] == "5":
+            tronview_ipaddr = tronview_str[3:18]
+            tronview_str = "Received TronView IP: " + tronview_ipaddr
+            print("Sending back to TronView:", tronview_str)
+            tronview_bytes = tronview_str.encode()
+            tronview_bytes += b'\r\n'
+            tronview_serial.write(tronview_bytes)
             break
         sleep(0.5)
 
 
 #                         coll, row, height
 
-text.AddText("N221TM",       25, 0, 39, Id="Line-1-Addr")
-text.AddText(ePaper_ipaddr,  0, 39, 25, Id="Line-2-Addr")
-text.AddText(aHat_ip_str,    0, 65, 25, Id="Line-3-Addr")
+text.AddText("N873PW",       25, 0, 39, Id="Line-1-Addr")
+text.AddText(ePaper_ipaddr,   0, 39, 25, Id="Line-2-Addr")
+text.AddText(tronview_ipaddr, 0, 65, 25, Id="Line-3-Addr")
 
 text.WriteAll()
 time.sleep(5.0)
@@ -123,7 +128,7 @@ time.sleep(5.0)
 
 
 
-logfile = open("/home/zap/Speedster/serial-papirus.log", "r+")
+logfile = open("/home/pi/1TM/serial-papirus.log", "r+")
 data=logfile.readlines()[-1]
 dataList = data.split(",")
 print("data:", data)
@@ -160,30 +165,30 @@ engine_status_prev = 's'  # Previous engine status for comparison
 # automationhat_bytes = automationhat_serial.read_until(b'\r\n', None)
 
 time.sleep(1.0)
-textPu.AddText("N221TM",    25,  0, 39, Id="Line-1")
-textPu.AddText(f"{last_fuel} Fuel",  0, 37, 30, Id="Line-2")
+textPu.AddText("N873PW",             25,  0, 39, Id="Line-1")
+textPu.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
 textPu.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
 time.sleep(1.0)
 
 while True:
     print("engine_status: ", engine_status)
     engine_status_prev = engine_status
-    automationhat_bytes = automationhat_serial.read_until(b'\r\n', None)
-#    automationhat_bytes = automationhat_serial.readline()
-    if len(automationhat_bytes) < 20:
-        print("Received: ", len(automationhat_bytes), " bytes from Automationhat, retrying...")
+    tronview_bytes = tronview_serial.read_until(b'\r\n', None)
+#    tronview_bytes = tronview_serial.readline()
+    if len(tronview_bytes) < 20:
+        print("Received: ", len(tronview_bytes), " bytes from TronView, retrying...")
         continue
-    print(automationhat_bytes)
-    automationhat_str = automationhat_bytes.decode()
-    automationhat_str.strip()
-    print(automationhat_str)
+    print(tronview_bytes)
+    tronview_str = tronview_bytes.decode()
+    tronview_str.strip()
+    print("TronView String: ", tronview_str)
     print()
-    if automationhat_bytes(1) != "4": continue
+    if tronview_str[1] != "4": continue
 
-    smoke_str = automationhat_str[3:9]
-    hobbs_str = automationhat_str[9:14]
-    fuel_remain_str = automationhat_str[14:17]
-    engine_status = automationhat_str[17:18]
+    smoke_str = tronview_str[3:9]
+    hobbs_str = tronview_str[9:14]
+    fuel_remain_str = tronview_str[14:17]
+    engine_status = tronview_str[17:18]
 
     print('Smoke Level: ',   smoke_str, ' Gallons')
     print('Total Time: ',    hobbs_str, ' Hours')
@@ -191,7 +196,7 @@ while True:
     print('engine_status:',  engine_status)
 
     try:
-        smoke_gal = float(automationhat_bytes[4:8]) / 10
+        smoke_gal = float(tronview_bytes[4:8]) / 10
         print('Smoke Level:', '{0:3.1f}' .format(smoke_gal), 'Gallons')
         smoke_change = abs(smoke_gal - last_smoke)
         if smoke_change > 0.2:
@@ -206,7 +211,7 @@ while True:
         print()
 
     try:
-        fuel = float(automationhat_bytes[14:17]) / 10
+        fuel = float(tronview_bytes[14:17]) / 10
         print ('Fuel Level:', '{0:3.1f}' .format(fuel), 'Gallons')
         fuel_change = abs(fuel - last_fuel)
         if fuel_change > 0.5:  # Update if fuel changes by more than 0.5 gallons
@@ -220,7 +225,7 @@ while True:
         print()
 
     try:
-        hobbs = float(automationhat_bytes[9:14]) / 10
+        hobbs = float(tronview_bytes[9:14]) / 10
         print('Hobbs: ', '{0:6.1f}'.format(hobbs), ' Hours')
         hobbs_change = abs(hobbs - last_hobbs)
         if hobbs_change > 0:

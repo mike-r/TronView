@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
+#  Version 1.0a testing
+print("serial_PaPiRus.py Version 1.0a.Testing")
 
-#  Version 1.0 testing
-print("serial_PaPiRus.py Version 1.0.Testing")
+# 
+# This module will send data via RS-232 Serial to a PaPiRus e-Paper display.
+
+#  This module is used to read data from the Dynon HDX and send it to a PaPiRus display.
 
 # TODO Add error handling for opening serial ports
 # FileNotFoundError: [Errno 2] No such file or directory: '/dev/ttyUSB0'
@@ -12,6 +16,7 @@ print("serial_PaPiRus.py Version 1.0.Testing")
 
 # Raspberry Pi 
 # /dev/ttyUSB0 is a USB to RS-232 converter to receive data from
+
 # the Dynon HDX via Serial out.
 # /dev/ttyACM0 on Pi 3B, and Pi 5 is a micro-USB cable plugged into a Pi-Zero OTG port
 # /dev/ttyAMA0 for Pi-4
@@ -36,7 +41,6 @@ print("serial_PaPiRus.py Version 1.0.Testing")
 
 import serial
 from time import sleep
-import paho.mqtt.client as mqtt #import the client
 import sys
 import os
 import socket
@@ -65,39 +69,6 @@ class serial_papirus(Input):
         self.msg_bad = 0
         self.nmea_buffer = ""  # Add buffer for NMEA messages
 
-    client_cloud = mqtt.Client()
-    print("Waiting 20 seconds to ensure Pi is fully booted")
-    sleep(2)  # Wait for bootup to complete
-
-############  For receiving mqtt messages
-    def on_connect_cloud(client, userdata, flags, rc):
-        print("Connected to cloud mosquito broker with result code " + str(rc))
-
-    def on_message(client, userdata, message):
-        nothing = 0                             # do nothing to save time
-        print("message received: " ,str(message.payload.decode("utf-8")))
-        print("message topic=",message.topic)
-        print("message qos=",message.qos)
-        print("message retain flag=",message.retain)
-
-    def on_disconnect_cloud(client, userdata, rc):
-        if rc != 0:
-            print(client, " Unexpected disconnection from cloud mosquito broker.")
-
-########################################
-    broker_address_cloud = "broker.mqtt.cool"
-    print("creating new MQTT Client instances")
-
-    #client_cloud = mqtt.Client() #create new instance
-    client_cloud.on_message = on_message #attach function to callback
-    client_cloud.on_connect = on_connect_cloud
-    client_cloud.connect(broker_address_cloud, 1883, 60)
-    client_cloud.loop_start() #start the loop
-    client_cloud.on_disconnect = on_disconnect_cloud
-
-    print()
-    sleep(2)
-
 #########################################
 
 # Define serial link to PaPaRus display Pi via OTG cable to PiZero
@@ -107,7 +78,7 @@ class serial_papirus(Input):
         parity=serial.PARITY_NONE,
         stopbits=serial.STOPBITS_ONE,
         bytesize=serial.EIGHTBITS,
-        writeTimeout=0
+        writeTimeout=5
     )
 
     hobbs           = 0   # Initialize hobbs meter as 0 (don't I wish...)
@@ -138,22 +109,12 @@ class serial_papirus(Input):
     except:
         print("Error: Unable to get IP address")
 
-    if client_cloud.is_connected() == False:
-        sleep(5)
-    print("Subscribing to topic 1TM")
-    client_cloud.subscribe("1TM")
-    pub = "Host, " + host + "  IP Address, " + ipaddr
-    try:
-        client_cloud.publish("1TM", "Message from serial_PaPiRus.py to the Cloud")
-        client_cloud.publish("1TM", pub)
-    except Exception as e:
-        print(e)
-        print("Unexpected error in publish to cloud: ", e)
-
-#  Send one dummy message to PaPiRus display pi to signal that comms are OK
+#  Send message to PaPiRus display pi every 5 secondsto signal that comms are OK
 #  and to test the serial link
-    papirus_str = "!41" + "+0231G" + "13590" + "312" + '\r\n'
+
+    papirus_str = "!51" + ipaddr + "\r\n"
     papirus_bytes = papirus_str.encode()
+    print("Sending PaPiRus message: ", papirus_str)
 
     while True:
         try:
@@ -161,9 +122,15 @@ class serial_papirus(Input):
         except Exception as e:
             print(e)
             print("Unexpected error in write to PaPiRus: ", e)
-        print("To  Papirus:", papirus_str)
-        sleep(5)
-        print("Dummy message sent to PaPiRus display")
+        papirus_bytes = papirus_serial.read_until(b'\r\n', None)
+        if papirus_bytes == b'':
+            print("No data received from PaPiRus, retrying...")
+            continue
+        else:
+            papirus_str = papirus_bytes.decode().strip()
+            print("Received from PaPiRus:", papirus_str)
+            break
+        sleep(1)
 
     sys.exit(0)  # Exit the program after sending the dummy message
     #  ##############################################################
@@ -204,7 +171,6 @@ class serial_papirus(Input):
             update = False
         tx_count = 0
         loop_count = loop_count + 1
-    client_cloud.loop_stop()  #stop the loop
     sleep(1)
 
 
