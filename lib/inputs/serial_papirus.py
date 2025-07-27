@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-#  Version 1.0a testing
-print("serial_PaPiRus.py Version 1.0a.Testing")
+#  Version 1.0b testing
+print("serial_PaPiRus.py Version 1.0b.Testing")
 
 # 
 # This module will send data via RS-232 Serial to a PaPiRus e-Paper display.
@@ -94,10 +94,9 @@ class serial_papirus(Input):
     loop_count     = 0     # print only max_print loops of debug messages
     max_print       = 10
 
-    print("Welcome to N221TM's Raspberry Pi", sep=' ', end='\n\n\n')
-    print("Starting loop to read data from Dynon HDX:")
-    print()
+    print("Welcome to TronView serial sender to a PaPiRus e-paper display on another RaPi`", sep=' ', end='\n\n\n')
 
+#  Get the IP address of the TronView Pi and send it to the PaPiRus display Pi.
     try:
         gw = os.popen("ip -4 route show default").read().split()
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

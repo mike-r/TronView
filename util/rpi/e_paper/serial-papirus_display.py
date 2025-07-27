@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.3c testing
-print("serial-papirus_display.py Version 0.3c.Testing")
+#  Version 0.3e testing
+print("serial-papirus_display.py Version 0.3e.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -96,14 +96,15 @@ if tronview_serial.is_open:
     while True:
         if time.time() - wait_time > 60: break
         tronview_bytes = tronview_serial.read_until(b'\r\n', None)
-        if len(tronview_bytes) < 20:
-            print("Received: ", len(tronview_bytes), " bytes from TronView, retrying...")
+        if len(tronview_bytes) < 10:
+            print("Received: ", len(tronview_bytes), " bytes from TronView, wait 0.5 and retry...")
+            sleep(0.5)
             continue
 
         print("Received: ", len(tronview_bytes), " bytes from TronView")
         tronview_str = tronview_bytes.decode()
         tronview_str.strip()
-        print(tronview_str)
+        print("String from TronView: ", tronview_str)
         print()
         if tronview_str[1] == "5":
             tronview_ipaddr = tronview_str[3:18]
@@ -123,7 +124,7 @@ text.AddText(ePaper_ipaddr,   0, 39, 25, Id="Line-2-Addr")
 text.AddText(tronview_ipaddr, 0, 65, 25, Id="Line-3-Addr")
 
 text.WriteAll()
-time.sleep(5.0)
+time.sleep(15.0)
 
 
 
