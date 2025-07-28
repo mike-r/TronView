@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.3e testing
-print("serial-papirus_display.py Version 0.3e.Testing")
+#  Version 0.3f testing
+print("serial-papirus_display.py Version 0.3f.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -90,7 +90,7 @@ except serial.SerialException:
     print("Error: Unable to open serial port")
     exit()
 
-tronview_ipaddr = "TronView NoCom"  # Default value if TronView not connected
+tronview_ipaddr = "No TronView"  # Default value if TronView not connected
 if tronview_serial.is_open:
     wait_time = time.time()
     while True:

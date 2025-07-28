@@ -51,6 +51,7 @@ class serial_papirus_send(Module):
         self.tv_ipaddr_bytes = None
         self.retry_time = time.time()
         self.comms_ok = False
+        self.engine_status = 's'  # Default engine status is stopped
 
         self.targetData = TargetData()
         self.gpsData = GPSData()
@@ -150,7 +151,7 @@ class serial_papirus_send(Module):
                     hobbs_str = "10234"
                 smoke_str = "+0234G"      #   "+nnnnG"
                 fuel_remain_str = "678"
-                papirus_str = '!41' + smoke_str + hobbs_str + fuel_remain_str + '\r\n'
+                papirus_str = '!41' + smoke_str + hobbs_str + fuel_remain_str + self.engine_status + '\r\n'
                 papirus_bytes = papirus_str.encode()
                 print(papirus_bytes)
                 try:
