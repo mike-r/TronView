@@ -47,7 +47,6 @@ class serial_papirus_send(Module):
         self.name = "Serial_PaPiRus_Send"  # set name
         self.update = True
         self.tx_count = 0
-        self.loop_count = 0
         self.isPlaybackMode = False
         self.tv_ipaddr_bytes = None
         self.retry_time = time.time()
@@ -127,23 +126,8 @@ class serial_papirus_send(Module):
                 break
             else:
                 self.sendIPaddrToPapirus()
-            continue
-            try:
-                self.ser.write(self.tv_ipaddr_bytes)         # Send data to PaPiRus
-                sleep(5)  # Wait for 5 seconds before sending next message
-            except Exception as e:
-                print(e)
-                print("Unexpected error in write to PaPiRus: ", e)
-            papirus_bytes = self.ser.read_until(b'\r\n', None)
-            if papirus_bytes == b'':
-                print("No data received from PaPiRus, retrying...")
-                continue
-            else:
-                papirus_str = papirus_bytes.decode().strip()
-                print("Received from PaPiRus:", papirus_str)
-                self.comms_ok = True
-                break
-        
+            sleep(5)  # Wait for 5 seconds before retrying
+                        
     #############################################
     ## Function: readMessage
     def readMessage(self, dataship: Dataship):
@@ -156,7 +140,8 @@ class serial_papirus_send(Module):
         while x != ord('!'):         
 
 # Build text string to send to PaPiRus display pi
-            if self.update or self.tx_count > 10:
+            if self.tx_count > 20:
+                self.tx_count = 0
                 if self.targetData.src_alt != None:
                     targetData_str = str(self.targetData.src_alt)
                     hobbs_str = targetData_str.zfill(5)  # Pad with leading zeros to 5 digits
@@ -166,18 +151,17 @@ class serial_papirus_send(Module):
                 smoke_str = "+0234G"      #   "+nnnnG"
                 fuel_remain_str = "678"
                 papirus_str = '!41' + smoke_str + hobbs_str + fuel_remain_str + '\r\n'
-                if self.loop_count < 10:  print("To  Papirus:", papirus_str)
                 papirus_bytes = papirus_str.encode()
                 print(papirus_bytes)
                 try:
                     self.ser.write(papirus_bytes)         # Send data to PaPiRus
-                    sleep(.1)
-                    if not self.comms_ok: self.sendIPaddrToPapirus()
+                    if not self.comms_ok:
+                        sleep(.1)
+                        self.sendIPaddrToPapirus()
                 except Exception as e:
                     print(e)
                     print("Unexpected error in write to PaPiRus: ", e)
-            self.tx_count = 20
-            self.loop_count = self.loop_count + 1
+            self.tx_count += 1
 
             if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
                 self.ser.seek(0)
@@ -196,7 +180,7 @@ class serial_papirus_send(Module):
             print("No data received from PaPiRus...")
         else:
             papirus_str = papirus_bytes.decode().strip()
-            print("Received from PaPiRus:", papirus_str)
+            print("Received this stringfrom PaPiRus: ", papirus_str)
             self.comms_ok = True
              
     # close this data input 
