@@ -90,7 +90,7 @@ except serial.SerialException:
     print("Error: Unable to open serial port")
     exit()
 
-tronview_ipaddr = "No TronView"  # Default value if TronView not connected
+tronview_ipaddr = "Waiting"  # Default value if TronView not connected
 if tronview_serial.is_open:
     wait_time = time.time()
     while True:
@@ -117,17 +117,18 @@ if tronview_serial.is_open:
         sleep(0.5)
 
 
-#                         coll, row, height
+#                           coll, row, height
 
-text.AddText("N873PW",       25, 0, 39, Id="Line-1-Addr")
-text.AddText(ePaper_ipaddr,   0, 39, 25, Id="Line-2-Addr")
-text.AddText(tronview_ipaddr, 0, 65, 25, Id="Line-3-Addr")
+#text.AddText("N873PW",       25, 0, 39, Id="Line-1-Addr")
+#text.AddText(ePaper_ipaddr,   0, 39, 25, Id="Line-2-Addr")
+#text.AddText(tronview_ipaddr, 0, 65, 25, Id="Line-3-Addr")
+text.AddText("PaPiRus Display:", 35,  5, 15, Id="Line-1-Addr")
+text.AddText(ePaper_ipaddr,       0, 20, 25, Id="Line-2-Addr")
+text.AddText("TronView:",        60, 50, 15, Id="Line-3-Addr")
+text.AddText(tronview_ipaddr,     0, 65, 25, Id="Line-4-Addr")
 
 text.WriteAll()
 time.sleep(15.0)
-
-
-
 
 logfile = open("/home/pi/1TM/serial-papirus.log", "r+")
 data=logfile.readlines()[-1]
@@ -162,9 +163,7 @@ loop_count = 0
 engine_status = 's'       # 'r' for running, 's' for stopped
 engine_status_prev = 's'  # Previous engine status for comparison
 
-# automationhat_serial.flushInput()                      # Flush input
-# automationhat_bytes = automationhat_serial.read_until(b'\r\n', None)
-
+text.Clear()
 time.sleep(1.0)
 textPu.AddText("N873PW",             25,  0, 39, Id="Line-1")
 textPu.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
