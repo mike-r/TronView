@@ -50,6 +50,8 @@ class serial_papirus_send(Module):
         self.loop_count = 0
         self.isPlaybackMode = False
         self.tv_ipaddr_bytes = None
+        self.retry_time = time.time()
+        self.comms_ok = False
 
         self.targetData = TargetData()
         self.gpsData = GPSData()
@@ -110,12 +112,38 @@ class serial_papirus_send(Module):
             print ("IP:", tv_ipaddr, " GW:", gateway, " Host:", host)
         except:
             print("Error: Unable to get IP address")
-        # Send TronView Pi's IP Address with:
+        # Send TronView Pi's IP Address to PaPiRus display Pi:
         tv_ipaddr_str = "!51" + tv_ipaddr + "\r\n"
         self.tv_ipaddr_bytes = tv_ipaddr_str.encode()
         print("Sending PaPiRus message: ", tv_ipaddr_str)     
-        self.ser.write(self.tv_ipaddr_bytes)         # Send data to PaPiRus
 
+#  Send message to PaPiRus display pi every 5 seconds until we get a response
+#  to signal that comms are OK
+        self.retry_time = time.time()
+        
+        while True:
+            if time.time() - self.retry_time > 60: break
+            if self.comms_ok:
+                break
+            else:
+                self.sendIPaddrToPapirus()
+            continue
+            try:
+                self.ser.write(self.tv_ipaddr_bytes)         # Send data to PaPiRus
+                sleep(5)  # Wait for 5 seconds before sending next message
+            except Exception as e:
+                print(e)
+                print("Unexpected error in write to PaPiRus: ", e)
+            papirus_bytes = self.ser.read_until(b'\r\n', None)
+            if papirus_bytes == b'':
+                print("No data received from PaPiRus, retrying...")
+                continue
+            else:
+                papirus_str = papirus_bytes.decode().strip()
+                print("Received from PaPiRus:", papirus_str)
+                self.comms_ok = True
+                break
+        
     #############################################
     ## Function: readMessage
     def readMessage(self, dataship: Dataship):
@@ -144,27 +172,36 @@ class serial_papirus_send(Module):
                 try:
                     self.ser.write(papirus_bytes)         # Send data to PaPiRus
                     sleep(.1)
-                    self.ser.write(self.tv_ipaddr_bytes)  # Send TV IP address to PaPiRus
-
+                    if not self.comms_ok: self.sendIPaddrToPapirus()
                 except Exception as e:
                     print(e)
                     print("Unexpected error in write to PaPiRus: ", e)
-                #self.update = False
             self.tx_count = 20
             self.loop_count = self.loop_count + 1
 
             if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
                 self.ser.seek(0)
             return dataship
-
         return dataship 
 
-
+    def sendIPaddrToPapirus(self):
+        try:
+            self.ser.write(self.tv_ipaddr_bytes)         # Send data to PaPiRus
+            sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
+        except Exception as e:
+            print(e)
+            print("Unexpected error in write to PaPiRus: ", e)
+        papirus_bytes = self.ser.read_until(b'\r\n', None)
+        if papirus_bytes == b'':
+            print("No data received from PaPiRus...")
+        else:
+            papirus_str = papirus_bytes.decode().strip()
+            print("Received from PaPiRus:", papirus_str)
+            self.comms_ok = True
+             
     # close this data input 
     def closeInput(self,dataship: Dataship):
         if self.isPlaybackMode:
             self.ser.close()
         else:
             self.ser.close()
-
-    print("Did it work?")

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-#  Version 1.0b testing
-print("serial_PaPiRus.py Version 1.0b.Testing")
+#  Version 1.0c testing
+print("serial_PaPiRus.py Version 1.0c.Testing")
 
 # 
 # This module will send data via RS-232 Serial to a PaPiRus e-Paper display.
@@ -10,9 +10,6 @@ print("serial_PaPiRus.py Version 1.0b.Testing")
 
 # TODO Add error handling for opening serial ports
 # FileNotFoundError: [Errno 2] No such file or directory: '/dev/ttyUSB0'
-
-# TODO Add "Hello World" serial transmission to PaPiRus Pi to signal Comms OK
-# TODO Add IP address and Gateway address and send to PaPiRus display
 
 # Raspberry Pi 
 # /dev/ttyUSB0 is a USB to RS-232 converter to receive data from
@@ -108,7 +105,7 @@ class serial_papirus(Input):
     except:
         print("Error: Unable to get IP address")
 
-#  Send message to PaPiRus display pi every 5 secondsto signal that comms are OK
+#  Send message to PaPiRus display pi every 5 seconds to signal that comms are OK
 #  and to test the serial link
 
     papirus_str = "!51" + ipaddr + "\r\n"
