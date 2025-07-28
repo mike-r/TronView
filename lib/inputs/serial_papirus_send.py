@@ -72,6 +72,7 @@ class serial_papirus_send(Module):
             #self.efis_data_format = hud_utils.readConfig(self.name, "format", "none")
             self.papirus_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyACM0")
             self.papirus_data_baudrate = hud_utils.readConfigInt(self.name, "baudrate", 9600)
+            self.registration = hud_utils.readConfig(self.name, "registration", "N12345")
 
             # open serial connection to Pi Zero with PaPiRus display.
             self.ser = serial.Serial(
@@ -151,7 +152,7 @@ class serial_papirus_send(Module):
                     hobbs_str = "10234"
                 smoke_str = "+0234G"      #   "+nnnnG"
                 fuel_remain_str = "678"
-                papirus_str = '!41' + smoke_str + hobbs_str + fuel_remain_str + self.engine_status + '\r\n'
+                papirus_str = '!41' + self.registration + smoke_str + hobbs_str + fuel_remain_str + self.engine_status + '\r\n'
                 papirus_bytes = papirus_str.encode()
                 print(papirus_bytes)
                 try:
@@ -181,7 +182,7 @@ class serial_papirus_send(Module):
             print("No data received from PaPiRus...")
         else:
             papirus_str = papirus_bytes.decode().strip()
-            print("Received this stringfrom PaPiRus: ", papirus_str)
+            print("Received this string from PaPiRus: ", papirus_str)
             self.comms_ok = True
              
     # close this data input 
