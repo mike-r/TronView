@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.3g testing
-print("serial-papirus_display.py Version 0.3g.Testing")
+#  Version 0.3i testing
+print("serial-papirus_display.py Version 0.3i.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -55,8 +55,8 @@ tronview_comms_ok = False
 tronview_ipaddr = "Waiting 60s"  # Default value if TronView not connected
 
 
-print("Waiting 1 second for PaPiRus display and USB OTG to be ready")
-sleep(1)
+print("Waiting 10 seconds for PaPiRus display and USB OTG to be ready")
+sleep(10)
 
 #  2" PaPiRus Display size is:  200 X 96 pixels
 
@@ -120,9 +120,9 @@ if tronview_serial.is_open:
             tronview_ipaddr = tronview_str[3:18]
             tronview_str = "Received TronView IP: " + tronview_ipaddr
             print("Sending back to TronView:", tronview_str)
-            tronview_bytes = tronview_str.encode()
-            tronview_bytes += b'\r\n'
-            tronview_serial.write(tronview_bytes)
+            papirus_bytes = ePaper_ipaddr.encode()
+            papirus_bytes += b'\r\n'
+            tronview_serial.write(papirus_bytes)
             tronview_comms_ok = True
             break
         sleep(0.5)
@@ -179,6 +179,9 @@ textPu.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
 textPu.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
 time.sleep(1.0)
 
+tronview_serial.flushInput()  # Clear any existing data in the serial buffer
+tronview_serial.flushOutput() # Clear any existing data in the serial buffer
+
 while True:
     print("engine_status: ", engine_status)
     engine_status_prev = engine_status
@@ -193,10 +196,10 @@ while True:
     if tronview_str[1] == "5" and not tronview_comms_ok:
         tronview_ipaddr = tronview_str[3:18]
         tronview_str = "Received TronView IP: " + tronview_ipaddr
-        print("Sending back to TronView:", tronview_str)
-        tronview_bytes = tronview_str.encode()
-        tronview_bytes += b'\r\n'
-        tronview_serial.write(tronview_bytes)
+        print("Sending PaPiRus IP Address back to TronView:", tronview_str)
+        papirus_bytes = ePaper_ipaddr.encode()
+        papirus_bytes += b'\r\n'
+        tronview_serial.write(papirus_bytes)
         tronview_comms_ok = True
         text.Clear()
         time.sleep(1.0)

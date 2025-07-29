@@ -23,6 +23,7 @@
 
 import serial
 from time import sleep
+import time
 import sys
 import os
 import socket
@@ -36,8 +37,6 @@ from lib.common.dataship.dataship_imu import IMUData
 from lib.common.dataship.dataship_engine_fuel import EngineData, FuelData
 from lib.common.dataship.dataship_air import AirData
 from lib.common.dataship.dataship_analog import AnalogData
-import time
-#from osgeo import osr
 from lib.common import shared
 
 class serial_papirus_send(Module):
@@ -73,6 +72,12 @@ class serial_papirus_send(Module):
             self.papirus_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyACM0")
             self.papirus_data_baudrate = hud_utils.readConfigInt(self.name, "baudrate", 9600)
             self.registration = hud_utils.readConfig(self.name, "registration", "N12345")
+            self.papirus_data1 = hud_utils.readConfig(self.name, "TronView_PaPiRUs_1", "none")
+            self.papirus_label1 = hud_utils.readConfig(self.name, "PaPirus_Label_1", "none")
+            self.papirus_data2 = hud_utils.readConfig(self.name, "TronView_PaPiRUs_2", "none")
+            self.papirus_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "none")
+            self.papirus_data3 = hud_utils.readConfig(self.name, "TronView_PaPiRUs_3", "none")
+            self.papirus_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "none")
 
             # open serial connection to Pi Zero with PaPiRus display.
             self.ser = serial.Serial(
@@ -81,7 +86,7 @@ class serial_papirus_send(Module):
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
                 bytesize=serial.EIGHTBITS,
-                timeout=3,
+                timeout=3,  # Set a timeout for reading
                 write_timeout=5
             )
 
@@ -138,21 +143,22 @@ class serial_papirus_send(Module):
             # Find the IP Address of the TronView Pi and send it to the PaPiRus display Pi.
             # Then read data out of the Dataship and send it to the PaPiRus display.
             
-        x = 0
-        while x != ord('!'):         
-
+        while True:       
 # Build text string to send to PaPiRus display pi
             if self.tx_count > 20:
                 self.tx_count = 0
-                if self.targetData.src_alt != None:
-                    targetData_str = str(self.targetData.src_alt)
-                    hobbs_str = targetData_str.zfill(5)  # Pad with leading zeros to 5 digits
-                    print("hobbs_str = ", hobbs_str)
-                else:
-                    hobbs_str = "10234"
-                smoke_str = "+0234G"      #   "+nnnnG"
-                fuel_remain_str = "678"
-                papirus_str = '!41' + self.registration + smoke_str + hobbs_str + fuel_remain_str + self.engine_status + '\r\n'
+
+                fuel_remain_str = self.papirus_label1 + "," + str(self.papirus_data1)
+                hobbs_str = self.papirus_label2 + "," + str(self.papirus_data2)
+                smoke_str = self.papirus_label3 + "," + str(self.papirus_data3)
+                print("fuel_remain_str = ", fuel_remain_str)
+                print("hobbs_str = ", hobbs_str)
+                print("smoke_str = ", smoke_str)
+                print()
+
+    # hobbs_str = targetData_str.zfill(5)  # Pad with leading zeros to 5 digits
+        
+                papirus_str = '!4#' + self.registration + "," + smoke_str + "," + hobbs_str + "," + fuel_remain_str + "," + self.engine_status + '\r\n'
                 papirus_bytes = papirus_str.encode()
                 print(papirus_bytes)
                 try:
@@ -180,9 +186,12 @@ class serial_papirus_send(Module):
         papirus_bytes = self.ser.read_until(b'\r\n', None)
         if papirus_bytes == b'':
             print("No data received from PaPiRus...")
+            self.comms_ok = True  # Assume comms are OK even if no data received
+            print("Assuming comms are OK with PaPiRus display.")
+            return
         else:
             papirus_str = papirus_bytes.decode().strip()
-            print("Received this string from PaPiRus: ", papirus_str)
+            print("Received IP Address from PaPiRus: ", papirus_str)
             self.comms_ok = True
              
     # close this data input 
