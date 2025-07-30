@@ -72,12 +72,12 @@ class serial_papirus_send(Module):
             self.papirus_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyACM0")
             self.papirus_data_baudrate = hud_utils.readConfigInt(self.name, "baudrate", 9600)
             self.registration = hud_utils.readConfig(self.name, "registration", "N12345")
-            self.papirus_data1 = hud_utils.readConfig(self.name, "TronView_PaPiRUs_1", "none")
-            self.papirus_label1 = hud_utils.readConfig(self.name, "PaPirus_Label_1", "none")
-            self.papirus_data2 = hud_utils.readConfig(self.name, "TronView_PaPiRUs_2", "none")
-            self.papirus_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "none")
-            self.papirus_data3 = hud_utils.readConfig(self.name, "TronView_PaPiRUs_3", "none")
-            self.papirus_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "none")
+            self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_1", "none")
+            self.tv_label1 = hud_utils.readConfig(self.name, "PaPirus_Label_1", "none")
+            self.tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_2", "none")
+            self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "none")
+            self.tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_3", "none")
+            self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "none")
 
             # open serial connection to Pi Zero with PaPiRus display.
             self.ser = serial.Serial(
@@ -89,6 +89,13 @@ class serial_papirus_send(Module):
                 timeout=3,  # Set a timeout for reading
                 write_timeout=5
             )
+
+        # create analog data object.
+        self.analogData = AnalogData()
+        self.analogData.name = self.name
+        self.index = len(dataship.analogData)
+        self.analogData.id = self.name + "_" + str(self.index)
+        dataship.analogData.append(self.analogData)
 
         # create a empty imu object.
         self.imuData = IMUData()
@@ -148,19 +155,24 @@ class serial_papirus_send(Module):
             if self.tx_count > 20:
                 self.tx_count = 0
 
-                fuel_remain_str = self.papirus_label1 + "," + str(self.papirus_data1)
-                hobbs_str = self.papirus_label2 + "," + str(self.papirus_data2)
-                smoke_str = self.papirus_label3 + "," + str(self.papirus_data3)
-                print("fuel_remain_str = ", fuel_remain_str)
-                print("hobbs_str = ", hobbs_str)
-                print("smoke_str = ", smoke_str)
+                self.tv_data1 = exec(self.tv_data1_name)
+                self.tv_data2 = exec(self.tv_data2_name)
+                self.tv_data3 = exec(self.tv_data3_name)
+
+                papirus1_str = self.tv_label1 + "," + str(self.tv_data1)
+                papirus2_str = self.tv_label2 + "," + str(self.tv_data2)
+                papirus3_str = self.tv_label3 + "," + str(self.tv_data3)
+                print()
+                print("papirus1_str = ", papirus1_str)
+                print("papirus2_str = ", papirus2_str)
+                print("papirus3_str = ", papirus3_str)
                 print()
 
-    # hobbs_str = targetData_str.zfill(5)  # Pad with leading zeros to 5 digits
-        
-                papirus_str = '!4#' + self.registration + "," + smoke_str + "," + hobbs_str + "," + fuel_remain_str + "," + self.engine_status + '\r\n'
+    # Pad with leading zeros to 5 digits
+
+                papirus_str = '!4#' + self.registration + "," + papirus1_str + "," + papirus2_str + "," + papirus3_str + "," + self.engine_status + '\r\n'
                 papirus_bytes = papirus_str.encode()
-                print(papirus_bytes)
+                print("PaPiRus Bytes = ", papirus_bytes)
                 try:
                     self.ser.write(papirus_bytes)         # Send data to PaPiRus
                     if not self.comms_ok:
