@@ -303,7 +303,6 @@ class automationHat(Module):
             self.engineData_hobbs_time_str = str(int(self.new_hobbs_time)).zfill(5)
             self.engineData_OilPress_str = str(int(self.new_OilPress)).zfill(2)
             self.fuelData_FuelRemain_str = str(int(self.new_FuelRemain)).zfill(3)
-            self.fuelData_FuelLevel_str = str(int(self.new_FuelLevel)).zfill(3)
             
         # Build the string to send to the display
         if time.time() - self.start_time > 10 and self.update:   # Send data every 10 seconds at the most.
