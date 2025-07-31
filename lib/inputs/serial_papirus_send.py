@@ -183,7 +183,7 @@ class serial_papirus_send(Module):
             # Find the IP Address of the TronView Pi and send it to the PaPiRus display Pi.
             # Then read data out of the Dataship and send it to the PaPiRus display.
     
-        self.updateEngineStatus(self, dataship)    
+        self.updateEngineStatus(dataship)    
         while True:       
 # Build text string to send to PaPiRus display pi
             if self.tx_count > 20:
