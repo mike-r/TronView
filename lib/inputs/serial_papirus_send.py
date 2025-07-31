@@ -64,20 +64,27 @@ class serial_papirus_send(Module):
 
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
-        
+        self.initPapirus(dataship)  # Initialize the PaPiRus display settings
         if(self.PlayFile!=None and self.PlayFile!=False):
             pass
         else:
-            #self.efis_data_format = hud_utils.readConfig(self.name, "format", "none")
-            self.papirus_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyACM0")
-            self.papirus_data_baudrate = hud_utils.readConfigInt(self.name, "baudrate", 9600)
-            self.registration = hud_utils.readConfig(self.name, "registration", "N12345")
-            self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_1", "none")
-            self.tv_label1 = hud_utils.readConfig(self.name, "PaPirus_Label_1", "none")
-            self.tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_2", "none")
-            self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "none")
-            self.tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_3", "none")
-            self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "none")
+            pass
+
+        # set the data to the first item in the list.
+        if len(shared.Dataship.targetData) > 0:
+            self.targetData = shared.Dataship.targetData[0]
+        if len(shared.Dataship.gpsData) > 0:
+            self.gpsData = shared.Dataship.gpsData[0]
+        if len(shared.Dataship.imuData) > 0:
+            self.imuData = shared.Dataship.imuData[0]
+        if len(shared.Dataship.engineData) > 0:
+            self.engineData = shared.Dataship.engineData[0]
+        if len(shared.Dataship.fuelData) > 0:
+            self.fuelData = shared.Dataship.fuelData[0]
+        if len(shared.Dataship.airData) > 0:
+            self.airData = shared.Dataship.airData[0]
+        if len(shared.Dataship.analogData) > 0:
+            self.analogData = shared.Dataship.analogData[0]
 
             # open serial connection to Pi Zero with PaPiRus display.
             self.ser = serial.Serial(
@@ -141,7 +148,32 @@ class serial_papirus_send(Module):
             else:
                 self.sendIPaddrToPapirus()
             sleep(5)  # Wait for 5 seconds before retrying
-                        
+
+    def initPapirus(self, dataship: Dataship):
+        # Initialize the PaPiRus display settings
+        self.papirus_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyACM0")
+        self.papirus_data_baudrate = hud_utils.readConfigInt(self.name, "baudrate", 9600)
+        self.registration = hud_utils.readConfig(self.name, "registration", "N12345")
+
+
+        self.tv_label1 = hud_utils.readConfig(self.name, "PaPirus_Label_1", "none")
+        self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_1", "none")
+        self.tv_data1_exec = "self.tv_data_one = self." + self.tv_data1_name
+        exec(self.tv_data1_exec)  # Evaluate the string to get the value
+        print("tv_data_one: ", self.tv_data_one, " ", self.tv_label1)
+
+        self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "none")
+        tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_2", "none")
+        self.tv_data2_exec = "self.tv_data_two = self." + tv_data2_name
+        exec(self.tv_data2_exec)  # Evaluate the string to get the value
+        print("tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
+        
+        self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "none")
+        tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_3", "none")
+        self.tv_data3_exec = "self.tv_data_three = self." + tv_data3_name
+        exec(self.tv_data3_exec)  # Evaluate the string to get the value
+        print("tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
+
     #############################################
     ## Function: readMessage
     def readMessage(self, dataship: Dataship):
@@ -149,19 +181,19 @@ class serial_papirus_send(Module):
             return dataship
             # Find the IP Address of the TronView Pi and send it to the PaPiRus display Pi.
             # Then read data out of the Dataship and send it to the PaPiRus display.
-            
+    
+        self.updateEngineStatus(self, dataship)    
         while True:       
 # Build text string to send to PaPiRus display pi
             if self.tx_count > 20:
                 self.tx_count = 0
 
-                self.tv_data1 = exec(self.tv_data1_name)
-                self.tv_data2 = exec(self.tv_data2_name)
-                self.tv_data3 = exec(self.tv_data3_name)
-
-                papirus1_str = self.tv_label1 + "," + str(self.tv_data1)
-                papirus2_str = self.tv_label2 + "," + str(self.tv_data2)
-                papirus3_str = self.tv_label3 + "," + str(self.tv_data3)
+                exec(self.tv_data1_exec)  # Evaluate the string to get the value
+                exec(self.tv_data2_exec)
+                exec(self.tv_data3_exec)
+                papirus1_str = self.tv_label1 + "," + str(self.tv_data_one)
+                papirus2_str = self.tv_label2 + "," + str(self.tv_data_two)
+                papirus3_str = self.tv_label3 + "," + str(self.tv_data_three)
                 print()
                 print("papirus1_str = ", papirus1_str)
                 print("papirus2_str = ", papirus2_str)
@@ -212,3 +244,23 @@ class serial_papirus_send(Module):
             self.ser.close()
         else:
             self.ser.close()
+            
+    def updateEngineStatus(self, dataship: Dataship):
+        if not hasattr(self, 'engineData'):
+            self.engineData = dataship.engineData[0]
+        if not hasattr(self, 'old_engine_status_str'):
+            self.old_engine_status_str = ''
+        if not hasattr(self, 'old_OilPress'):
+            self.old_OilPress = 0
+                    
+        self.old_engine_status_str = self.engine_status_str  # Set old engine status to current status
+        if self.engineData.OilPress != None:
+            if self.engineData.OilPress > 15 or self.di0 != 0 or self.di1 != 0:
+                self.engine_status_str = "r"  # running
+                if dataship.debug_mode > 0: print("Engine is running, Oil Pressure: ", self.engineData.OilPress)
+            else:
+                self.engine_status_str = "s"  # stopped
+            self.new_OilPress = self.engineData.OilPress
+            if self.new_OilPress != self.old_OilPress:
+                self.old_OilPress = self.new_OilPress
+                self.update = True
