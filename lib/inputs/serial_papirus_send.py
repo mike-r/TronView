@@ -157,19 +157,19 @@ class serial_papirus_send(Module):
 
 
         self.tv_label1 = hud_utils.readConfig(self.name, "PaPirus_Label_1", "none")
-        self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_1", "none")
+        self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_1", "none")
         self.tv_data1_exec = "self.tv_data_one = self." + self.tv_data1_name
         exec(self.tv_data1_exec)  # Evaluate the string to get the value
         print("tv_data_one: ", self.tv_data_one, " ", self.tv_label1)
 
         self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "none")
-        tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_2", "none")
+        tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_2", "none")
         self.tv_data2_exec = "self.tv_data_two = self." + tv_data2_name
         exec(self.tv_data2_exec)  # Evaluate the string to get the value
         print("tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
         
         self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "none")
-        tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRUs_3", "none")
+        tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_3", "none")
         self.tv_data3_exec = "self.tv_data_three = self." + tv_data3_name
         exec(self.tv_data3_exec)  # Evaluate the string to get the value
         print("tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
