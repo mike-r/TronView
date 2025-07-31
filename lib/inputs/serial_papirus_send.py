@@ -256,7 +256,7 @@ class serial_papirus_send(Module):
 
         self.old_engine_status = self.engine_status  # Set old engine status to current status
         if self.engineData.OilPress != None:
-            if self.engineData.OilPress > 15 or self.di0 != 0 or self.di1 != 0:
+            if self.engineData.OilPress > 15:
                 self.engine_status = "r"  # running
                 if dataship.debug_mode > 0: print("Engine is running, Oil Pressure: ", self.engineData.OilPress)
             else:
