@@ -306,7 +306,7 @@ while True:
 
     if fuel < 15.5: engine_status = "s"  # Debug to test engine status change
     if engine_status == "s" and engine_status_prev == "r":      # Engine stopped and was running
-        text.UpdateText("Line-1", hobbsF)
+        text.UpdateText("Line-1", last_hobbs)
         print("Engine stopped, updating Line-1 with Hobbs")
         logfile.write(f"{registration},{last_hobbs},{last_fuel},{last_smoke}\n")
         logfile.close()
