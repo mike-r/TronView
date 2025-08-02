@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.3i testing
-print("serial-papirus_display.py Version 0.3i.Testing")
+#  Version 0.3l testing
+print("serial-papirus_display.py Version 0.3l.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -53,7 +53,15 @@ from papirus import PapirusTextPos
 
 tronview_comms_ok = False
 tronview_ipaddr = "Waiting 60s"  # Default value if TronView not connected
-
+registration = "Speedy"  # Default registration number
+engine_status = 's'  # Default engine status, 's' for stopped
+engine_status_prev = 's'  # Previous engine status for comparison
+tvName1 = "TronView1"
+tvName2 = "TronView2"
+tvName3 = "TronView3"
+tvValue1 = 0
+tvValue2 = 0
+tvValue3 = 0
 
 print("Waiting 10 seconds for PaPiRus display and USB OTG to be ready")
 sleep(10)
@@ -114,6 +122,8 @@ if tronview_serial.is_open:
         print("Received: ", len(tronview_bytes), " bytes from TronView")
         tronview_str = tronview_bytes.decode()
         tronview_str.strip()
+        #tronview_str = tronview_lst.join()
+        tronview_str.split(",")
         print("String from TronView: ", tronview_str)
         print()
         if tronview_str[1] == "5":
@@ -167,14 +177,13 @@ smoke_gal  = 200.1
 fuel       = 200.1
 update     = False
 loop_count = 0
-engine_status = 's'       # 'r' for running, 's' for stopped
-engine_status_prev = 's'  # Previous engine status for comparison
+
 
 time.sleep(10.0)
 text.Clear()
 time.sleep(1.0)
 
-textPu.AddText("N873PW",             25,  0, 39, Id="Line-1")
+textPu.AddText(registration,         20,  0, 39, Id="Line-1")
 textPu.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
 textPu.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
 time.sleep(1.0)
@@ -186,12 +195,14 @@ while True:
     print("engine_status: ", engine_status)
     engine_status_prev = engine_status
     tronview_bytes = tronview_serial.read_until(b'\r\n', None)
+    tronview_str = tronview_bytes.decode()
+    tronview_str1 = tronview_str.strip()
+    tronview_str2 = tronview_str1.split(",")
+    for i in range(len(tronview_str2)):
+        print("Value : ", tronview_str2[i], " at index:", i)
     if len(tronview_bytes) < 10:
         print("Received: ", len(tronview_bytes), " bytes from TronView, retrying...")
         continue
-    print("TronView Bytes: ", tronview_bytes)
-    tronview_str = tronview_bytes.decode()
-    tronview_str.strip()
 
     if tronview_str[1] == "5" and not tronview_comms_ok:
         tronview_ipaddr = tronview_str[3:18]
@@ -213,21 +224,22 @@ while True:
         text.Clear()
         time.sleep(1.0)
         
-        textPu.AddText("N873PW",             25,  0, 39, Id="Line-1")
-        textPu.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
-        textPu.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
+        textPu.AddText(registration,             25,  0, 39, Id="Line-1")
+        textPu.AddText(tvName1,   0, 37, 30, Id="Line-2")
+        textPu.AddText(tvName3,   0, 66, 30, Id="Line-3")
         continue
 
-    if tronview_str[1] == "4":
-        smoke_str = tronview_str[3:9]
-        hobbs_str = tronview_str[9:14]
-        fuel_remain_str = tronview_str[14:17]
-        engine_status = tronview_str[17:18]
+    if tronview_str2[0] == "!4#":
+        registration = tronview_str2[1]
+        #hobbs_str = tronview_str[9:14]
+        #fuel_remain_str = tronview_str[14:17]
+        #engine_status = tronview_str[17:18]
 
-        print('Smoke Level: ',   smoke_str, ' Gallons')
-        print('Total Time: ',    hobbs_str, ' Hours')
-        print('Fuel Remaining:', fuel_remain_str, ' Gallons', end='\r\n\n')
-        print('engine_status:',  engine_status)
+        print('Registration: ',   registration)
+        print(tvName1, tvValue1)
+        print(tvName2, tvValue2)
+        print(tvName3, tvValue3)
+        print('engine_status:',  tronview_str2[7])
 
         try:
             smoke_gal = float(tronview_bytes[4:8]) / 10
