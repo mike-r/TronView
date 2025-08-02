@@ -54,6 +54,7 @@ from papirus import PapirusTextPos
 tronview_comms_ok = False
 tronview_ipaddr = "Waiting 60s"  # Default value if TronView not connected
 registration = "Speedy"  # Default registration number
+last_registration = registration  # Last registration number
 engine_status = 's'  # Default engine status, 's' for stopped
 engine_status_prev = 's'  # Previous engine status for comparison
 tvName1 = "TronView1"
@@ -64,7 +65,7 @@ tvValue2 = 0
 tvValue3 = 0
 
 print("Waiting 10 seconds for PaPiRus display and USB OTG to be ready")
-sleep(10)
+sleep(1)
 
 #  2" PaPiRus Display size is:  200 X 96 pixels
 
@@ -112,7 +113,7 @@ except serial.SerialException:
 if tronview_serial.is_open:
     wait_time = time.time()
     while True:
-        if time.time() - wait_time > 60: break
+        if time.time() - wait_time > 6: break
         tronview_bytes = tronview_serial.read_until(b'\r\n', None)
         if len(tronview_bytes) < 10:
             print("Received: ", len(tronview_bytes), " bytes from TronView, waiting and retry...")
@@ -122,7 +123,6 @@ if tronview_serial.is_open:
         print("Received: ", len(tronview_bytes), " bytes from TronView")
         tronview_str = tronview_bytes.decode()
         tronview_str.strip()
-        #tronview_str = tronview_lst.join()
         tronview_str.split(",")
         print("String from TronView: ", tronview_str)
         print()
@@ -136,11 +136,6 @@ if tronview_serial.is_open:
             tronview_comms_ok = True
             break
         sleep(0.5)
-
-#                           coll, row, height
-#text.AddText("N873PW",       25, 0, 39, Id="Line-1-Addr")
-#text.AddText(ePaper_ipaddr,   0, 39, 25, Id="Line-2-Addr")
-#text.AddText(tronview_ipaddr, 0, 65, 25, Id="Line-3-Addr")
 
 text.UpdateText("Line-4-Addr", tronview_ipaddr)
 time.sleep(1.0)
@@ -156,9 +151,11 @@ print ("dataList:", dataList)
 if len(dataList) > 0:
     #logfile.close()
     try:
-        last_hobbs = float(dataList[0])
-        last_fuel = float(dataList[1])
-        last_smoke = float(dataList[2])
+        registration = dataList[0]
+        last_registration = registration
+        last_hobbs = float(dataList[1])
+        last_fuel = float(dataList[2])
+        last_smoke = float(dataList[3])
 
         print("Last Fuel:", last_fuel, "Last Smoke:", last_smoke, "Last Hobbs:", last_hobbs)
     except ValueError:
@@ -181,30 +178,30 @@ loop_count = 0
 
 time.sleep(10.0)
 text.Clear()
-time.sleep(1.0)
+#time.sleep(1.0)
 
-textPu.AddText(registration,         20,  0, 39, Id="Line-1")
-textPu.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
-textPu.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
+#textPu.AddText(registration,         20,  0, 39, Id="Line-1")
+#textPu.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
+#textPu.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
+#time.sleep(1.0)
+
+text.AddText(registration,         20,  0, 39, Id="Line-1")
+text.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
+text.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
 time.sleep(1.0)
+text.WriteAll()
 
 tronview_serial.flushInput()  # Clear any existing data in the serial buffer
 tronview_serial.flushOutput() # Clear any existing data in the serial buffer
 
 while True:
-    print("engine_status: ", engine_status)
-    engine_status_prev = engine_status
     tronview_bytes = tronview_serial.read_until(b'\r\n', None)
-    tronview_str = tronview_bytes.decode()
-    tronview_str1 = tronview_str.strip()
-    tronview_str2 = tronview_str1.split(",")
-    engine_status = tronview_str2[8]
-    
-    for i in range(len(tronview_str2)):
-        print("Value : ", tronview_str2[i], " at index:", i)
+
     if len(tronview_bytes) < 10:
         print("Received: ", len(tronview_bytes), " bytes from TronView, retrying...")
         continue
+    
+    tronview_str = tronview_bytes.decode()
 
     if tronview_str[1] == "5" and not tronview_comms_ok:
         tronview_ipaddr = tronview_str[3:18]
@@ -226,70 +223,105 @@ while True:
         text.Clear()
         time.sleep(1.0)
         
-        textPu.AddText(registration,             25,  0, 39, Id="Line-1")
-        textPu.AddText(tvName1,   0, 37, 30, Id="Line-2")
-        textPu.AddText(tvName3,   0, 66, 30, Id="Line-3")
+        textPu.AddText(registration,    25,  0, 39, Id="Line-1")
+        textPu.AddText(tvName1,          0, 37, 30, Id="Line-2")
+        textPu.AddText(tvName3,          0, 66, 30, Id="Line-3")
         continue
 
-    if tronview_str2[0] == "!4#":
+    if tronview_str[1] == "4":
+        tronview_str1 = tronview_str.strip()
+        tronview_str2 = tronview_str1.split(",")
+        for i in range(len(tronview_str2)):
+            print("Value : ", tronview_str2[i], " at index:", i)
+            
+        engine_status_prev = engine_status  # Save previous engine status
         registration = tronview_str2[1]
-        print('Registration: ',   registration)
-        print(tvName1, tvValue1)
-        print(tvName2, tvValue2)
-        print(tvName3, tvValue3)
-        print('engine_status:',  engine_status)
+        tvName1 = tronview_str2[2]  # Fuel remaining
+        tvValue1 = tronview_str2[3]  # Fuel value
+        tvName2 = tronview_str2[4]  # Hobbs time
+        tvValue2 = tronview_str2[5]  # Hobbs value
+        tvName3 = tronview_str2[6]  # Smoke level
+        tvValue3 = tronview_str2[7]  # Smoke value
+        engine_status = tronview_str2[8]  # Engine status
+        print()
+        print('Registration: ', registration)
+        print('tv1: ', tvName1, tvValue1)
+        print('tv2: ', tvName2, tvValue2)
+        print('tv3: ', tvName3, tvValue3)
+        print('engine_status:', engine_status)
+        print()
 
         try:
-            smoke_gal = float(tronview_bytes[4:8]) / 10
+            if registration != last_registration:
+                last_registration = registration
+                #textPu.UpdateText("Line-1", registration)
+                text.UpdateText("Line-1", registration)
+                print("Updated Line-1 with Registration:", registration)
+                update = True
+        except Exception as e:
+            print("Error updating Line-1 with Registration:", e)
+        
+        try:
+            smoke_gal = float(tvValue3)
             print('Smoke Level:', '{0:3.1f}' .format(smoke_gal), 'Gallons')
             smoke_change = abs(smoke_gal - last_smoke)
-            if smoke_change > 0.2:
+            if smoke_change > 0.109:  # Update if smoke changes by more than 0.1 gallons
                 gallonsF = "{:.1f}".format(smoke_gal)
                 gallonsF = gallonsF + "  Smoke"
                 if smoke_gal < 0.25: gallonsF = "--EMPTY--"
-                textPu.UpdateText("Line-3", gallonsF)
-                print("GallonsF:", gallonsF)
+                #textPu.UpdateText("Line-3", gallonsF)
+                text.UpdateText("Line-3", gallonsF)
+                print("Updated Line-3 withGallonsF:", gallonsF)
                 last_smoke = smoke_gal
                 update = True
-        except ValueError:
-            print()
+        except Exception as e:
+            print("Error updating Line-3 with Smoke Level:", e)
 
         try:
-            fuel = float(tronview_str2[3]) / 10
-            print (tronview_str2[2], '{0:3.1f}' .format(fuel), 'Gallons')
+            fuel = float(tvValue1)
+            print (tvName1, '{0:3.1f}' .format(fuel), 'Gallons')
             fuel_change = abs(fuel - last_fuel)
-            if fuel_change > 0.5:  # Update if fuel changes by more than 0.5 gallons
+            if fuel_change > 0.09:  # Update if fuel changes by more than 0.09 gallons
                 fuelF = "{:.1f}".format(fuel)
                 fuelF = fuelF + " Fuel"
-                textPu.UpdateText("Line-2", fuelF)
-                print("fuelF:", fuelF)
+                #textPu.UpdateText("Line-2", fuelF)
+                text.UpdateText("Line-2", fuelF)
+                print("Updated Line-2 with fuelF:", fuelF)
                 last_fuel = fuel
                 update = True
-        except ValueError:
-            print("Error parsing fuel level from TronView data")
-            
+        except Exception as e:
+            print("Error updating Line-2 with fuelF:", e)
+
         try:
-            hobbs = float(tronview_str2[5]) / 10
-            print(tronview_str2[4], '{0:6.1f}'.format(hobbs), ' Hours')
+            hobbs = float(tvValue2)
+            print(tvName2, '{0:6.1f}'.format(hobbs), ' Hours')
             hobbs_change = abs(hobbs - last_hobbs)
             if hobbs_change > 0:
                 hobbsF = "{:.1f}".format(hobbs)
                 if hobbs < 1000:  hobbsF = hobbsF + " TT"
                 print("hobbsF:", hobbsF)
                 last_hobbs = hobbs
-                update = True
-        except ValueError:
-            print("Error parsing Hobbs time from TronView data")
-        
+        except Exception as e:
+            print("Error updating Line-1 with Hobbs:", e)
+
+    if fuel < 15.5: engine_status = "s"  # Debug to test engine status change
     if engine_status == "s" and engine_status_prev == "r":      # Engine stopped and was running
-        textPu.UpdateText("Line-1", hobbsF)
+        text.UpdateText("Line-1", hobbsF)
         print("Engine stopped, updating Line-1 with Hobbs")
-        logfile.write(f"{last_hobbs},{last_fuel},{last_smoke}\n")
-        logfile.close() 
+        logfile.write(f"{registration},{last_hobbs},{last_fuel},{last_smoke}\n")
+        logfile.close()
+        time.sleep(1.0)
+        text.WriteAll()
+        print("PaPiRus display updated with Hobbs time")
+        time.sleep(3.0)
         sys.exit(0)
     
     if update or loop_count > 50:
         update = False
         loop_count = 0
+        time.sleep(1.0)
+        print('Updating PaPiRus display with new values')
+        text.WriteAll()
+        time.sleep(1.0)
     loop_count += 1
     print()
