@@ -198,6 +198,8 @@ while True:
     tronview_str = tronview_bytes.decode()
     tronview_str1 = tronview_str.strip()
     tronview_str2 = tronview_str1.split(",")
+    engine_status = tronview_str2[8]
+    
     for i in range(len(tronview_str2)):
         print("Value : ", tronview_str2[i], " at index:", i)
     if len(tronview_bytes) < 10:
@@ -231,15 +233,11 @@ while True:
 
     if tronview_str2[0] == "!4#":
         registration = tronview_str2[1]
-        #hobbs_str = tronview_str[9:14]
-        #fuel_remain_str = tronview_str[14:17]
-        #engine_status = tronview_str[17:18]
-
         print('Registration: ',   registration)
         print(tvName1, tvValue1)
         print(tvName2, tvValue2)
         print(tvName3, tvValue3)
-        print('engine_status:',  tronview_str2[7])
+        print('engine_status:',  engine_status)
 
         try:
             smoke_gal = float(tronview_bytes[4:8]) / 10
@@ -257,8 +255,8 @@ while True:
             print()
 
         try:
-            fuel = float(tronview_bytes[14:17]) / 10
-            print ('Fuel Level:', '{0:3.1f}' .format(fuel), 'Gallons')
+            fuel = float(tronview_str2[3]) / 10
+            print (tronview_str2[2], '{0:3.1f}' .format(fuel), 'Gallons')
             fuel_change = abs(fuel - last_fuel)
             if fuel_change > 0.5:  # Update if fuel changes by more than 0.5 gallons
                 fuelF = "{:.1f}".format(fuel)
@@ -271,8 +269,8 @@ while True:
             print("Error parsing fuel level from TronView data")
             
         try:
-            hobbs = float(tronview_bytes[9:14]) / 10
-            print('Hobbs: ', '{0:6.1f}'.format(hobbs), ' Hours')
+            hobbs = float(tronview_str2[5]) / 10
+            print(tronview_str2[4], '{0:6.1f}'.format(hobbs), ' Hours')
             hobbs_change = abs(hobbs - last_hobbs)
             if hobbs_change > 0:
                 hobbsF = "{:.1f}".format(hobbs)
