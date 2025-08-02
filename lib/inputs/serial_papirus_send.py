@@ -51,6 +51,9 @@ class serial_papirus_send(Module):
         self.retry_time = time.time()
         self.comms_ok = False
         self.engine_status = 's'  # Default engine status is stopped
+        self.tv_data_one = None
+        self.tv_data_two = None
+        self.tv_data_three = None
 
         self.targetData = TargetData()
         self.gpsData = GPSData()
@@ -157,8 +160,8 @@ class serial_papirus_send(Module):
 
 
         self.tv_label1 = hud_utils.readConfig(self.name, "PaPirus_Label_1", "none")
-        self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_1", "none")
-        self.tv_data1_exec = "self.tv_data_one = self." + self.tv_data1_name
+        tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_1", "none")
+        self.tv_data1_exec = "self.tv_data_one = self." + tv_data1_name
         print("tv_data_one_exec: ", self.tv_data1_exec)
         exec(self.tv_data1_exec)  # Evaluate the string to get the value
         print("self.tv_data_one: ", self.tv_data_one, " ", self.tv_label1)
@@ -166,14 +169,16 @@ class serial_papirus_send(Module):
         self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "none")
         tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_2", "none")
         self.tv_data2_exec = "self.tv_data_two = self." + tv_data2_name
+        print("tv_data_two_exec: ", self.tv_data2_exec)
         exec(self.tv_data2_exec)  # Evaluate the string to get the value
-        print("tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
+        print("self.tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
         
         self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "none")
         tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_3", "none")
         self.tv_data3_exec = "self.tv_data_three = self." + tv_data3_name
+        print("tv_data_three_exec: ", self.tv_data3_exec)
         exec(self.tv_data3_exec)  # Evaluate the string to get the value
-        print("tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
+        print("self.tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
 
     #############################################
     ## Function: readMessage
