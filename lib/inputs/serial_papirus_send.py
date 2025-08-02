@@ -101,19 +101,19 @@ class serial_papirus_send(Module):
             )
 
         # create analog data object.
-        self.analogData = AnalogData()
-        self.analogData.name = self.name
-        self.index = len(dataship.analogData)
-        self.analogData.id = self.name + "_" + str(self.index)
-        dataship.analogData.append(self.analogData)
+        #self.analogData = AnalogData()
+        #self.analogData.name = self.name
+        #self.index = len(dataship.analogData)
+        #self.analogData.id = self.name + "_" + str(self.index)
+        #dataship.analogData.append(self.analogData)
 
         # create a empty imu object.
-        self.imuData = IMUData()
-        self.imuData.name = "stratux_papirus_imu"
-        self.imu_index = len(dataship.imuData)  # Start at 0
-        self.imuData.id = "stratux_papirus_imu"+str(self.imu_index)
-        dataship.imuData.append(self.imuData)
-        self.last_read_time = time.time()
+        #self.imuData = IMUData()
+        #self.imuData.name = "stratux_papirus_imu"
+        #self.imu_index = len(dataship.imuData)  # Start at 0
+        #self.imuData.id = "stratux_papirus_imu"+str(self.imu_index)
+        #dataship.imuData.append(self.imuData)
+        #self.last_read_time = time.time()
 
 
         # set the target data and gps data to the first item in the list.
