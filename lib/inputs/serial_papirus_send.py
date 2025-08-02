@@ -204,6 +204,8 @@ class serial_papirus_send(Module):
                 print("papirus1_str = ", papirus1_str)
                 print("papirus2_str = ", papirus2_str)
                 print("papirus3_str = ", papirus3_str)
+                print("Analog Data[0] = ", self.analogData.Data[0])
+                print("Analog Data[1] = ", self.analogData.Data[1])
                 print()
 
     # Pad with leading zeros to 5 digits
