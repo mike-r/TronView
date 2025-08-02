@@ -109,7 +109,7 @@ try:
 except serial.SerialException:
     print("Error: Unable to open serial port")
     exit()
-
+tronview_serial.flushInput()  # Clear any existing data in the serial buffer
 if tronview_serial.is_open:
     wait_time = time.time()
     while True:
@@ -180,11 +180,6 @@ time.sleep(10.0)
 text.Clear()
 #time.sleep(1.0)
 
-#textPu.AddText(registration,         20,  0, 39, Id="Line-1")
-#textPu.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
-#textPu.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
-#time.sleep(1.0)
-
 text.AddText(registration,         20,  0, 39, Id="Line-1")
 text.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
 text.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
@@ -222,7 +217,8 @@ while True:
         time.sleep(15.0)
         text.Clear()
         time.sleep(1.0)
-        
+        tronview_serial.flushInput()  # Clear any existing data in the serial buffer
+    
         textPu.AddText(registration,    25,  0, 39, Id="Line-1")
         textPu.AddText(tvName1,          0, 37, 30, Id="Line-2")
         textPu.AddText(tvName3,          0, 66, 30, Id="Line-3")
@@ -313,7 +309,7 @@ while True:
         time.sleep(1.0)
         text.WriteAll()
         print("PaPiRus display updated with Hobbs time")
-        time.sleep(3.0)
+        time.sleep(10.0)
         sys.exit(0)
     
     if update or loop_count > 50:
@@ -323,5 +319,6 @@ while True:
         print('Updating PaPiRus display with new values')
         text.WriteAll()
         time.sleep(1.0)
+        tronview_serial.flushInput()  # Clear any existing data in the serial buffer
     loop_count += 1
     print()
