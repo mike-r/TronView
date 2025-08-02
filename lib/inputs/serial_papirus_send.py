@@ -203,7 +203,7 @@ class serial_papirus_send(Module):
 
     # Pad with leading zeros to 5 digits
 
-                papirus_str = '!4#' + self.registration + "," + papirus1_str + "," + papirus2_str + "," + papirus3_str + "," + self.engine_status + '\r\n'
+                papirus_str = '!4#,' + self.registration + "," + papirus1_str + "," + papirus2_str + "," + papirus3_str + "," + self.engine_status + '\r\n'
                 papirus_bytes = papirus_str.encode()
                 print("PaPiRus Bytes = ", papirus_bytes)
                 try:
