@@ -290,19 +290,20 @@ while True:
 
         try:
             hobbs = float(tvValue2)
+            hobbsF = "{:.1f}".format(hobbs)
             print(tvName2, '{0:6.1f}'.format(hobbs), ' Hours')
+            print('hobbsF: ', hobbsF, ' Hours')
             hobbs_change = abs(hobbs - last_hobbs)
             if hobbs_change > 0:
-                hobbsF = "{:.1f}".format(hobbs)
                 if hobbs < 1000:  hobbsF = hobbsF + " TT"
                 print("hobbsF:", hobbsF)
                 last_hobbs = hobbs
         except Exception as e:
             print("Error updating Line-1 with Hobbs:", e)
 
-    if fuel < 15.5: engine_status = "s"  # Debug to test engine status change
+    #if fuel < 15.5: engine_status = "s"  # Debug to test engine status change
     if engine_status == "s" and engine_status_prev == "r":      # Engine stopped and was running
-        text.UpdateText("Line-1", last_hobbs)
+        text.UpdateText("Line-1", hobbsF)
         print("Engine stopped, updating Line-1 with Hobbs")
         logfile.write(f"{registration},{last_hobbs},{last_fuel},{last_smoke}\n")
         logfile.close()
