@@ -90,7 +90,8 @@ class serial_papirus_send(Module):
             self.analogData = shared.Dataship.analogData[0]
 
             # open serial connection to Pi Zero with PaPiRus display.
-            self.ser = serial.Serial(
+            try:
+                self.ser = serial.Serial(
                 port=self.papirus_data_port,
                 baudrate=self.papirus_data_baudrate,
                 parity=serial.PARITY_NONE,
@@ -99,6 +100,11 @@ class serial_papirus_send(Module):
                 timeout=3,  # Set a timeout for reading
                 write_timeout=5
             )
+                print("Serial Port opened: ", self.papirus_data_port, " at baudrate: ", self.papirus_data_baudrate)
+            except serial.SerialException as e:
+                print("Error opening serial port: ", e)
+                print("Is the USB cable to the PaPiRus RaPi plugged in?")
+                sys.exit(1)
 
         # set the target data and gps data to the first item in the list.
         if len(shared.Dataship.targetData) > 0:
