@@ -222,8 +222,8 @@ class serial_papirus_send(Module):
         papirus_bytes = self.ser.read_until(b'\r\n', None)
         if papirus_bytes == b'':
             print("No data received from PaPiRus...")
-            self.comms_ok = True  # Assume comms are OK even if no data received
-            print("Assuming comms are OK with PaPiRus display.")
+            self.comms_ok = False  # Assume comms are not OK if no data received
+            print("Assuming comms are not OK with PaPiRus display.")
             return
         else:
             papirus_str = papirus_bytes.decode().strip()
