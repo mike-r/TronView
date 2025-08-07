@@ -106,14 +106,6 @@ class serial_papirus_send(Module):
                 print("Is the USB cable to the PaPiRus RaPi plugged in?")
                 sys.exit(1)
 
-        # set the target data and gps data to the first item in the list.
-        if len(shared.Dataship.targetData) > 0:
-            self.targetData = shared.Dataship.targetData[0]
-        if len(shared.Dataship.gpsData) > 0:
-            self.gpsData = shared.Dataship.gpsData[0]
-        if len(shared.Dataship.imuData) > 0:
-            self.imuData = shared.Dataship.imuData[0]
-
         # Get the IP address of the TronView Pi
         try:
             gw = os.popen("ip -4 route show default").read().split()
@@ -130,17 +122,17 @@ class serial_papirus_send(Module):
         self.tv_ipaddr_bytes = tv_ipaddr_str.encode()
         print("Sending PaPiRus message: ", tv_ipaddr_str)     
 
-#  Send message to PaPiRus display pi every 5 seconds until we get a response
+#  Send message to PaPiRus display pi every 2 seconds until we get a response
 #  to signal that comms are OK
         self.retry_time = time.time()
         
         while True:
-            if time.time() - self.retry_time > 60: break
+            if time.time() - self.retry_time > 10: break
             if self.comms_ok:
                 break
             else:
                 self.sendIPaddrToPapirus()
-            sleep(5)  # Wait for 5 seconds before retrying
+            sleep(2)  # Wait for 2 seconds before retrying
 
     def initPapirus(self, dataship: Dataship):
         # Initialize the PaPiRus display settings
@@ -235,6 +227,7 @@ class serial_papirus_send(Module):
             papirus_str = papirus_bytes.decode().strip()
             print("Received IP Address from PaPiRus: ", papirus_str)
             self.comms_ok = True
+            return
              
     # close this data input 
     def closeInput(self,dataship: Dataship):
