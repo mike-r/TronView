@@ -260,6 +260,6 @@ class serial_papirus_send(Module):
                 print("Is the USB cable to the PaPiRus RaPi plugged in?")
                 self.serialCommsOK = False
                 self.comms_ok = False
-                time.sleep(10)  # Wait for 10 seconds before retrying
+                time.sleep(2)  # Wait for 2 seconds before retrying
         return
                 
