@@ -248,7 +248,7 @@ class serial_papirus_send(Module):
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
                 bytesize=serial.EIGHTBITS,
-                timeout=3,  # Set a timeout for reading
+                timeout=0.1,  # Set a timeout for reading
                 write_timeout=0
             )
                 self.serialCommsOK = True
