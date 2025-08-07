@@ -249,7 +249,7 @@ class serial_papirus_send(Module):
                 stopbits=serial.STOPBITS_ONE,
                 bytesize=serial.EIGHTBITS,
                 timeout=3,  # Set a timeout for reading
-                write_timeout=5
+                write_timeout=0
             )
                 self.serialCommsOK = True
                 print("Connected to PaPiRus display.")
