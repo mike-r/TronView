@@ -50,6 +50,7 @@ class serial_papirus_send(Module):
         self.tv_ipaddr_bytes = None
         self.retry_time = time.time()
         self.comms_ok = False
+        self.serialCommsOK = False
         self.engine_status = 's'  # Default engine status is stopped
         self.tv_data_one = None
         self.tv_data_two = None
@@ -90,21 +91,8 @@ class serial_papirus_send(Module):
             self.analogData = shared.Dataship.analogData[0]
 
             # open serial connection to Pi Zero with PaPiRus display.
-            try:
-                self.ser = serial.Serial(
-                port=self.papirus_data_port,
-                baudrate=self.papirus_data_baudrate,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                bytesize=serial.EIGHTBITS,
-                timeout=3,  # Set a timeout for reading
-                write_timeout=5
-            )
-                print("Serial Port opened: ", self.papirus_data_port, " at baudrate: ", self.papirus_data_baudrate)
-            except serial.SerialException as e:
-                print("Error opening serial port: ", e)
-                print("Is the USB cable to the PaPiRus RaPi plugged in?")
-                sys.exit(1)
+            self.connectToPapirus()  # Try to connect to the PaPiRus display if not already connected
+
 
         # Get the IP address of the TronView Pi
         try:
@@ -121,18 +109,7 @@ class serial_papirus_send(Module):
         tv_ipaddr_str = "!51" + tv_ipaddr + "\r\n"
         self.tv_ipaddr_bytes = tv_ipaddr_str.encode()
         print("Sending PaPiRus message: ", tv_ipaddr_str)     
-
-#  Send message to PaPiRus display pi every 2 seconds until we get a response
-#  to signal that comms are OK
-        self.retry_time = time.time()
-        
-        while True:
-            if time.time() - self.retry_time > 10: break
-            if self.comms_ok:
-                break
-            else:
-                self.sendIPaddrToPapirus()
-            sleep(2)  # Wait for 2 seconds before retrying
+        if self.serialCommsOK and not self.comms_ok: self.sendIPaddrToPapirus()
 
     def initPapirus(self, dataship: Dataship):
         # Initialize the PaPiRus display settings
@@ -170,7 +147,12 @@ class serial_papirus_send(Module):
             # Find the IP Address of the TronView Pi and send it to the PaPiRus display Pi.
             # Then read data out of the Dataship and send it to the PaPiRus display.
     
-        self.updateEngineStatus(dataship)    
+        self.updateEngineStatus(dataship)
+        
+        if not self.serialCommsOK:
+            self.connectToPapirus()  # Try to connect to the PaPiRus display if not already connected
+            return dataship  # If serial comms are not OK, return the dataship without sending data
+
         while True:       
 # Build text string to send to PaPiRus display pi
             if self.tx_count > 20:
@@ -255,3 +237,29 @@ class serial_papirus_send(Module):
             if self.new_OilPress != self.old_OilPress:
                 self.old_OilPress = self.new_OilPress
                 self.update = True
+                
+    def connectToPapirus(self):
+        # Try to connect to the PaPiRus display if not already connected
+        if not self.serialCommsOK:
+            try:
+                self.ser = serial.Serial(
+                port=self.papirus_data_port,
+                baudrate=self.papirus_data_baudrate,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE,
+                bytesize=serial.EIGHTBITS,
+                timeout=3,  # Set a timeout for reading
+                write_timeout=5
+            )
+                self.serialCommsOK = True
+                print("Connected to PaPiRus display.")
+                print("Serial Port opened: ", self.papirus_data_port, " at baudrate: ", self.papirus_data_baudrate)
+
+            except serial.SerialException as e:
+                print("Error opening serial port: ", e)
+                print("Is the USB cable to the PaPiRus RaPi plugged in?")
+                self.serialCommsOK = False
+                self.comms_ok = False
+        return
+                
+            
