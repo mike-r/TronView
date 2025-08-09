@@ -50,6 +50,7 @@ from time import sleep
 import serial
 import time
 from papirus import PapirusTextPos
+import RPi.GPIO as GPIO
 
 tronview_comms_ok = False
 tronview_ipaddr = "Waiting 60s"  # Default value if TronView not connected
@@ -63,6 +64,18 @@ tvName3 = "TronView3"
 tvValue1 = 0
 tvValue2 = 0
 tvValue3 = 0
+
+
+SW1 = 21
+SW2 = 16
+SW3 = 20
+SW4 = 19
+SW5 = 26
+GPIO.setup(SW1, GPIO.IN)
+GPIO.setup(SW2, GPIO.IN)
+GPIO.setup(SW3, GPIO.IN)
+GPIO.setup(SW4, GPIO.IN)
+GPIO.setup(SW5, GPIO.IN)
 
 print("Waiting 10 seconds for PaPiRus display and USB OTG to be ready")
 sleep(1)
@@ -191,7 +204,9 @@ tronview_serial.flushOutput() # Clear any existing data in the serial buffer
 
 while True:
     tronview_bytes = tronview_serial.read_until(b'\r\n', None)
-
+    if GPIO.input(SW1) == False:
+        print("SW1 pressed")
+        time.sleep(0.1) # Debounce delay
     if len(tronview_bytes) < 10:
         print("Received: ", len(tronview_bytes), " bytes from TronView, retrying...")
         continue
