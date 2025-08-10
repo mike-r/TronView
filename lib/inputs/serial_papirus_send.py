@@ -153,44 +153,37 @@ class serial_papirus_send(Module):
             self.connectToPapirus()  # Try to connect to the PaPiRus display if not already connected
             return dataship  # If serial comms are not OK, return the dataship without sending data
 
-        while True:       
-# Build text string to send to PaPiRus display pi
-            if self.tx_count > 20:
-                self.tx_count = 0
+#   Temp Debugging
+        exec(self.tv_data1_exec)  # Evaluate the string to get the value
+        exec(self.tv_data2_exec)
+        exec(self.tv_data3_exec)
+        papirus1_str = self.tv_label1 + "," + str(self.tv_data_one)
+        papirus2_str = self.tv_label2 + "," + str(self.tv_data_two)
+        papirus3_str = self.tv_label3 + "," + str(self.tv_data_three)
+        print()
+        print("papirus1_str = ", papirus1_str)
+        print("papirus2_str = ", papirus2_str)
+        print("papirus3_str = ", papirus3_str)
+        print("Analog Data[0] = ", self.analogData.Data[0])
+        print("Analog Data[1] = ", self.analogData.Data[1])
+        print()
+        
+        # Create the string to send to the PaPiRus display
+        papirus_str = '!4#,' + self.registration + "," + papirus1_str + "," + papirus2_str + "," + papirus3_str + "," + self.engine_status + '\r\n'
+        papirus_bytes = papirus_str.encode()
+        print("PaPiRus Bytes = ", papirus_bytes)
+        try:
+            self.ser.write(papirus_bytes)         # Send data to PaPiRus
+            if not self.comms_ok:
+                sleep(.1)
+                self.sendIPaddrToPapirus()
+        except Exception as e:
+            print(e)
+            print("Unexpected error in write to PaPiRus: ", e)
 
-                exec(self.tv_data1_exec)  # Evaluate the string to get the value
-                exec(self.tv_data2_exec)
-                exec(self.tv_data3_exec)
-                papirus1_str = self.tv_label1 + "," + str(self.tv_data_one)
-                papirus2_str = self.tv_label2 + "," + str(self.tv_data_two)
-                papirus3_str = self.tv_label3 + "," + str(self.tv_data_three)
-                print()
-                print("papirus1_str = ", papirus1_str)
-                print("papirus2_str = ", papirus2_str)
-                print("papirus3_str = ", papirus3_str)
-                print("Analog Data[0] = ", self.analogData.Data[0])
-                print("Analog Data[1] = ", self.analogData.Data[1])
-                print()
-
-    # Pad with leading zeros to 5 digits
-
-                papirus_str = '!4#,' + self.registration + "," + papirus1_str + "," + papirus2_str + "," + papirus3_str + "," + self.engine_status + '\r\n'
-                papirus_bytes = papirus_str.encode()
-                print("PaPiRus Bytes = ", papirus_bytes)
-                try:
-                    self.ser.write(papirus_bytes)         # Send data to PaPiRus
-                    if not self.comms_ok:
-                        sleep(.1)
-                        self.sendIPaddrToPapirus()
-                except Exception as e:
-                    print(e)
-                    print("Unexpected error in write to PaPiRus: ", e)
-            self.tx_count += 1
-
-            if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
-                self.ser.seek(0)
-            return dataship
-        return dataship 
+        if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
+            self.ser.seek(0)
+        return dataship
 
     def sendIPaddrToPapirus(self):
         try:
