@@ -142,6 +142,8 @@ class serial_papirus_send(Module):
     #############################################
     ## Function: readMessage
     def readMessage(self, dataship: Dataship):
+        print("serial_papirus_send.readMessage() called")
+        
         if dataship.errorFoundNeedToExit:
             return dataship
             # Find the IP Address of the TronView Pi and send it to the PaPiRus display Pi.
@@ -200,9 +202,9 @@ class serial_papirus_send(Module):
             return
         else:
             papirus_str = papirus_bytes.decode().strip()
-            print("Received IP Address from PaPiRus: ", papirus_str)
+            print("Received from PaPiRus: ", papirus_str)
             self.comms_ok = True
-            return
+        return
              
     # close this data input 
     def closeInput(self,dataship: Dataship):
@@ -221,7 +223,7 @@ class serial_papirus_send(Module):
 
         self.old_engine_status = self.engine_status  # Set old engine status to current status
         if self.engineData.OilPress != None:
-            if self.engineData.OilPress > 15:
+            if self.engineData.OilPress > 15:     # If Oil Pressure is greater than 15 psi, engine is running
                 self.engine_status = "r"  # running
                 if dataship.debug_mode > 0: print("Engine is running, Oil Pressure: ", self.engineData.OilPress)
             else:
@@ -241,8 +243,8 @@ class serial_papirus_send(Module):
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
                 bytesize=serial.EIGHTBITS,
-                timeout=0.1,  # Set a timeout for reading
-                write_timeout=0
+                timeout=0.1,       # Set a timeout for reading
+                write_timeout=0.1  # Set a timeout for writing
             )
                 self.serialCommsOK = True
                 print("Connected to PaPiRus display.")
