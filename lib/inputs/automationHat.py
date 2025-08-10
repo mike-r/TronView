@@ -401,7 +401,6 @@ class automationHat(Module):
      
     # close this data input 
     def closeInput(self,dataship: Dataship):
-        self.ser.close()
         self.mqtt_client_cloud.disconnect()
         self.mqtt_client_local.disconnect()
         self.mqtt_client_cloud.loop_stop()

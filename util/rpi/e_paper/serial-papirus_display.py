@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.3l testing
-print("serial-papirus_display.py Version 0.3l.Testing")
+#  Version 0.4 testing
+print("serial-papirus_display.py Version 0.4.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -65,7 +65,8 @@ tvValue1 = 0
 tvValue2 = 0
 tvValue3 = 0
 
-
+GPIO.setmode(GPIO.BCM)
+# Setup GPIO pins for PaPiRus buttons
 SW1 = 21
 SW2 = 16
 SW3 = 20
@@ -77,8 +78,27 @@ GPIO.setup(SW3, GPIO.IN)
 GPIO.setup(SW4, GPIO.IN)
 GPIO.setup(SW5, GPIO.IN)
 
+def displayAddreses():
+    text.Clear()
+    time.sleep(1.0)
+    text.AddText("PaPiRus Display:", 35,  5, 15, Id="Line-1-Addr")
+    text.AddText(ePaper_ipaddr,       0, 20, 25, Id="Line-2-Addr")
+    text.AddText("TronView:",        60, 50, 15, Id="Line-3-Addr")
+    text.AddText(tronview_ipaddr,     0, 65, 25, Id="Line-4-Addr")
+
+    text.WriteAll()
+    time.sleep(15.0)
+    text.Clear()
+    time.sleep(1.0)
+
+    text.AddText(registration,         20,  0, 39, Id="Line-1")
+    text.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
+    text.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
+    time.sleep(1.0)
+    text.WriteAll()
+
 print("Waiting 10 seconds for PaPiRus display and USB OTG to be ready")
-sleep(1)
+sleep(10)
 
 #  2" PaPiRus Display size is:  200 X 96 pixels
 
@@ -126,6 +146,9 @@ tronview_serial.flushInput()  # Clear any existing data in the serial buffer
 if tronview_serial.is_open:
     wait_time = time.time()
     while True:
+        if GPIO.input(SW1) == False:
+            print("SW1 pressed but do nothing")
+            #time.sleep(0.1) # Debounce delay
         if time.time() - wait_time > 6: break
         tronview_bytes = tronview_serial.read_until(b'\r\n', None)
         if len(tronview_bytes) < 10:
@@ -205,7 +228,8 @@ tronview_serial.flushOutput() # Clear any existing data in the serial buffer
 while True:
     tronview_bytes = tronview_serial.read_until(b'\r\n', None)
     if GPIO.input(SW1) == False:
-        print("SW1 pressed")
+        print("SW1 pressed - Displaying IP addresses")
+        displayAddreses()
         time.sleep(0.1) # Debounce delay
     if len(tronview_bytes) < 10:
         print("Received: ", len(tronview_bytes), " bytes from TronView, retrying...")
@@ -220,23 +244,8 @@ while True:
         papirus_bytes = ePaper_ipaddr.encode()
         papirus_bytes += b'\r\n'
         tronview_serial.write(papirus_bytes)
-        tronview_comms_ok = True
-        text.Clear()
-        time.sleep(1.0)
-        text.AddText("PaPiRus Display:", 35,  5, 15, Id="Line-1-Addr")
-        text.AddText(ePaper_ipaddr,       0, 20, 25, Id="Line-2-Addr")
-        text.AddText("TronView:",        60, 50, 15, Id="Line-3-Addr")
-        text.AddText(tronview_ipaddr,     0, 65, 25, Id="Line-4-Addr")
-
-        text.WriteAll()
-        time.sleep(15.0)
-        text.Clear()
-        time.sleep(1.0)
+        displayAddreses()
         tronview_serial.flushInput()  # Clear any existing data in the serial buffer
-    
-        textPu.AddText(registration,    25,  0, 39, Id="Line-1")
-        textPu.AddText(tvName1,          0, 37, 30, Id="Line-2")
-        textPu.AddText(tvName3,          0, 66, 30, Id="Line-3")
         continue
 
     if tronview_str[1] == "4":
@@ -338,3 +347,5 @@ while True:
         tronview_serial.flushInput()  # Clear any existing data in the serial buffer
     loop_count += 1
     print()
+    
+
