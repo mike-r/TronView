@@ -141,9 +141,7 @@ class serial_papirus_send(Module):
 
     #############################################
     ## Function: readMessage
-    def readMessage(self, dataship: Dataship):
-        print("serial_papirus_send.readMessage() called")
-        
+    def readMessage(self, dataship: Dataship):        
         if dataship.errorFoundNeedToExit:
             return dataship
             # Find the IP Address of the TronView Pi and send it to the PaPiRus display Pi.
@@ -181,25 +179,22 @@ class serial_papirus_send(Module):
                 sleep(.1)
                 self.sendIPaddrToPapirus()
         except Exception as e:
-            print(e)
-            print("Unexpected error in write to PaPiRus: ", e)
+            if dataship.debug_mode>0: print("Unexpected error in write to PaPiRus: ", e)
 
         if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
             self.ser.seek(0)
         return dataship
 
-    def sendIPaddrToPapirus(self):
+    def sendIPaddrToPapirus(self, dataship: Dataship):
         try:
             self.ser.write(self.tv_ipaddr_bytes)         # Send data to PaPiRus
             sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
         except Exception as e:
-            print(e)
-            print("Unexpected error in write to PaPiRus: ", e)
+            if dataship.debug_mode>0: print("Unexpected error in write to PaPiRus: ", e)
         papirus_bytes = self.ser.read_until(b'\r\n', None)
         if papirus_bytes == b'':
-            print("No data received from PaPiRus...")
+            if dataship.debug_mode>0: print("No data received from PaPiRus...")
             self.comms_ok = False  # Assume comms are not OK if no data received
-            print("Assuming comms are not OK with PaPiRus display.")
             return
         else:
             papirus_str = papirus_bytes.decode().strip()
