@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.4 testing
-print("serial-papirus_display.py Version 0.4.Testing")
+#  Version 0.5 testing
+print("serial-papirus_display.py Version 0.5.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -97,8 +97,8 @@ def displayAddreses():
     time.sleep(1.0)
     text.WriteAll()
 
-print("Waiting 10 seconds for PaPiRus display and USB OTG to be ready")
-sleep(10)
+print("Waiting 15 seconds for PaPiRus display and USB OTG to be ready")
+sleep(15)
 
 #  2" PaPiRus Display size is:  200 X 96 pixels
 
@@ -251,8 +251,8 @@ while True:
     if tronview_str[1] == "4":
         tronview_str1 = tronview_str.strip()
         tronview_str2 = tronview_str1.split(",")
-        for i in range(len(tronview_str2)):
-            print("Value : ", tronview_str2[i], " at index:", i)
+        #for i in range(len(tronview_str2)):
+        #    print("Value : ", tronview_str2[i], " at index:", i)
             
         engine_status_prev = engine_status  # Save previous engine status
         registration = tronview_str2[1]
@@ -264,12 +264,12 @@ while True:
         tvValue3 = tronview_str2[7]  # Smoke value
         engine_status = tronview_str2[8]  # Engine status
         print()
-        print('Registration: ', registration)
-        print('tv1: ', tvName1, tvValue1)
-        print('tv2: ', tvName2, tvValue2)
-        print('tv3: ', tvName3, tvValue3)
-        print('engine_status:', engine_status)
-        print()
+        #print('Registration: ', registration)
+        #print('tv1: ', tvName1, tvValue1)
+        #print('tv2: ', tvName2, tvValue2)
+        #print('tv3: ', tvName3, tvValue3)
+        #print('engine_status:', engine_status)
+        #print()
 
         try:
             if registration != last_registration:

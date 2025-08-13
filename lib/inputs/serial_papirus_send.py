@@ -162,18 +162,19 @@ class serial_papirus_send(Module):
         papirus1_str = self.tv_label1 + "," + str(self.tv_data_one)
         papirus2_str = self.tv_label2 + "," + str(self.tv_data_two)
         papirus3_str = self.tv_label3 + "," + str(self.tv_data_three)
-        print()
-        print("papirus1_str = ", papirus1_str)
-        print("papirus2_str = ", papirus2_str)
-        print("papirus3_str = ", papirus3_str)
-        print("Analog Data[0] = ", self.analogData.Data[0])
-        print("Analog Data[1] = ", self.analogData.Data[1])
-        print()
+        if dataship.debug_mode>0: 
+            print()
+            print("papirus1_str = ", papirus1_str)
+            print("papirus2_str = ", papirus2_str)
+            print("papirus3_str = ", papirus3_str)
+            print("Analog Data[0] = ", self.analogData.Data[0])
+            print("Analog Data[1] = ", self.analogData.Data[1])
+            print()
         
         # Create the string to send to the PaPiRus display
         papirus_str = '!4#,' + self.registration + "," + papirus1_str + "," + papirus2_str + "," + papirus3_str + "," + self.engine_status + '\r\n'
         papirus_bytes = papirus_str.encode()
-        print("PaPiRus Bytes = ", papirus_bytes)
+        if dataship.debug_mode>0: print("PaPiRus Bytes = ", papirus_bytes)
         try:
             self.ser.write(papirus_bytes)         # Send data to PaPiRus
             if not self.comms_ok:
