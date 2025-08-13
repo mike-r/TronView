@@ -108,8 +108,8 @@ class serial_papirus_send(Module):
         # Send TronView Pi's IP Address to PaPiRus display Pi:
         tv_ipaddr_str = "!51" + tv_ipaddr + "\r\n"
         self.tv_ipaddr_bytes = tv_ipaddr_str.encode()
-        print("Sending PaPiRus message: ", tv_ipaddr_str)     
-        if self.serialCommsOK and not self.comms_ok: self.sendIPaddrToPapirus()
+        print("Sending PaPiRus message: ", tv_ipaddr_str)
+        if self.serialCommsOK and not self.comms_ok: self.sendIPaddrToPapirus(dataship)
 
     def initPapirus(self, dataship: Dataship):
         # Initialize the PaPiRus display settings
@@ -177,7 +177,7 @@ class serial_papirus_send(Module):
             self.ser.write(papirus_bytes)         # Send data to PaPiRus
             if not self.comms_ok:
                 sleep(.1)
-                self.sendIPaddrToPapirus()
+                self.sendIPaddrToPapirus(dataship)
         except Exception as e:
             if dataship.debug_mode>0: print("Unexpected error in write to PaPiRus: ", e)
 
