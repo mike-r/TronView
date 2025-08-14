@@ -313,9 +313,10 @@ while $RUN_MENU_AGAIN; do
                                 "serial_g3x" "Garmin G3x Serial" OFF \
                                 "serial_grt_eis" "Grand Rapids EIS Serial" OFF \
                                 "serial_nmea" "NMEA Serial" OFF \
-                                "network_skyview_adsb" "Dynon Skyview ADSB Network" OFF \
+                                "serial_papirus_send" "PaPiRus Serial" OFF \
                                 "serial_skyview" "Dynon Skyview Serial" OFF \
                                 "network_skyview" "Dynon Skyview Network" OFF \
+                                "network_skyview_adsb" "Dynon Skyview ADSB Network" OFF \
                                 "automationHat" "Automation Hat I/O Board" OFF\
                                 "meshtastic" "Meshtastic Serial" OFF \
                                 "gyro_i2c_bno055" "BNO055 IMU i2c (Pi only)" OFF \
