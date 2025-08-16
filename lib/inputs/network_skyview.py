@@ -535,6 +535,12 @@ class network_skyview(Input):
             self.msg_bad += 1
             print("bad: "+str(msg))
             pass
+        except struct.error as e:
+            self.msg_bad += 1
+            print("struct error: "+str(e))
+            print("msg: "+str(msg))
+            if dataship.debug_mode>0: print(traceback.format_exc())
+            pass
         except Exception as e:
             print(e)
             print(traceback.format_exc())
