@@ -104,7 +104,6 @@ class automationHat(Module):
         
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
-        self.initMqtt(dataship)
         self.initAutomationHat(dataship)
         if(self.PlayFile!=None and self.PlayFile!=False):
             pass
