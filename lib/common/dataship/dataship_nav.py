@@ -58,10 +58,9 @@ class NavData(object):
         self.XPDR_Code = None
         self.XPDR_Ident = None
 
-
-
         self.msg_count = 0
         self.msg_last = ""
+        self.msg_bad = 0
 
 
 # vi: modeline tabstop=8 expandtab shiftwidth=4 softtabstop=4 syntax=python

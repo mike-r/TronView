@@ -267,9 +267,10 @@ class network_skyview(Input):
         if isinstance(dataType,str):
             dataType = dataType.encode() # if read from file then convert to bytes
             dataVer = dataVer.encode()
-        try:
-            if True:
-                if dataType == ord('1'):  # ADAHRS message
+
+        if True:
+            if dataType == ord('1'):  # ADAHRS message
+                try:
                     if(isinstance(msg,str)):
                         msg = msg.encode() # if read from file then convert to bytes
                         if dataship.debug_mode==2: print("ADAHRS !1", msg)
@@ -345,8 +346,24 @@ class network_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
+                        
+                except ValueError:
+                    self.airData.msg_bad += 1
+                    print("bad: "+str(msg))
+                    pass
+                except struct.error as e:
+                    self.airData.msg_bad += 1
+                    print("struct error: "+str(e))
+                    print("msg: "+str(msg))
+                    if dataship.debug_mode>0: print(traceback.format_exc())
+                    pass
+                except Exception as e:
+                    print(e)
+                    print(traceback.format_exc())
+                    dataship.errorFoundNeedToExit = True
 
-                elif dataType == ord('2'): #Skyview System message (NAV,AP, etc)
+            elif dataType == ord('2'): #Skyview System message (NAV,AP, etc)
+                try:
                     self.navData.msg_count += 1
                     if isinstance(msg, str): msg = msg.encode()  # if read from file then convert to bytes
                     HH,MM,SS,FF,HBug,AltBug, ASIBug,VSBug,Course,CDISrcType,CDISourePort,CDIScale,CDIDeflection,GS,APEng,APRollMode,Not1,APPitch,Not2,APRollF,APRollP,APRollSlip,APPitchF, APPitchP,APPitchSlip,APYawF,APYawP,APYawSlip,TransponderStatus,TransponderReply,TransponderIdent,TransponderCode,DynonUnused,Checksum,CRLF= struct.unpack(
@@ -431,8 +448,24 @@ class network_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
+                        
+                except ValueError:
+                    self.navData.msg_bad += 1
+                    print("bad: "+str(msg))
+                    pass
+                except struct.error as e:
+                    self.navData.msg_bad += 1
+                    print("struct error: "+str(e))
+                    print("msg: "+str(msg))
+                    if dataship.debug_mode>0: print(traceback.format_exc())
+                    pass
+                except Exception as e:
+                    print(e)
+                    print(traceback.format_exc())
+                    dataship.errorFoundNeedToExit = True
 
-                elif dataType == ord('3'): #Skyview EMS Engine data message
+            elif dataType == ord('3'): #Skyview EMS Engine data message
+                try:
                     self.engineData.msg_count += 1
                     self.fuelData.msg_count += 1
                     if isinstance(msg,str):msg = msg.encode() # if read from file then convert to bytes
@@ -528,23 +561,23 @@ class network_skyview(Input):
                     if self.output_logFile != None:
                         Input.addToLog(self,self.output_logFile,bytes([33,int(dataType),int(dataVer)]))
                         Input.addToLog(self,self.output_logFile,msg)
-                else:
+                        
+                except ValueError:
+                    self.engineData.msg_bad += 1
+                    print("bad: "+str(msg))
                     pass
-                    #self.msg_unknown += 1 # unknown message found.
-        except ValueError:
-            self.msg_bad += 1
-            print("bad: "+str(msg))
-            pass
-        except struct.error as e:
-            self.msg_bad += 1
-            print("struct error: "+str(e))
-            print("msg: "+str(msg))
-            if dataship.debug_mode>0: print(traceback.format_exc())
-            pass
-        except Exception as e:
-            print(e)
-            print(traceback.format_exc())
-            dataship.errorFoundNeedToExit = True
+                except struct.error as e:
+                    self.engineData.msg_bad += 1
+                    print("struct error: "+str(e))
+                    print("msg: "+str(msg))
+                    if dataship.debug_mode>0: print(traceback.format_exc())
+                    pass
+                except Exception as e:
+                    print(e)
+                    print(traceback.format_exc())
+                    dataship.errorFoundNeedToExit = True
+            else:
+                pass    # not a Skyview message.
 
         if self.isPlaybackMode:  #if play back mode then add a delay.  Else reading a file is way to fast.
             time.sleep(.05)
