@@ -119,25 +119,34 @@ class serial_papirus_send(Module):
 
 
         self.tv_label1 = hud_utils.readConfig(self.name, "PaPirus_Label_1", "none")
-        tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_1", "none")
-        self.tv_data1_exec = "self.tv_data_one = self." + tv_data1_name
+        self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_1", "none")
+        self.tv_data1_exec = "self.tv_data_one = self." + self.tv_data1_name
         print("tv_data_one_exec: ", self.tv_data1_exec)
-        exec(self.tv_data1_exec)  # Evaluate the string to get the value
-        print("self.tv_data_one: ", self.tv_data_one, " ", self.tv_label1)
+        if self.tv_data1_name == "none":
+            print("No data source defined for tv_data_one.  Set TronView_PaPiRus_1 in config.cfg to dataship variable you want to display.")
+        else:
+            exec(self.tv_data1_exec)  # Evaluate the string to get the value
+            print("self.tv_data_one: ", self.tv_data_one, " ", self.tv_label1)
 
         self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "none")
-        tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_2", "none")
-        self.tv_data2_exec = "self.tv_data_two = self." + tv_data2_name
+        self.tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_2", "none")
+        self.tv_data2_exec = "self.tv_data_two = self." + self.tv_data2_name
         print("tv_data_two_exec: ", self.tv_data2_exec)
-        exec(self.tv_data2_exec)  # Evaluate the string to get the value
-        print("self.tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
-        
+        if self.tv_data2_name == "none":
+            print("No data source defined for tv_data_two.  Set TronView_PaPiRus_2 in config.cfg to dataship variable you want to display.")
+        else:
+            exec(self.tv_data2_exec)  # Evaluate the string to get the value
+            print("self.tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
+
         self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "none")
-        tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_3", "none")
-        self.tv_data3_exec = "self.tv_data_three = self." + tv_data3_name
+        self.tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_3", "none")
+        self.tv_data3_exec = "self.tv_data_three = self." + self.tv_data3_name
         print("tv_data_three_exec: ", self.tv_data3_exec)
-        exec(self.tv_data3_exec)  # Evaluate the string to get the value
-        print("self.tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
+        if self.tv_data3_name == "none":
+            print("No data source defined for tv_data_three.  Set TronView_PaPiRus_3 in config.cfg to dataship variable you want to display.")
+        else:
+            exec(self.tv_data3_exec)  # Evaluate the string to get the value
+            print("self.tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
 
     #############################################
     ## Function: readMessage
@@ -153,10 +162,18 @@ class serial_papirus_send(Module):
             self.connectToPapirus()  # Try to connect to the PaPiRus display if not already connected
             return dataship  # If serial comms are not OK, return the dataship without sending data
 
-#   Temp Debugging
-        exec(self.tv_data1_exec)  # Evaluate the string to get the value
-        exec(self.tv_data2_exec)
-        exec(self.tv_data3_exec)
+        if self.tv_data1_name == "none":
+            self.tv_data_one = "0.00"
+        else:
+            exec(self.tv_data1_exec)  # Evaluate the string to get the value
+        if self.tv_data2_name == "none":
+            self.tv_data_two = "0.00"
+        else:
+            exec(self.tv_data2_exec)
+        if self.tv_data3_name == "none":
+            self.tv_data_three = "0.00"
+        else:
+            exec(self.tv_data3_exec)
         papirus1_str = self.tv_label1 + "," + str(self.tv_data_one)
         papirus2_str = self.tv_label2 + "," + str(self.tv_data_two)
         papirus3_str = self.tv_label3 + "," + str(self.tv_data_three)
