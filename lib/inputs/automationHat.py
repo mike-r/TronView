@@ -10,23 +10,6 @@
 # Zap 2025
 # 
 # To check I2C devices:        sudo i2cdetect -y 0
-# To check MQTT status:        sudo systemctl status mosquitto
-
-# To install and setup the MQTT Broker on the Pi:
-#  sudo apt update
-#  sudo apt upgrade
-#  sudo apt install mosquitto mosquitto-clients
-#  sudo systemctl enable mosquitto
-# To allow anonymous access:
-#  sudo nano /etc/mosquitto/mosquitto.conf
-# Add the following lines to the end of the file:
-#    allow_anonymous true
-#    listener 1883 0.0.0.0
-# Restart Mosquitto service to apply changes:
-#  sudo service mosquitto restart
-
-# To install MQTT library in Python
-#  sudo pip3 install paho-mqtt --break-system-packages
 
 # To install AutomationHat code:
 # git clone https://github.com/pimoroni/automation-hat
@@ -37,10 +20,6 @@
 #    Must install as superuser to be able to run the AutomationHat code as superuser.
 # sudo python3 -m pip install -r requirments.txt  --break-system-packages
 # sudo pip3 install automationhat --break-system-packages
-
-
-# Requires modification to /usr/lib/python3/dist-packages/automationhat/__init__.py
-# Fork of modification is from: https://github.com/kiddigital/automation-hat
 
 
 from time import time
@@ -66,7 +45,6 @@ import math
 import time
 from lib.common import shared
 from urllib.request import urlopen
-import paho.mqtt.client as mqtt #import the client
 import automationhat
 
 
@@ -93,8 +71,6 @@ class automationHat(Module):
         self.tv_feed_one = None
         self.tv_feed_two = None
         self.tv_feed_three = None
-        self.mqtt_broker_address_cloud = "broker.mqtt.cool"
-        self.mqtt_broker_address_local = "localhost"
         self.engineData_hobbs_time_str = "00000"
         self.fuelData_FuelRemain_str = "0000"
         self.fuelData_FuelLevel_str = "000"
@@ -107,8 +83,6 @@ class automationHat(Module):
         self.di1 = 0                        # Digital input 1.
         self.start_time = time.time()
         self.loop_time = time.time()  - 5 # Start loop_time 5 seconds in the past to allow first readMessage to run immediately.
-        self.papirus_str = ""
-        self.mqtt_cloud = False
 
         # Add smoothing configuration
         self.ApplySmoothing = 1
@@ -158,33 +132,6 @@ class automationHat(Module):
         if len(shared.Dataship.analogData) > 0:
             self.analogData = shared.Dataship.analogData[0]
 
-        # Set up MQTT client
-
-    def initMqtt(self, dataship: Dataship):
-        # Initialize MQTT client
-        print("Initializing MQTT client...")
-        try:
-            self.mqtt_client_cloud = mqtt.Client()
-            self.mqtt_client_cloud.on_connect = self.cloud_on_connect
-            self.mqtt_client_cloud.on_message = self.on_message
-            self.mqtt_client_cloud.on_disconnect = self.cloud_on_disconnect
-            self.mqtt_client_cloud.connect_async(self.mqtt_broker_address_cloud, 1883, 60)
-            self.mqtt_client_cloud.loop_start()
-        except Exception as e:
-            print("Error initializing MQTT cloud client: ", e)
-            self.mqtt_cloud = False
-            
-        try:
-            self.mqtt_client_local = mqtt.Client()
-            self.mqtt_client_local.on_connect = self.local_on_connect
-            self.mqtt_client_local.on_message = self.on_message
-            self.mqtt_client_local.on_disconnect = self.local_on_disconnect
-            self.mqtt_client_local.connect_async(self.mqtt_broker_address_local, 1883, 60)
-            self.mqtt_client_local.loop_start()
-        except Exception as e:
-            print("Error initializing MQTT local client: ", e)
-
-
     def initAutomationHat(self, dataship: Dataship):
         # Initialize Automation Hat
         print("Initializing Automation Hat...")
@@ -218,45 +165,10 @@ class automationHat(Module):
             print("Error initializing Automation Hat: ", e)
 
     #############################################
-
-    def cloud_on_connect(self, client, userdata, flags, rc):
-        print("mqtt cloud client connected with result code " + str(rc))
-        # Subscribe to the topic
-        self.mqtt_client_cloud.subscribe("1TM")
-        print("mqtt cloud client subscribed to topic: 1TM")
-        self.mqtt_cloud = True
-        if automationhat.is_automation_hat(): automationhat.light.comms.write(1)
-        
-    def local_on_connect(self, client, userdata, flags, rc):
-        print("mqtt local client connected with result code " + str(rc))
-        # Subscribe to the topic
-        self.mqtt_client_local.subscribe("1TM")
-        print("mqtt local client subscribed to topic: 1TM")
-
-    def cloud_on_disconnect(self, client, userdata, rc):
-        if rc != 0:
-            print(client, " Unexpected disconnection from cloud mosquito broker.")
-        if automationhat.is_automation_hat(): automationhat.light.comms.write(0)
-        self.mqtt_cloud = False
-
-    def local_on_disconnect(self, client, userdata, rc):
-        if rc != 0:
-            print(client, " Unexpected disconnection from local mosquito broker.")
-
-    def on_message(self, client, userdata, msg):
-        # Handle incoming messages
-        if self.debug_mode>0: print("mqtt Received message: " + str(msg.payload))
-        # Process the message as needed
-
-    #############################################
     ## Function: readMessage
     def readMessage(self, dataship: Dataship):
         if dataship.errorFoundNeedToExit:
             print("Error found, exiting readMessage")
-            self.mqtt_client_local.disconnect()
-            self.mqtt_client_cloud.disconnect()
-            self.mqtt_client_local.loop_stop()
-            self.mqtt_client_cloud.loop_stop()
             return dataship
 
         if time.time() - self.loop_time < 3:   # no need to read data faster than once per every 3 seconds.
@@ -294,31 +206,9 @@ class automationHat(Module):
         self.analogData_smoke_remain_str = str(int(self.smokeLevel*10)).zfill(4)    # Format as 4 digits with leading zeros
         if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " gallons")
         self.analogData.Data[1] = self.smokeLevel  # Store the smoke level in the analog data object
-
-
-        if time.time() - self.start_time > 30: self.update = True  # Force update every 30 seconds to ensure display is updated
-        if self.update:
-            self.engineData_hobbs_time_str = str(int(self.new_hobbs_time)).zfill(5)
-            self.engineData_OilPress_str = str(int(self.new_OilPress)).zfill(2)
-            self.fuelData_FuelRemain_str = str(int(self.new_FuelRemain)).zfill(3)
-            
-        # Build the string to send to the display
-        if time.time() - self.start_time > 10 and self.update:   # Send data every 10 seconds at the most.
-            if dataship.debug_mode > 0:
-                print("engineData_hobbs_time_str = ", self.engineData_hobbs_time_str)
-                print("fuelData_FuelRemain_str = ", self.fuelData_FuelRemain_str)
-                print("fuelData_FuelLevel_str = ", self.fuelData_FuelLevel_str)
-                print("engineData_OilPress_str = ", self.engineData_OilPress_str)
                 
-            self.start_time = time.time()
-            self.update = False
-            
-            try:
-                self.mqtt_client_local.publish("1TM", self.papirus_str)
-                if dataship.debug_mode>0: print("papirus_str to mqtt local: ", self.papirus_str)
-            except Exception as e:
-                print(e)
-                print("Unexpected error in publish to MQTT: ", e)
+        self.start_time = time.time()
+        self.update = False
     
         self.loop_count = self.loop_count + 1
         if dataship.debug_mode >0: print("end of readMessage, loop_count: ", self.loop_count)
@@ -338,10 +228,7 @@ class automationHat(Module):
      
     # close this data input 
     def closeInput(self,dataship: Dataship):
-        self.mqtt_client_cloud.disconnect()
-        self.mqtt_client_local.disconnect()
-        self.mqtt_client_cloud.loop_stop()
-        self.mqtt_client_local.loop_stop()        
+        pass
 
 # vi: modeline tabstop=8 expandtab shiftwidth=4 softtabstop=4 syntax=python
 
