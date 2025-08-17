@@ -68,8 +68,6 @@ from lib.common import shared
 from urllib.request import urlopen
 import paho.mqtt.client as mqtt #import the client
 import automationhat
-from Adafruit_IO import Client, Feed, RequestError  # import Adafruit IO REST client.
-
 
 
 class automationHat(Module):
@@ -321,68 +319,7 @@ class automationHat(Module):
             except Exception as e:
                 print(e)
                 print("Unexpected error in publish to MQTT: ", e)
-            
-        # Update the analog data object with the latest values if the engine just shutdown.        
-        if self.engine_status_str == "s" and self.old_engine_status_str == "r" and self.isAdafruitIOReachable():
-            print("Initializing Adafruit IO...")
-            self.ADAFRUIT_IO_USERNAME = _input_file_utils.readConfig("AIO", "ADAFRUIT_IO_USERNAME")
-            self.ADAFRUIT_IO_KEY = _input_file_utils.readConfig("AIO", "ADAFRUIT_IO_KEY")
-            self.ADAFRUIT_FEED_ONE = _input_file_utils.readConfig("AIO", "ADAFRUIT_FEED_ONE")
-            self.ADAFRUIT_FEED_TWO = _input_file_utils.readConfig("AIO", "ADAFRUIT_FEED_TWO")
-            self.ADAFRUIT_FEED_THREE = _input_file_utils.readConfig("AIO", "ADAFRUIT_FEED_THREE")
-
-            print ("Feed_One: ", self.ADAFRUIT_FEED_ONE)
-            print ("Feed_Two: ", self.ADAFRUIT_FEED_TWO)
-            print ("Feed_Three: ", self.ADAFRUIT_FEED_THREE)
     
-            # Initialize AdaFruit IO client, feeds then send the data
-            self.AIO = Client(self.ADAFRUIT_IO_USERNAME, self.ADAFRUIT_IO_KEY)  # Initialize Adafruit IO client
-            print("Adafruit IO client initialized.")
-            try:
-                self.ADAFRUIT_FEED_ONE = self.AIO.feeds(self.ADAFRUIT_FEED_ONE)
-            except RequestError: # Doesn't exist, create a new feed
-                self.ADAFRUIT_FEED_ONE = Feed(name=self.ADAFRUIT_FEED_ONE)
-                self.AIO.create_feed(self.ADAFRUIT_FEED_ONE)
-
-            try:
-                self.ADAFRUIT_FEED_TWO = self.AIO.feeds(self.ADAFRUIT_FEED_TWO)
-            except RequestError: # Doesn't exist, create a new feed
-                self.ADAFRUIT_FEED_TWO = Feed(name=self.ADAFRUIT_FEED_TWO)
-                self.AIO.create_feed(self.ADAFRUIT_FEED_TWO)
-                
-            try:
-                self.ADAFRUIT_FEED_THREE = self.AIO.feeds(self.ADAFRUIT_FEED_THREE)
-            except RequestError: # Doesn't exist, create a new feed
-                self.ADAFRUIT_FEED_THREE = Feed(name=self.ADAFRUIT_FEED_THREE)
-                self.AIO.create_feed(self.ADAFRUIT_FEED_THREE)
-
-            # AIO Feed One is the fuel remaining in gallons.
-            # Read the value from the config file and set it to self.fuelRemain
-            
-            tv_feed_one_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_ONE")
-            feed_one_str_exec = "self.tv_feed_one = self." + tv_feed_one_str
-            exec(feed_one_str_exec)  # Evaluate the string to get the value
-            print("tv_feed_one: ", self.tv_feed_one)
-            self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(self.tv_feed_one))
-
-            # AIO Feed Two is the Hobbs time in tenths of hours.
-            # Read the value from the config file and set it to self.hobbsTime
-            
-            tv_feed_two_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_TWO")
-            feed_two_str_exec = "self.tv_feed_two = self." + tv_feed_two_str
-            exec(feed_two_str_exec)  # Evaluate the string to get the value
-            print("tv_feed_two: ", self.tv_feed_two)
-            self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(self.tv_feed_two))
-
-            # AIO Feed Three is the smoke level.
-            # Read the value from the config file and set it to self.smokeLevel
-
-            tv_feed_three_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_THREE")
-            feed_three_str_exec = "self.tv_feed_three = self." + tv_feed_three_str
-            exec(feed_three_str_exec)  # Evaluate the string to get the value
-            print("tv_feed_three: ", self.tv_feed_three)
-            self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, str(self.tv_feed_three))
-
         self.loop_count = self.loop_count + 1
         if dataship.debug_mode >0: print("end of readMessage, loop_count: ", self.loop_count)
         return dataship
