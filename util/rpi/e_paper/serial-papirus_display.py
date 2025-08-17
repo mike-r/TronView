@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.5 testing
-print("serial-papirus_display.py Version 0.5.Testing")
+#  Version 0.9 testing
+print("serial-papirus_display.py Version 0.9.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -56,6 +56,12 @@ tronview_comms_ok = False
 tronview_ipaddr = "Waiting 60s"  # Default value if TronView not connected
 registration = "Speedy"  # Default registration number
 last_registration = registration  # Last registration number
+last_hobbs = 0.0  # Last Hobbs time
+last_fuel = 0.0  # Last fuel level
+last_smoke = 0.0  # Last smoke level
+hobbs = 0.0  # Hobbs time
+smoke_gal = 0.0  # Smoke level in gallons
+fuel = 0.0  # Fuel level in gallons
 engine_status = 's'  # Default engine status, 's' for stopped
 engine_status_prev = 's'  # Previous engine status for comparison
 tvName1 = "TronView1"
@@ -91,11 +97,12 @@ def displayAddreses():
     text.Clear()
     time.sleep(1.0)
 
+def displayRegFuelSmoke():
     text.AddText(registration,         20,  0, 39, Id="Line-1")
     text.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
     text.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
-    time.sleep(1.0)
     text.WriteAll()
+    time.sleep(1.0)
 
 print("Waiting 15 seconds for PaPiRus display and USB OTG to be ready")
 sleep(15)
@@ -122,12 +129,12 @@ try:
 except:
     print("Error: Unable to get IP address")
     
-text.AddText("PaPiRus Display:", 35,  5, 15, Id="Line-1-Addr")
-text.AddText(ePaper_ipaddr,       0, 20, 25, Id="Line-2-Addr")
-text.AddText("TronView:",        60, 50, 15, Id="Line-3-Addr")
-text.AddText(tronview_ipaddr,     0, 65, 25, Id="Line-4-Addr")
-time.sleep(1.0)
-text.WriteAll()
+#text.AddText("PaPiRus Display:", 35,  5, 15, Id="Line-1-Addr")
+#text.AddText(ePaper_ipaddr,       0, 20, 25, Id="Line-2-Addr")
+#text.AddText("TronView:",        60, 50, 15, Id="Line-3-Addr")
+#text.AddText(tronview_ipaddr,     0, 65, 25, Id="Line-4-Addr")
+#time.sleep(1.0)
+#text.WriteAll()
 
 # Define serial link to TronView via USB OTG cable
 try:
@@ -137,19 +144,21 @@ try:
         parity=serial.PARITY_NONE,
         stopbits=serial.STOPBITS_ONE,
         bytesize=serial.EIGHTBITS,
-        timeout=5
+        timeout=None  # Set a timeout for reading
     )
 except serial.SerialException:
     print("Error: Unable to open serial port")
     exit()
-tronview_serial.flushInput()  # Clear any existing data in the serial buffer
+
+displayAddreses()  # Display IP addresses on PaPiRus
 if tronview_serial.is_open:
     wait_time = time.time()
     while True:
-        if GPIO.input(SW1) == False:
+        if GPIO.input(SW1) == False:  # SW1 pressed
             print("SW1 pressed but do nothing")
-            #time.sleep(0.1) # Debounce delay
         if time.time() - wait_time > 6: break
+        tronview_serial.reset_input_buffer()
+        #tronview_serial.flushInput()  # Clear any existing data in the serial buffer
         tronview_bytes = tronview_serial.read_until(b'\r\n', None)
         if len(tronview_bytes) < 10:
             print("Received: ", len(tronview_bytes), " bytes from TronView, waiting and retry...")
@@ -168,6 +177,7 @@ if tronview_serial.is_open:
             print("Sending back to TronView:", tronview_str)
             papirus_bytes = ePaper_ipaddr.encode()
             papirus_bytes += b'\r\n'
+            tronview_serial.flushOutput() # Clear any existing data in the serial buffer
             tronview_serial.write(papirus_bytes)
             tronview_comms_ok = True
             break
@@ -196,21 +206,9 @@ if len(dataList) > 0:
         print("Last Fuel:", last_fuel, "Last Smoke:", last_smoke, "Last Hobbs:", last_hobbs)
     except ValueError:
         print("Error: Unable to parse previous values from log file")
-        last_fuel =  100.1
-        last_smoke = 100.1
-        last_hobbs = 100.1
-else:
-    print("No previous values found in log file, using defaults")
-    last_fuel =  100.1
-    last_smoke = 100.1
-    last_hobbs = 100.1
-
-hobbs      = 200.1
-smoke_gal  = 200.1
-fuel       = 200.1
+        
 update     = False
 loop_count = 0
-
 
 time.sleep(10.0)
 text.Clear()
@@ -222,54 +220,74 @@ text.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
 time.sleep(1.0)
 text.WriteAll()
 
-tronview_serial.flushInput()  # Clear any existing data in the serial buffer
-tronview_serial.flushOutput() # Clear any existing data in the serial buffer
-
 while True:
+    #tronview_serial.flushInput()  # Clear any existing data in the serial buffer
+    tronview_serial.reset_input_buffer()
     tronview_bytes = tronview_serial.read_until(b'\r\n', None)
     if GPIO.input(SW1) == False:
         print("SW1 pressed - Displaying IP addresses")
         displayAddreses()
+        displayRegFuelSmoke
         time.sleep(0.1) # Debounce delay
     if len(tronview_bytes) < 10:
         print("Received: ", len(tronview_bytes), " bytes from TronView, retrying...")
         continue
     
     tronview_str = tronview_bytes.decode()
+    
+    if tronview_str[0] != '!':
+        print("Error: Invalid message format from TronView, expected '!' at start")
+        print("Received: ", tronview_str)
+        print("Reading again...")
+        tronview_bytes = tronview_serial.read_until(b'\r\n', None)
+        tronview_str = tronview_bytes.decode()
+        if tronview_str[0] != '!': continue  # Skip to next iteration if still invalid format
 
     if tronview_str[1] == "5" and not tronview_comms_ok:
-        tronview_ipaddr = tronview_str[3:18]
+        try:
+            tronview_ipaddr = tronview_str[3:18]
+        except Exception as e:
+            print("Error parsing TronView IP address:", e)
+            print("tronview_str: ", tronview_str)
+            continue  # Skip to the next iteration if parsing fails
         tronview_str = "Received TronView IP: " + tronview_ipaddr
         print("Sending PaPiRus IP Address back to TronView:", tronview_str)
         papirus_bytes = ePaper_ipaddr.encode()
         papirus_bytes += b'\r\n'
+        tronview_serial.flushOutput() # Clear any existing data in the serial buffer
         tronview_serial.write(papirus_bytes)
         displayAddreses()
-        tronview_serial.flushInput()  # Clear any existing data in the serial buffer
+        displayRegFuelSmoke()
+        tronview_comms_ok = True
         continue
 
-    if tronview_str[1] == "4":
-        tronview_str1 = tronview_str.strip()
-        tronview_str2 = tronview_str1.split(",")
-        #for i in range(len(tronview_str2)):
-        #    print("Value : ", tronview_str2[i], " at index:", i)
+    if tronview_str[1] == "4": 
+        try:
+            tronview_str1 = tronview_str.strip()
+            tronview_str2 = tronview_str1.split(",")
+            #for i in range(len(tronview_str2)):
+            #    print("Value : ", tronview_str2[i], " at index:", i)
             
-        engine_status_prev = engine_status  # Save previous engine status
-        registration = tronview_str2[1]
-        tvName1 = tronview_str2[2]  # Fuel remaining
-        tvValue1 = tronview_str2[3]  # Fuel value
-        tvName2 = tronview_str2[4]  # Hobbs time
-        tvValue2 = tronview_str2[5]  # Hobbs value
-        tvName3 = tronview_str2[6]  # Smoke level
-        tvValue3 = tronview_str2[7]  # Smoke value
-        engine_status = tronview_str2[8]  # Engine status
-        print()
-        #print('Registration: ', registration)
-        #print('tv1: ', tvName1, tvValue1)
-        #print('tv2: ', tvName2, tvValue2)
-        #print('tv3: ', tvName3, tvValue3)
-        #print('engine_status:', engine_status)
-        #print()
+            engine_status_prev = engine_status  # Save previous engine status
+            registration = tronview_str2[1]
+            tvName1 = tronview_str2[2]  # Fuel remaining
+            tvValue1 = tronview_str2[3]  # Fuel value
+            tvName2 = tronview_str2[4]  # Hobbs time
+            tvValue2 = tronview_str2[5]  # Hobbs value
+            tvName3 = tronview_str2[6]  # Smoke level
+            tvValue3 = tronview_str2[7]  # Smoke value
+            engine_status = tronview_str2[8]  # Engine status
+            print()
+            #print('Registration: ', registration)
+            #print('tv1: ', tvName1, tvValue1)
+            #print('tv2: ', tvName2, tvValue2)
+            #print('tv3: ', tvName3, tvValue3)
+            #print('engine_status:', engine_status)
+            print()
+        except Exception as e:
+            print("Error parsing TronView data:", e)
+            print("tronview_str: ", tronview_str)
+            continue  # Skip to the next iteration if parsing fails
 
         try:
             if registration != last_registration:
@@ -285,16 +303,19 @@ while True:
             smoke_gal = float(tvValue3)
             print('Smoke Level:', '{0:3.1f}' .format(smoke_gal), 'Gallons')
             smoke_change = abs(smoke_gal - last_smoke)
-            if smoke_change > 0.109:  # Update if smoke changes by more than 0.1 gallons
+            if smoke_change >= 0.1:  # Update if smoke changes by 0.1 gallons
                 gallonsF = "{:.1f}".format(smoke_gal)
                 gallonsF = gallonsF + "  Smoke"
-                if smoke_gal < 0.25: gallonsF = "--EMPTY--"
+                if smoke_gal < 0.25: 
+                    print("Smoke level is low, setting to --EMPTY--")
+                    gallonsF = "--EMPTY--"
                 #textPu.UpdateText("Line-3", gallonsF)
                 text.UpdateText("Line-3", gallonsF)
                 print("Updated Line-3 withGallonsF:", gallonsF)
                 last_smoke = smoke_gal
                 update = True
         except Exception as e:
+            print("Error updating Line-3 with gallonsF:", e)
             print("Error updating Line-3 with Smoke Level:", e)
 
         try:
@@ -316,7 +337,6 @@ while True:
             hobbs = float(tvValue2)
             hobbsF = "{:.1f}".format(hobbs)
             print(tvName2, '{0:6.1f}'.format(hobbs), ' Hours')
-            print('hobbsF: ', hobbsF, ' Hours')
             hobbs_change = abs(hobbs - last_hobbs)
             if hobbs_change > 0:
                 if hobbs < 1000:  hobbsF = hobbsF + " TT"
@@ -331,20 +351,18 @@ while True:
         print("Engine stopped, updating Line-1 with Hobbs")
         logfile.write(f"{registration},{last_hobbs},{last_fuel},{last_smoke}\n")
         logfile.close()
-        time.sleep(1.0)
         text.WriteAll()
         print("PaPiRus display updated with Hobbs time")
-        time.sleep(10.0)
+        time.sleep(5.0)
         sys.exit(0)
     
-    if update or loop_count > 50:
+    if update or loop_count > 150:
+        print("Loop count:", loop_count, "Update:", update)
         update = False
         loop_count = 0
-        time.sleep(1.0)
         print('Updating PaPiRus display with new values')
         text.WriteAll()
         time.sleep(1.0)
-        tronview_serial.flushInput()  # Clear any existing data in the serial buffer
     loop_count += 1
     print()
     

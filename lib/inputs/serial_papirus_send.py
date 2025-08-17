@@ -176,7 +176,7 @@ class serial_papirus_send(Module):
         try:
             self.ser.write(papirus_bytes)         # Send data to PaPiRus
             if not self.comms_ok:
-                sleep(.1)
+                #sleep(.1)
                 self.sendIPaddrToPapirus(dataship)
         except Exception as e:
             if dataship.debug_mode>0: print("Unexpected error in write to PaPiRus: ", e)
@@ -188,7 +188,7 @@ class serial_papirus_send(Module):
     def sendIPaddrToPapirus(self, dataship: Dataship):
         try:
             self.ser.write(self.tv_ipaddr_bytes)         # Send data to PaPiRus
-            sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
+            #sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
         except Exception as e:
             if dataship.debug_mode>0: print("Unexpected error in write to PaPiRus: ", e)
         papirus_bytes = self.ser.read_until(b'\r\n', None)
