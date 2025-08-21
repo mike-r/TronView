@@ -187,6 +187,8 @@ class automationHat(Module):
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
         self.a0 = automationhat.analog[0].read()  # Read from analog input 1
+        self.image = Image.open("docs/imgs/blank3.bmp")
+        self.draw = ImageDraw.Draw(self.image)
         self.draw.text((self.text_x, self.text_y + self.offset), "{reading:.2f}".format(reading=self.a0), font=self.font, fill=self.colour)
         self.disp.display(self.image)
         
