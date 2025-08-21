@@ -187,10 +187,6 @@ class automationHat(Module):
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
         self.a0 = automationhat.analog[0].read()  # Read from analog input 1
-        self.image = Image.open("docs/imgs/blank3.bmp")
-        self.draw = ImageDraw.Draw(self.image)
-        self.draw.text((self.text_x, self.text_y + self.offset), "{reading:.2f}".format(reading=self.a0), font=self.font, fill=self.colour)
-        self.disp.display(self.image)
         
         if(self.ApplySmoothing):
             self.smoothingA.append(self.a0)  # Append the current value to the smoothing list
@@ -218,7 +214,13 @@ class automationHat(Module):
         self.analogData_smoke_remain_str = str(int(self.smokeLevel*10)).zfill(4)    # Format as 4 digits with leading zeros
         if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " gallons")
         self.analogData.Data[1] = self.smokeLevel  # Store the smoke level in the analog data object
-                
+
+        self.image = Image.open("docs/imgs/blank3.bmp")
+        self.draw = ImageDraw.Draw(self.image)
+        self.draw.text((self.text_x, self.text_y + self.offset), "{reading:.2f}".format(reading=self.a0), font=self.font, fill=self.colour)
+        self.draw.text((self.text_x, self.text_y + self.offset + 14), "{reading:.2f}".format(reading=self.smokeLevel), font=self.font, fill=self.colour)
+        self.disp.display(self.image)
+                        
         self.start_time = time.time()
         self.update = False
     
