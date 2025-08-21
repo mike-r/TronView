@@ -139,7 +139,7 @@ class automationHat(Module):
 
             self.display_is_off = False
             # Open our background image.
-            self.image = Image.open("docs/imgs/blank3.bmp")
+            self.image = Image.open("docs/imgs/blank4.bmp")
             self.draw = ImageDraw.Draw(self.image)
 
         try:
@@ -215,7 +215,7 @@ class automationHat(Module):
         if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " gallons")
         self.analogData.Data[1] = self.smokeLevel  # Store the smoke level in the analog data object
 
-        self.image = Image.open("docs/imgs/blank3.bmp")
+        self.image = Image.open("docs/imgs/blank4.bmp")
         self.draw = ImageDraw.Draw(self.image)
         self.draw.text((self.text_x, self.text_y + self.offset), "{reading:.2f}".format(reading=self.a0), font=self.font, fill=self.colour)
         self.draw.text((self.text_x, self.text_y + self.offset + 40), "{reading:.2f}".format(reading=self.smokeLevel), font=self.font, fill=self.colour)
