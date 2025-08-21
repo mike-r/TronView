@@ -134,7 +134,7 @@ class automationHat(Module):
 
             # Values to keep everything aligned nicely.
             self.text_x = 110
-            self.text_y = 34
+            self.text_y = 24
             self.offset = 0
 
             self.display_is_off = False
@@ -218,7 +218,7 @@ class automationHat(Module):
         self.image = Image.open("docs/imgs/blank3.bmp")
         self.draw = ImageDraw.Draw(self.image)
         self.draw.text((self.text_x, self.text_y + self.offset), "{reading:.2f}".format(reading=self.a0), font=self.font, fill=self.colour)
-        self.draw.text((self.text_x, self.text_y + self.offset + 14), "{reading:.2f}".format(reading=self.smokeLevel), font=self.font, fill=self.colour)
+        self.draw.text((self.text_x, self.text_y + self.offset + 40), "{reading:.2f}".format(reading=self.smokeLevel), font=self.font, fill=self.colour)
         self.disp.display(self.image)
                         
         self.start_time = time.time()
