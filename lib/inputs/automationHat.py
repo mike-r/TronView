@@ -46,6 +46,9 @@ import time
 from lib.common import shared
 from urllib.request import urlopen
 import automationhat
+import st7735
+from PIL import Image, ImageDraw, ImageFont
+from fonts.ttf import RobotoBlackItalic as UserFont
 
 
 class automationHat(Module):
@@ -89,19 +92,7 @@ class automationHat(Module):
         self.SmoothingAVGMaxCount = 10
         self.smoothingA = []
         self.debug_mode = 0
-        
-        # Add tracking of previous positions
-        self.target_positions = {}          # Store previous positions for smoothing
-        self.targetData = TargetData()
-        self.gpsData = GPSData()
-        self.imuData = IMUData()
-        self.analogData = AnalogData()
-        self.engineData = EngineData()
-        self.fuelData = FuelData()
-        self.airData = AirData()
-        self.selectedTarget = None
-        self.selectedTargetID = None
-        
+                
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
         self.initAutomationHat(dataship)
@@ -115,25 +106,42 @@ class automationHat(Module):
         self.analogData.id = self.name + "_" + str(self.index)
         dataship.analogData.append(self.analogData)
 
-        # set the data to the first item in the list.
-        if len(shared.Dataship.targetData) > 0:
-            self.targetData = shared.Dataship.targetData[0]
-        if len(shared.Dataship.gpsData) > 0:
-            self.gpsData = shared.Dataship.gpsData[0]
-        if len(shared.Dataship.imuData) > 0:
-            self.imuData = shared.Dataship.imuData[0]
-        if len(shared.Dataship.engineData) > 0:
-            self.engineData = shared.Dataship.engineData[0]
-        if len(shared.Dataship.fuelData) > 0:
-            self.fuelData = shared.Dataship.fuelData[0]
-        if len(shared.Dataship.airData) > 0:
-            self.airData = shared.Dataship.airData[0]
+        # set the data to the first item in the list
         if len(shared.Dataship.analogData) > 0:
             self.analogData = shared.Dataship.analogData[0]
 
     def initAutomationHat(self, dataship: Dataship):
         # Initialize Automation Hat
         print("Initializing Automation Hat...")
+        
+        # Create ST7735 LCD display class if mini-hat.
+        # No test to confirm but the mini-hat is based on the phat
+        if automationhat.is_automation_phat():
+            self.disp = st7735.ST7735(
+                port=0,
+                cs=st7735.BG_SPI_CS_FRONT,
+                dc=9,
+                backlight=25,
+                rotation=270,
+                spi_speed_hz=4000000
+            )
+            
+            # Initialise display.
+            self.disp.begin()
+
+            self.colour = (255, 181, 86)
+            self.font = ImageFont.truetype(UserFont, 12)
+
+            # Values to keep everything aligned nicely.
+            self.text_x = 110
+            self.text_y = 34
+            self.offset = 0
+
+            self.display_is_off = False
+            # Open our background image.
+            self.image = Image.open("images/blank3.bmp")
+            self.draw = ImageDraw.Draw(self.image)
+
         try:
             # Set up Automation Hat inputs and outputs
             if automationhat.is_automation_hat():
@@ -154,8 +162,8 @@ class automationHat(Module):
             #automationhat.input.two.resistor(automationhat.PULL_UP)
             #automationhat.input.three.resistor(automationhat.PULL_UP)
         # Startup with all relays turned off.
+            automationhat.relay.one.off()
             if automationhat.is_automation_hat(): 
-                automationhat.relay.one.off()
                 automationhat.relay.two.off()
                 automationhat.relay.three.off()
 
@@ -179,6 +187,9 @@ class automationHat(Module):
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
         self.a0 = automationhat.analog[0].read()  # Read from analog input 1
+        self.draw.text((self.text_x, self.text_y + self.offset), "{reading:.2f}".format(reading=self.a0), font=self.font, fill=self.colour)
+        self.disp.display(self.image)
+        
         if(self.ApplySmoothing):
             self.smoothingA.append(self.a0)  # Append the current value to the smoothing list
             if(len(self.smoothingA)>self.SmoothingAVGMaxCount): self.smoothingA.pop(0)
