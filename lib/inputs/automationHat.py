@@ -139,7 +139,7 @@ class automationHat(Module):
 
             self.display_is_off = False
             # Open our background image.
-            self.image = Image.open("images/blank3.bmp")
+            self.image = Image.open("imgs/blank3.bmp")
             self.draw = ImageDraw.Draw(self.image)
 
         try:
