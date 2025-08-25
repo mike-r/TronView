@@ -20,28 +20,17 @@
 #    Must install as superuser to be able to run the AutomationHat code as superuser.
 # sudo python3 -m pip install -r requirments.txt  --break-system-packages
 # sudo pip3 install automationhat --break-system-packages
+# sudo pip3 install st7735 --break-system-packages
+# sudo pip3 install pillow --break-system-packages
+# sudo pip3 install fonts font-roboto --break-system-packages
 
 
 from time import time
-from .import _input_file_utils
-import sys
-import os
-import socket
 import statistics
 from ._input import Input
 from lib.modules._module import Module
-from lib import hud_graphics
-from lib import hud_utils
-from lib import smartdisplay
 from lib.common.dataship.dataship import Dataship
-from lib.common.dataship.dataship_targets import TargetData, Target
-from lib.common.dataship.dataship_gps import GPSData
-from lib.common.dataship.dataship_imu import IMUData
-from lib.common.dataship.dataship_engine_fuel import EngineData, FuelData
-from lib.common.dataship.dataship_air import AirData
 from lib.common.dataship.dataship_analog import AnalogData
-import pygame
-import math
 import time
 from lib.common import shared
 from urllib.request import urlopen
@@ -56,21 +45,7 @@ class automationHat(Module):
     def __init__(self):
         Module.__init__(self)
         self.name = "AutomationHat"  # set name
-        self.show_callsign = False
-        self.show_details = False
-        self.targetDetails = {} # keep track of details about each target.
-        self.update = True
-        self.loop_count = 0
         self.isPlaybackMode = False
-        self.old_src_alt = -100
-        self.old_hobbs_time = -10
-        self.old_OilPress = -10.0
-        self.old_FuelRemain = -10.0
-        self.old_FuelLevel = -10.0
-        self.old_smokeLevel = -10.0
-        self.new_hobbs_time = 0.0
-        self.new_FuelRemain = 0.0
-        self.new_OilPress = 0.0
         self.tv_feed_one = None
         self.tv_feed_two = None
         self.tv_feed_three = None
@@ -79,13 +54,13 @@ class automationHat(Module):
         self.fuelData_FuelLevel_str = "000"
         self.engineData_OilPress_str = "000"
         self.analogData_smoke_remain_str = "0000"
-        self.engine_status_str = "s"  # Default to stopped
-        self.old_engine_status_str = "s"  # Default to stopped
         self.a0 = 0                         # Analog input 0.  Read from Automation Hat.  
+        self.a1 = 0                         # Analog input 1.
+        self.a2 = 0                         # Analog input 2.
+        self.a3 = 0                         # Analog input 3.
         self.di0 = 0                        # Digital input 0.  Set to 1 to indicate the Automation Hat is running.
         self.di1 = 0                        # Digital input 1.
-        self.start_time = time.time()
-        self.loop_time = time.time()  - 5 # Start loop_time 5 seconds in the past to allow first readMessage to run immediately.
+        self.di2 = 0                        # Digital input 2.
 
         # Add smoothing configuration
         self.ApplySmoothing = 1
@@ -148,15 +123,21 @@ class automationHat(Module):
                 automationhat.light.power.write(0)
                 automationhat.light.comms.write(0)
                 automationhat.light.warn.write(0)
-            #automationhat.digital.write(1, 0)  # Set output 1 to low
-            #automationhat.digital.write(2, 0)  # Set output 2 to low
-            #automationhat.digital.write(3, 0)  # Set output 3 to low
+            automationhat.digital.write(1, 0)  # Set output 1 to low
+            automationhat.digital.write(2, 0)  # Set output 2 to low
+            automationhat.digital.write(3, 0)  # Set output 3 to low
             self.a0 = automationhat.analog[0].read()      # Read from analog input 0
+            self.a1 = automationhat.analog[1].read()      # Read from analog input 1
+            self.a2 = automationhat.analog[2].read()      # Read from analog input 2
+            if automationhat.is_automation_hat(): 
+                self.a3 = automationhat.analog[3].read()      # Read from analog input 3
             self.di0 = automationhat.input[0].read()  # Read digital input 0
             self.di1 = automationhat.input[1].read()  # Read digital input 1
+            self.di2 = automationhat.input[2].read()  # Read digital input 2
             print("Automation Hat initialized with analog input 0: ", self.a0)
             print("Digital input 0: ", self.di0)
             print("Digital input 1: ", self.di1)
+            print("Digital input 2: ", self.di2)
         # Set Automation Hat inputs HIGH.
             #automationhat.input.one.resistor(automationhat.PULL_UP)
             #automationhat.input.two.resistor(automationhat.PULL_UP)
@@ -178,11 +159,9 @@ class automationHat(Module):
             print("Error found, exiting readMessage")
             return dataship
 
-        if time.time() - self.loop_time < 3:   # no need to read data faster than once per every 3 seconds.
-            return dataship
-        self.loop_time = time.time()
-
-        self.debug_mode = dataship.debug_mode   # Set debug mode from dataship for received mqtt messages
+        #if time.time() - self.loop_time < 3:   # no need to read data faster than once per every 3 seconds.
+            #return dataship
+        #self.loop_time = time.time()
 
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
@@ -220,11 +199,7 @@ class automationHat(Module):
         self.draw.text((self.text_x, self.text_y + self.offset), "{reading:.2f}".format(reading=self.a0), font=self.font, fill=self.colour)
         self.draw.text((self.text_x, self.text_y + self.offset + 40), "{reading:.2f}".format(reading=self.smokeLevel), font=self.font, fill=self.colour)
         self.disp.display(self.image)
-                        
-        self.start_time = time.time()
-        self.update = False
     
-        self.loop_count = self.loop_count + 1
         if dataship.debug_mode >0: print("end of readMessage, loop_count: ", self.loop_count)
         return dataship
 
