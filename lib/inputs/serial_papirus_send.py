@@ -127,6 +127,7 @@ class serial_papirus_send(Module):
         else:
             exec(self.tv_data1_exec)  # Evaluate the string to get the value
             print("self.tv_data_one: ", self.tv_data_one, " ", self.tv_label1)
+            self.tv_data_one_old = self.tv_data_one
 
         self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "none")
         self.tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_2", "none")
@@ -137,6 +138,7 @@ class serial_papirus_send(Module):
         else:
             exec(self.tv_data2_exec)  # Evaluate the string to get the value
             print("self.tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
+            self.tv_data_two_old = self.tv_data_two
 
         self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "none")
         self.tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_3", "none")
@@ -147,6 +149,7 @@ class serial_papirus_send(Module):
         else:
             exec(self.tv_data3_exec)  # Evaluate the string to get the value
             print("self.tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
+            self.tv_data_three_old = self.tv_data_three
 
     #############################################
     ## Function: readMessage
@@ -166,14 +169,26 @@ class serial_papirus_send(Module):
             self.tv_data_one = "0.00"
         else:
             exec(self.tv_data1_exec)  # Evaluate the string to get the value
+            if self.tv_data_one != self.tv_data_one_old:
+                self.update = True
+                self.tv_data_one_old = self.tv_data_one
+                
         if self.tv_data2_name == "none":
             self.tv_data_two = "0.00"
         else:
             exec(self.tv_data2_exec)
+            if self.tv_data_two != self.tv_data_two_old:
+                self.update = True
+                self.tv_data_two_old = self.tv_data_two
+                
         if self.tv_data3_name == "none":
             self.tv_data_three = "0.00"
         else:
             exec(self.tv_data3_exec)
+            if self.tv_data_three != self.tv_data_three_old:
+                self.update = True
+                self.tv_data_three_old = self.tv_data_three
+        
         papirus1_str = self.tv_label1 + "," + str(self.tv_data_one)
         papirus2_str = self.tv_label2 + "," + str(self.tv_data_two)
         papirus3_str = self.tv_label3 + "," + str(self.tv_data_three)
@@ -191,7 +206,9 @@ class serial_papirus_send(Module):
         papirus_bytes = papirus_str.encode()
         if dataship.debug_mode>0: print("PaPiRus Bytes = ", papirus_bytes)
         try:
-            self.ser.write(papirus_bytes)         # Send data to PaPiRus
+            if self.update:
+                self.ser.write(papirus_bytes)         # Send data to PaPiRus
+                self.update = False
             if not self.comms_ok:
                 #sleep(.1)
                 self.sendIPaddrToPapirus(dataship)
