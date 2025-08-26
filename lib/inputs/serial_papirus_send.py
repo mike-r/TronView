@@ -52,9 +52,12 @@ class serial_papirus_send(Module):
         self.comms_ok = False
         self.serialCommsOK = False
         self.engine_status = 's'  # Default engine status is stopped
-        self.tv_data_one = None
-        self.tv_data_two = None
-        self.tv_data_three = None
+        self.tv_data_one = 0
+        self.tv_data_two = 0
+        self.tv_data_three = 0
+        self.tv_data_one_old = 0
+        self.tv_data_two_old = 0
+        self.tv_data_three_old = 0
 
         self.targetData = TargetData()
         self.gpsData = GPSData()
