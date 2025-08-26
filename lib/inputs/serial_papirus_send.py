@@ -133,6 +133,7 @@ class serial_papirus_send(Module):
             if self.tv_data_one == None:
                 self.tv_data_one = 0
             self.tv_data_one_old = self.tv_data_one
+            print("self.tv_data_one: ", self.tv_data_one, " ", self.tv_label1)
 
         self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "None")
         self.tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_2", "None")
