@@ -179,6 +179,7 @@ class serial_papirus_send(Module):
             self.tv_data_one = 0.00
         else:
             exec(self.tv_data1_exec)  # Evaluate the string to get the value
+            if self.tv_data_one == None: self.tv_data_one = 0.00
             if round(self.tv_data_one,1) != round(self.tv_data_one_old,1):
                 print("tv_data_one changed from ", self.tv_data_one_old, " to ", self.tv_data_one)
                 self.update = True
@@ -188,6 +189,7 @@ class serial_papirus_send(Module):
             self.tv_data_two = 0.00
         else:
             exec(self.tv_data2_exec)
+            if self.tv_data_two == None: self.tv_data_two = 0.00
             if round(self.tv_data_two,1) != round(self.tv_data_two_old,1):
                 print("tv_data_two changed from ", self.tv_data_two_old, " to ", self.tv_data_two)
                 self.update = True
@@ -197,6 +199,7 @@ class serial_papirus_send(Module):
             self.tv_data_three = 0.00
         else:
             exec(self.tv_data3_exec)
+            if self.tv_data_three == None: self.tv_data_three = 0.00
             if round(self.tv_data_three,1) != round(self.tv_data_three_old,1):
                 print("tv_data_three changed from ", self.tv_data_three_old, " to ", self.tv_data_three)
                 self.update = True
