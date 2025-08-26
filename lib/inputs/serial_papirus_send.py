@@ -165,7 +165,7 @@ class serial_papirus_send(Module):
             self.connectToPapirus()  # Try to connect to the PaPiRus display if not already connected
             return dataship  # If serial comms are not OK, return the dataship without sending data
 
-        if self.tv_data1_name == "None":
+        if self.tv_data1_name == "None" or self.tv_data_one == None:
             self.tv_data_one = 0.00
         else:
             exec(self.tv_data1_exec)  # Evaluate the string to get the value
@@ -174,7 +174,7 @@ class serial_papirus_send(Module):
                 self.update = True
                 self.tv_data_one_old = self.tv_data_one
 
-        if self.tv_data2_name == "None":
+        if self.tv_data2_name == "None" or self.tv_data_two == None:
             self.tv_data_two = 0.00
         else:
             exec(self.tv_data2_exec)
@@ -183,7 +183,7 @@ class serial_papirus_send(Module):
                 self.update = True
                 self.tv_data_two_old = self.tv_data_two
 
-        if self.tv_data3_name == "None":
+        if self.tv_data3_name == "None" or self.tv_data_three == None:
             self.tv_data_three = 0.00
         else:
             exec(self.tv_data3_exec)
