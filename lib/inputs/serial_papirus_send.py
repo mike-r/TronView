@@ -130,6 +130,8 @@ class serial_papirus_send(Module):
         else:
             exec(self.tv_data1_exec)  # Evaluate the string to get the value
             print("self.tv_data_one: ", self.tv_data_one, " ", self.tv_label1)
+            if self.tv_data_one == None:
+                self.tv_data_one = 0
             self.tv_data_one_old = self.tv_data_one
 
         self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "None")
@@ -141,6 +143,8 @@ class serial_papirus_send(Module):
         else:
             exec(self.tv_data2_exec)  # Evaluate the string to get the value
             print("self.tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
+            if self.tv_data_two == None:
+                self.tv_data_two = 0
             self.tv_data_two_old = self.tv_data_two
 
         self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "None")
@@ -152,6 +156,8 @@ class serial_papirus_send(Module):
         else:
             exec(self.tv_data3_exec)  # Evaluate the string to get the value
             print("self.tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
+            if self.tv_data_three == None:
+                self.tv_data_three = 0
             self.tv_data_three_old = self.tv_data_three
 
     #############################################
