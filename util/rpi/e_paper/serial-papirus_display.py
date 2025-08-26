@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.9 testing
-print("serial-papirus_display.py Version 0.9.Testing")
+#  Version 0.11 testing
+print("serial-papirus_display.py Version 0.11.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -67,9 +67,9 @@ engine_status_prev = 's'  # Previous engine status for comparison
 tvName1 = "TronView1"
 tvName2 = "TronView2"
 tvName3 = "TronView3"
-tvValue1 = 0
-tvValue2 = 0
-tvValue3 = 0
+tvValue1 = 0.0
+tvValue2 = 0.0
+tvValue3 = 0.0
 
 GPIO.setmode(GPIO.BCM)
 # Setup GPIO pins for PaPiRus buttons
@@ -303,7 +303,7 @@ while True:
             smoke_gal = float(tvValue3)
             print('Smoke Level:', '{0:3.1f}' .format(smoke_gal), 'Gallons')
             smoke_change = abs(smoke_gal - last_smoke)
-            if smoke_change >= 0.1:  # Update if smoke changes by 0.1 gallons
+            if smoke_change >= 0.06:  # Update if smoke changes by 0.06 gallons
                 gallonsF = "{:.1f}".format(smoke_gal)
                 gallonsF = gallonsF + "  Smoke"
                 if smoke_gal < 0.25: 
@@ -344,6 +344,7 @@ while True:
                 last_hobbs = hobbs
         except Exception as e:
             print("Error updating Line-1 with Hobbs:", e)
+        print("loop_count:", loop_count)
 
     #if fuel < 15.5: engine_status = "s"  # Debug to test engine status change
     if engine_status == "s" and engine_status_prev == "r":      # Engine stopped and was running
@@ -356,7 +357,7 @@ while True:
         time.sleep(5.0)
         sys.exit(0)
     
-    if update or loop_count > 150:
+    if update or loop_count > 500:
         print("Loop count:", loop_count, "Update:", update)
         update = False
         loop_count = 0
