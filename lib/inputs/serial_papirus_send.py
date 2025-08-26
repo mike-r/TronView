@@ -118,33 +118,33 @@ class serial_papirus_send(Module):
         self.registration = hud_utils.readConfig(self.name, "registration", "N12345")
 
 
-        self.tv_label1 = hud_utils.readConfig(self.name, "PaPirus_Label_1", "none")
-        self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_1", "none")
+        self.tv_label1 = hud_utils.readConfig(self.name, "PaPirus_Label_1", "None")
+        self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_1", "None")
         self.tv_data1_exec = "self.tv_data_one = self." + self.tv_data1_name
         print("tv_data_one_exec: ", self.tv_data1_exec)
-        if self.tv_data1_name == "none":
+        if self.tv_data1_name == "None":
             print("No data source defined for tv_data_one.  Set TronView_PaPiRus_1 in config.cfg to dataship variable you want to display.")
         else:
             exec(self.tv_data1_exec)  # Evaluate the string to get the value
             print("self.tv_data_one: ", self.tv_data_one, " ", self.tv_label1)
             self.tv_data_one_old = self.tv_data_one
 
-        self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "none")
-        self.tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_2", "none")
+        self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "None")
+        self.tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_2", "None")
         self.tv_data2_exec = "self.tv_data_two = self." + self.tv_data2_name
         print("tv_data_two_exec: ", self.tv_data2_exec)
-        if self.tv_data2_name == "none":
+        if self.tv_data2_name == "None":
             print("No data source defined for tv_data_two.  Set TronView_PaPiRus_2 in config.cfg to dataship variable you want to display.")
         else:
             exec(self.tv_data2_exec)  # Evaluate the string to get the value
             print("self.tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
             self.tv_data_two_old = self.tv_data_two
 
-        self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "none")
-        self.tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_3", "none")
+        self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "None")
+        self.tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_3", "None")
         self.tv_data3_exec = "self.tv_data_three = self." + self.tv_data3_name
         print("tv_data_three_exec: ", self.tv_data3_exec)
-        if self.tv_data3_name == "none":
+        if self.tv_data3_name == "None":
             print("No data source defined for tv_data_three.  Set TronView_PaPiRus_3 in config.cfg to dataship variable you want to display.")
         else:
             exec(self.tv_data3_exec)  # Evaluate the string to get the value
@@ -165,26 +165,26 @@ class serial_papirus_send(Module):
             self.connectToPapirus()  # Try to connect to the PaPiRus display if not already connected
             return dataship  # If serial comms are not OK, return the dataship without sending data
 
-        if self.tv_data1_name == "none":
-            self.tv_data_one = "0.00"
+        if self.tv_data1_name == "None":
+            self.tv_data_one = 0.00
         else:
             exec(self.tv_data1_exec)  # Evaluate the string to get the value
             if round(self.tv_data_one,1) != round(self.tv_data_one_old,1):
                 print("tv_data_one changed from ", self.tv_data_one_old, " to ", self.tv_data_one)
                 self.update = True
                 self.tv_data_one_old = self.tv_data_one
-                
-        if self.tv_data2_name == "none":
-            self.tv_data_two = "0.00"
+
+        if self.tv_data2_name == "None":
+            self.tv_data_two = 0.00
         else:
             exec(self.tv_data2_exec)
             if round(self.tv_data_two,1) != round(self.tv_data_two_old,1):
                 print("tv_data_two changed from ", self.tv_data_two_old, " to ", self.tv_data_two)
                 self.update = True
                 self.tv_data_two_old = self.tv_data_two
-                
-        if self.tv_data3_name == "none":
-            self.tv_data_three = "0.00"
+
+        if self.tv_data3_name == "None":
+            self.tv_data_three = 0.00
         else:
             exec(self.tv_data3_exec)
             if round(self.tv_data_three,1) != round(self.tv_data_three_old,1):
