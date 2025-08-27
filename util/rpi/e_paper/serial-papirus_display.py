@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.11 testing
-print("serial-papirus_display.py Version 0.11.Testing")
+#  Version 0.13 testing
+print("serial-papirus_display.py Version 0.13.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -46,7 +46,6 @@ print("serial-papirus_display.py Version 0.11.Testing")
 import socket
 import os
 import sys
-from time import sleep
 import serial
 import time
 from papirus import PapirusTextPos
@@ -93,11 +92,13 @@ def displayAddreses():
     text.AddText(tronview_ipaddr,     0, 65, 25, Id="Line-4-Addr")
 
     text.WriteAll()
-    time.sleep(15.0)
-    text.Clear()
+    #time.sleep(15.0)
+    #text.Clear()
     time.sleep(1.0)
 
 def displayRegFuelSmoke():
+    text.Clear()
+    time.sleep(1.0)
     text.AddText(registration,         20,  0, 39, Id="Line-1")
     text.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
     text.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
@@ -105,12 +106,12 @@ def displayRegFuelSmoke():
     time.sleep(1.0)
 
 print("Waiting 15 seconds for PaPiRus display and USB OTG to be ready")
-sleep(15)
+time.sleep(15)
 
 #  2" PaPiRus Display size is:  200 X 96 pixels
 
 try:
-    textPu = PapirusTextPos(True)       # Initialize with update=True for partial updates
+    #textPu = PapirusTextPos(True)       # Initialize with update=True for partial updates
     text = PapirusTextPos(False)        # Initialize with update=False for full screen updates
 except:
     print("Error: Unable to initialize PapirusTextPos.  Display not attached?\r\n   Program will exit")
@@ -128,13 +129,6 @@ try:
     print ("IP:", ePaper_ipaddr, " GW:", gateway, " Host:", host)
 except:
     print("Error: Unable to get IP address")
-    
-#text.AddText("PaPiRus Display:", 35,  5, 15, Id="Line-1-Addr")
-#text.AddText(ePaper_ipaddr,       0, 20, 25, Id="Line-2-Addr")
-#text.AddText("TronView:",        60, 50, 15, Id="Line-3-Addr")
-#text.AddText(tronview_ipaddr,     0, 65, 25, Id="Line-4-Addr")
-#time.sleep(1.0)
-#text.WriteAll()
 
 # Define serial link to TronView via USB OTG cable
 try:
@@ -156,13 +150,11 @@ if tronview_serial.is_open:
     while True:
         if GPIO.input(SW1) == False:  # SW1 pressed
             print("SW1 pressed but do nothing")
-        if time.time() - wait_time > 6: break
-        tronview_serial.reset_input_buffer()
-        #tronview_serial.flushInput()  # Clear any existing data in the serial buffer
+        if time.time() - wait_time > 10: break
         tronview_bytes = tronview_serial.read_until(b'\r\n', None)
         if len(tronview_bytes) < 10:
             print("Received: ", len(tronview_bytes), " bytes from TronView, waiting and retry...")
-            sleep(0.5)
+            time.sleep(0.5)
             continue
 
         print("Received: ", len(tronview_bytes), " bytes from TronView")
@@ -181,9 +173,10 @@ if tronview_serial.is_open:
             tronview_serial.write(papirus_bytes)
             tronview_comms_ok = True
             break
-        sleep(0.5)
+        time.sleep(0.5)
 
 text.UpdateText("Line-4-Addr", tronview_ipaddr)
+print("tronview_ipaddr:", tronview_ipaddr)
 time.sleep(1.0)
 text.WriteAll()
 print("Displayed updated TronView IP Address on PaPiRus")
@@ -210,25 +203,25 @@ if len(dataList) > 0:
 update     = False
 loop_count = 0
 
-time.sleep(10.0)
+time.sleep(5.0)
 text.Clear()
-#time.sleep(1.0)
 
-text.AddText(registration,         20,  0, 39, Id="Line-1")
-text.AddText(f"{last_fuel} Fuel",   0, 37, 30, Id="Line-2")
-text.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
+text.AddText(registration,         30,  0, 39, Id="Line-1")
+text.AddText(f"{last_fuel} Fuel",  20, 37, 30, Id="Line-2")
+text.AddText(f"{last_smoke} Smoke",20, 66, 30, Id="Line-3")
 time.sleep(1.0)
 text.WriteAll()
 
 while True:
     #tronview_serial.flushInput()  # Clear any existing data in the serial buffer
     tronview_serial.reset_input_buffer()
-    tronview_bytes = tronview_serial.read_until(b'\r\n', None)
     if GPIO.input(SW1) == False:
         print("SW1 pressed - Displaying IP addresses")
         displayAddreses()
-        displayRegFuelSmoke
-        time.sleep(0.1) # Debounce delay
+        time.sleep(5) # Display for 5 seconds
+        displayRegFuelSmoke()
+
+    tronview_bytes = tronview_serial.read_until(b'\r\n', None)
     if len(tronview_bytes) < 10:
         print("Received: ", len(tronview_bytes), " bytes from TronView, retrying...")
         continue
@@ -257,6 +250,7 @@ while True:
         tronview_serial.flushOutput() # Clear any existing data in the serial buffer
         tronview_serial.write(papirus_bytes)
         displayAddreses()
+        time.sleep(5)
         displayRegFuelSmoke()
         tronview_comms_ok = True
         continue
@@ -277,13 +271,6 @@ while True:
             tvName3 = tronview_str2[6]  # Smoke level
             tvValue3 = tronview_str2[7]  # Smoke value
             engine_status = tronview_str2[8]  # Engine status
-            print()
-            #print('Registration: ', registration)
-            #print('tv1: ', tvName1, tvValue1)
-            #print('tv2: ', tvName2, tvValue2)
-            #print('tv3: ', tvName3, tvValue3)
-            #print('engine_status:', engine_status)
-            print()
         except Exception as e:
             print("Error parsing TronView data:", e)
             print("tronview_str: ", tronview_str)
@@ -301,7 +288,6 @@ while True:
         
         try:
             smoke_gal = float(tvValue3)
-            print('Smoke Level:', '{0:3.1f}' .format(smoke_gal), 'Gallons')
             smoke_change = abs(smoke_gal - last_smoke)
             if smoke_change >= 0.06:  # Update if smoke changes by 0.06 gallons
                 gallonsF = "{:.1f}".format(smoke_gal)
@@ -320,7 +306,6 @@ while True:
 
         try:
             fuel = float(tvValue1)
-            print (tvName1, '{0:3.1f}' .format(fuel), 'Gallons')
             fuel_change = abs(fuel - last_fuel)
             if fuel_change > 0.09:  # Update if fuel changes by more than 0.09 gallons
                 fuelF = "{:.1f}".format(fuel)
@@ -336,19 +321,25 @@ while True:
         try:
             hobbs = float(tvValue2)
             hobbsF = "{:.1f}".format(hobbs)
-            print(tvName2, '{0:6.1f}'.format(hobbs), ' Hours')
             hobbs_change = abs(hobbs - last_hobbs)
             if hobbs_change > 0:
-                if hobbs < 1000:  hobbsF = hobbsF + " TT"
+                if hobbs < 10000:  hobbsF = hobbsF + " TT"
                 print("hobbsF:", hobbsF)
                 last_hobbs = hobbs
         except Exception as e:
-            print("Error updating Line-1 with Hobbs:", e)
-        print("loop_count:", loop_count)
+            print("Error updating Hobbs:", e)
+        #print("loop_count:", loop_count)
 
     #if fuel < 15.5: engine_status = "s"  # Debug to test engine status change
     if engine_status == "s" and engine_status_prev == "r":      # Engine stopped and was running
-        text.UpdateText("Line-1", hobbsF)
+        #text.UpdateText("Line-1", hobbsF)
+        ##hobbsF = "8234.5" + " TT"
+        text.Clear()
+        time.sleep(1)
+        text.AddText(hobbsF,                0,  0, 37, Id="Line-1")
+        text.AddText(f"{last_fuel} Fuel",  20, 37, 30, Id="Line-2")
+        text.AddText(f"{last_smoke} Smoke",20, 66, 30, Id="Line-3")
+
         print("Engine stopped, updating Line-1 with Hobbs")
         logfile.write(f"{registration},{last_hobbs},{last_fuel},{last_smoke}\n")
         logfile.close()
@@ -362,9 +353,14 @@ while True:
         update = False
         loop_count = 0
         print('Updating PaPiRus display with new values')
+        print(tvName1, '{0:3.1f}' .format(fuel), 'Gallons')
+        print(tvName2, '{0:6.1f}'.format(hobbs), ' Hours')
+        print('Smoke Level:', '{0:3.1f}' .format(smoke_gal), 'Gallons')
+        print()
+
         text.WriteAll()
         time.sleep(1.0)
     loop_count += 1
-    print()
+    #print()
     
 
