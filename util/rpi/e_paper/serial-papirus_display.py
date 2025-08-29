@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.13 testing
-print("serial-papirus_display.py Version 0.13.Testing")
+#  Version 0.14 testing
+print("serial-papirus_display.py Version 0.14.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -52,7 +52,7 @@ from papirus import PapirusTextPos
 import RPi.GPIO as GPIO
 
 tronview_comms_ok = False
-tronview_ipaddr = "Waiting 60s"  # Default value if TronView not connected
+tronview_ipaddr = "Waiting On TV"  # Default value if TronView not connected
 registration = "Speedy"  # Default registration number
 last_registration = registration  # Last registration number
 last_hobbs = 0.0  # Last Hobbs time
@@ -82,6 +82,34 @@ GPIO.setup(SW2, GPIO.IN)
 GPIO.setup(SW3, GPIO.IN)
 GPIO.setup(SW4, GPIO.IN)
 GPIO.setup(SW5, GPIO.IN)
+GPIO.add_event_detect(SW1, GPIO.FALLING)
+GPIO.add_event_detect(SW2, GPIO.FALLING)
+GPIO.add_event_detect(SW3, GPIO.FALLING)
+GPIO.add_event_detect(SW4, GPIO.FALLING)
+GPIO.add_event_detect(SW5, GPIO.FALLING)
+
+def buttonEventHandlerSw1(SW1):
+    print("SW1 pressed - Displaying IP addresses")
+    displayAddreses()
+    time.sleep(5) # Display for 5 seconds
+    displayRegFuelSmoke()    
+GPIO.add_event_callback(SW1, buttonEventHandlerSw1, 100)
+
+def buttonEventHandlerSw2(SW2):
+    print("Button SW2 pressed")
+GPIO.add_event_callback(SW2, buttonEventHandlerSw2, 100)
+
+def buttonEventHandlerSw3(SW3):
+    print("Button SW3 pressed")
+GPIO.add_event_callback(SW3, buttonEventHandlerSw3, 100)
+
+def buttonEventHandlerSw4(SW4):
+    print("Button SW4 pressed")
+GPIO.add_event_callback(SW4, buttonEventHandlerSw4, 100)
+
+def buttonEventHandlerSw5(SW5):
+    print("Button SW5 pressed")
+GPIO.add_event_callback(SW5, buttonEventHandlerSw5, 100)
 
 def displayAddreses():
     text.Clear()
@@ -92,8 +120,6 @@ def displayAddreses():
     text.AddText(tronview_ipaddr,     0, 65, 25, Id="Line-4-Addr")
 
     text.WriteAll()
-    #time.sleep(15.0)
-    #text.Clear()
     time.sleep(1.0)
 
 def displayRegFuelSmoke():
@@ -140,16 +166,22 @@ try:
         bytesize=serial.EIGHTBITS,
         timeout=None  # Set a timeout for reading
     )
-except serial.SerialException:
+except Exception as e:
     print("Error: Unable to open serial port")
+    print("Error with serial port:", e)
+    text.Clear()
+    text.UpdateText("Line-1", "Serial err")
+    text.UpdateText("Line-2", "Is USB cable")
+    text.UpdateText("Line-3", "in OTG port?")
+    time.sleep(1)
+    text.WriteAll()
+    time.sleep(5.0)
     exit()
 
 displayAddreses()  # Display IP addresses on PaPiRus
 if tronview_serial.is_open:
     wait_time = time.time()
     while True:
-        if GPIO.input(SW1) == False:  # SW1 pressed
-            print("SW1 pressed but do nothing")
         if time.time() - wait_time > 10: break
         tronview_bytes = tronview_serial.read_until(b'\r\n', None)
         if len(tronview_bytes) < 10:
@@ -199,7 +231,9 @@ if len(dataList) > 0:
         print("Last Fuel:", last_fuel, "Last Smoke:", last_smoke, "Last Hobbs:", last_hobbs)
     except ValueError:
         print("Error: Unable to parse previous values from log file")
-        
+    except Exception as e:
+        print("Error with logfile:", e)
+
 update     = False
 loop_count = 0
 
@@ -213,14 +247,7 @@ time.sleep(1.0)
 text.WriteAll()
 
 while True:
-    #tronview_serial.flushInput()  # Clear any existing data in the serial buffer
-    tronview_serial.reset_input_buffer()
-    if GPIO.input(SW1) == False:
-        print("SW1 pressed - Displaying IP addresses")
-        displayAddreses()
-        time.sleep(5) # Display for 5 seconds
-        displayRegFuelSmoke()
-
+    #tronview_serial.reset_input_buffer()
     tronview_bytes = tronview_serial.read_until(b'\r\n', None)
     if len(tronview_bytes) < 10:
         print("Received: ", len(tronview_bytes), " bytes from TronView, retrying...")
