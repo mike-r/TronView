@@ -3,14 +3,14 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.14 testing
-print("serial-papirus_display.py Version 0.14.Testing")
+#  Version 0.15 testing
+print("serial-papirus_display.py Version 0.15.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
-# Modify /boot/cmdline.txt
+# Modify /boot/cmdline.txt (or /boot/firmware/cmdline.txt for 64 bit OS)
 #    Add "modules-load=dw2" after "rootwait"
-# Modify /boot/confix.txt
+# Modify /boot/config.txt (or /boot/firmware/config.txt for 64 bit OS)
 #    Add "dtoverlay=dwc2" at the end of the file
 # Run Raspi-Config to enable serial ports and disable login console over serial
 # The above will create a Serial instance on the USB cable via the "/dev/ttyGS0" driver
