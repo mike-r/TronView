@@ -6,7 +6,6 @@
 # sudo pip3 install adafruit-io --break-system-packages
 
 
-#from time import time
 import time
 from ._input import Input
 from . import _input_file_utils
