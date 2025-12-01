@@ -202,7 +202,7 @@ class AIO(Module):
             if dataship.debug_mode>1: print("tv_feed_one: ", self.tv_feed_one)
             if self.tv_feed_one_old != self.tv_feed_one:
                 self.tv_feed_one_old  = self.tv_feed_one
-                print("tv_feed_one: ", self.tv_feed_one)
+                if dataship.debug_mode>0: print("tv_feed_one: ", self.tv_feed_one)
                 if self.tv_feed_one > 0.1 and self.isAdafruitIOReachable() and self.aio1Up:  # Only send if fuel remaining is greater than 0.1
                     self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(self.tv_feed_one))
 
@@ -214,7 +214,7 @@ class AIO(Module):
             if dataship.debug_mode>1: print("tv_feed_two: ", self.tv_feed_two)
             if self.tv_feed_two_old != self.tv_feed_two:
                 self.tv_feed_two_old  = self.tv_feed_two
-                print("tv_feed_two: ", self.tv_feed_two)
+                if dataship.debug_mode>0: print("tv_feed_two: ", self.tv_feed_two)
                 if self.tv_feed_two > 0.1 and self.isAdafruitIOReachable() and self.aio2Up:  # Only send if fuel remaining is greater than 0.1
                     self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(self.tv_feed_two))
 
@@ -226,7 +226,7 @@ class AIO(Module):
             if dataship.debug_mode>1: print("tv_feed_three: ", self.tv_feed_three)
             if self.tv_feed_three_old != self.tv_feed_three:
                 self.tv_feed_three_old  = self.tv_feed_three
-                print("tv_feed_three ", self.tv_feed_three)
+                if dataship.debug_mode>0: print("tv_feed_three ", self.tv_feed_three)
                 if self.tv_feed_three > 0.1 and self.isAdafruitIOReachable() and self.aio3Up:  # Only send if value is greater than 0.1
                     self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, str(self.tv_feed_three))
 
@@ -238,7 +238,7 @@ class AIO(Module):
             if dataship.debug_mode>1: print("tv_feed_four: ", self.tv_feed_four)
             if self.tv_feed_four_old != self.tv_feed_four:
                 self.tv_feed_four_old  = self.tv_feed_four
-                print("tv_feed_four ", self.tv_feed_four)
+                if dataship.debug_mode>0: print("tv_feed_four ", self.tv_feed_four)
                 if self.tv_feed_four > 0.1 and self.isAdafruitIOReachable() and self.aio4Up:  # Only send if value greater than 0.1
                     self.AIO.send_data(self.ADAFRUIT_FEED_FOUR.key, str(self.tv_feed_four))
 
@@ -250,7 +250,7 @@ class AIO(Module):
             if dataship.debug_mode>1: print("tv_feed_five: ", self.tv_feed_five)
             if self.tv_feed_five_old != self.tv_feed_five:
                 self.tv_feed_five_old  = self.tv_feed_five
-                print("tv_feed_five ", self.tv_feed_five)
+                if dataship.debug_mode>0: print("tv_feed_five ", self.tv_feed_five)
                 if self.tv_feed_five > 0.1 and self.isAdafruitIOReachable() and self.aio5Up:  # Only send if value greater than 0.1
                     self.AIO.send_data(self.ADAFRUIT_FEED_FIVE.key, str(self.tv_feed_five))
 
