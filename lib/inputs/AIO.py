@@ -4,9 +4,13 @@
 
 # Install Adafruit IO library:
 # sudo pip3 install adafruit-io --break-system-packages
+#
+#  How to setup AIO web based screens
+# https://learn.adafruit.com/welcome-to-adafruit-io
+
+#################################################
 
 
-from time import time
 import time
 from ._input import Input
 from . import _input_file_utils
@@ -21,7 +25,7 @@ from lib.common.dataship.dataship_imu import IMUData
 from lib.common.dataship.dataship_engine_fuel import EngineData, FuelData
 from lib.common.dataship.dataship_air import AirData
 from lib.common.dataship.dataship_analog import AnalogData
-from Adafruit_IO import Client, Feed, RequestError  # import Adafruit IO REST client.
+from Adafruit_IO import Client, Feed, RequestError
 from lib.common import shared
 from urllib.request import urlopen
 
@@ -30,31 +34,7 @@ class AIO(Module):
     def __init__(self):
         Module.__init__(self)
         self.name = "AIO"  # set name
-        self.show_callsign = False
-        self.show_details = False
-        self.targetDetails = {} # keep track of details about each target.
-        self.update = True
-        self.loop_count = 0
         self.isPlaybackMode = False
-        self.old_src_alt = -100
-        self.old_hobbs_time = 0
-        self.old_OilPress = 0
-        self.old_FuelRemain = 0
-        self.old_FuelLevel = 0
-        self.old_smokeLevel = 0.0
-        self.mqtt_broker_address_cloud = "broker.mqtt.cool"
-        self.mqtt_broker_address_local = "localhost"
-        self.engineData_hobbs_time_str = "00000"
-        self.fuelData_FuelRemain_str = "0000"
-        self.fuelData_FuelLevel_str = "000"
-        self.engineData_OilPress_str = "000"
-        self.analogData_smoke_remain_str = "0000"
-        self.engine_status_str = "s"  # Default to stopped
-        self.a0 = 0
-        self.start_time = time.time()
-        self.loop_time = time.time()  - 5 # Start loop_time 5 seconds in the past to allow first readMessage to run immediately.
-        self.papirus_str = ""
-        self.mqtt_cloud = False
         self.shouldExit = False
 
         # Add smoothing configuration
@@ -63,8 +43,6 @@ class AIO(Module):
         self.smoothingA = []
         self.debug_mode = 0
         
-        # Add tracking of previous positions
-        self.target_positions = {}          # Store previous positions for smoothing
         self.targetData = TargetData()
         self.gpsData = GPSData()
         self.imuData = IMUData()
@@ -72,17 +50,37 @@ class AIO(Module):
         self.engineData = EngineData()
         self.fuelData = FuelData()
         self.airData = AirData()
-        self.selectedTarget = None
-        self.selectedTargetID = None
-        
-        self.ADAFRUIT_IO_USERNAME = None
-        self.ADAFRUIT_IO_KEY = None
-        self.ADAFRUIT_FEED_ONE = None
+
+        self.ADAFRUIT_IO_USERNAME = None        # Your Adafruit IO account UserName
+        self.ADAFRUIT_IO_KEY = None             #    and KEY
+
+    # Name of AIO Feeds from config.cfg
+        self.ADAFRUIT_FEED_ONE = None           
         self.ADAFRUIT_FEED_TWO = None
         self.ADAFRUIT_FEED_THREE = None
         self.ADAFRUIT_FEED_FOUR = None
         self.ADAFRUIT_FEED_FIVE = None
         self.AIO = None
+
+    # Values pulled out of the Dataship that match AIO feeds
+        self.tv_feed_one = 0.0                  
+        self.tv_feed_two = 0.0
+        self.tv_feed_three = 0.0
+        self.tv_feed_four = 0.0
+        self.tv_feed_five = 0.0
+
+        self.tv_feed_two_old = 0.0
+        self.tv_feed_one_old = 0.0
+        self.tv_feed_three_old = 0.0
+        self.tv_feed_four_old = 0.0
+        self.tv_feed_five_old = 0.0
+
+    # Status of the AIO feed.
+        self.aio1Up = True
+        self.aio2Up = True
+        self.aio3Up = True
+        self.aio4Up = True
+        self.aio5Up = True
            
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
@@ -100,58 +98,179 @@ class AIO(Module):
     def initAIO(self, dataship: Dataship):
         print("Initializing Adafruit IO...")
         self.ADAFRUIT_IO_USERNAME = _input_file_utils.readConfig(self.name, "ADAFRUIT_IO_USERNAME")
-        self.ADAFRUIT_IO_KEY = _input_file_utils.readConfig(self.name, "ADAFRUIT_IO_KEY")
+        self.ADAFRUIT_IO_KEY = _input_file_utils.readConfig(self.name,   "ADAFRUIT_IO_KEY")
         self.ADAFRUIT_FEED_ONE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_ONE")
         self.ADAFRUIT_FEED_TWO = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_TWO")
-        self.ADAFRUIT_FEED_THREE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_THREE")
+        self.ADAFRUIT_FEED_THREE = _input_file_utils.readConfig(self.name,"ADAFRUIT_FEED_THREE")
+        self.ADAFRUIT_FEED_FOUR = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_FOUR")
+        self.ADAFRUIT_FEED_FIVE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_FIVE")
 
-        print ("Feed_One: ", self.ADAFRUIT_FEED_ONE)
-        print ("Feed_Two: ", self.ADAFRUIT_FEED_TWO)
+        print ("Feed_One: ",   self.ADAFRUIT_FEED_ONE)
+        print ("Feed_Two: ",   self.ADAFRUIT_FEED_TWO)
         print ("Feed_Three: ", self.ADAFRUIT_FEED_THREE)
-    
+        print ("Feed_Four: ",  self.ADAFRUIT_FEED_FOUR)
+        print ("Feed_Five: ",  self.ADAFRUIT_FEED_FIVE)
+
         if self.isAdafruitIOReachable():
             self.AIO = Client(self.ADAFRUIT_IO_USERNAME, self.ADAFRUIT_IO_KEY)  # Initialize Adafruit IO client
             print("Adafruit IO client initialized.")
             try:
                 self.ADAFRUIT_FEED_ONE = self.AIO.feeds(self.ADAFRUIT_FEED_ONE)
-            except RequestError: # Doesn't exist, create a new feed
-                self.ADAFRUIT_FEED_ONE = Feed(name=self.ADAFRUIT_FEED_ONE)
-                self.AIO.create_feed(self.ADAFRUIT_FEED_ONE)
+            except RequestError: # Doesn't exist, try to create a new feed
+                try:
+                    self.ADAFRUIT_FEED_ONE = Feed(name=self.ADAFRUIT_FEED_ONE)
+                    self.AIO.create_feed(self.ADAFRUIT_FEED_ONE)
+                except:
+                    print("AIO Feed ONE probably doesn't exist")
+                    self.aio1Up = False
+                else:
+                    self.aio1Up = True
 
             try:
                 self.ADAFRUIT_FEED_TWO = self.AIO.feeds(self.ADAFRUIT_FEED_TWO)
+            except RequestError: # Doesn't exist, try to create a new feed
+                try:
+                    self.ADAFRUIT_FEED_TWO = Feed(name=self.ADAFRUIT_FEED_TWO)
+                    self.AIO.create_feed(self.ADAFRUIT_FEED_TWO)
+                except:
+                    print("AIO Feed TWO probably doesn't exist")
+                    self.aio2Up = False
+                else:
+                    self.aio2Up = True
+
+            try:
+                self.ADAFRUIT_FEED_THREE = self.AIO.feeds(self.ADAFRUIT_FEED_THREE)
+            except RequestError: # Doesn't exist, try tocreate a new feed
+                try:
+                    self.ADAFRUIT_FEED_THREE = Feed(name=self.ADAFRUIT_FEED_THREE)
+                    self.AIO.create_feed(self.ADAFRUIT_FEED_THREE)
+                except:
+                    print("AIO Feed THREE probably doesn't exist")
+                    self.aio3Up = False
+                else:
+                    self.aio3Up = True
+
+            try:
+                self.ADAFRUIT_FEED_FOUR = self.AIO.feeds(self.ADAFRUIT_FEED_FOUR)
             except RequestError: # Doesn't exist, create a new feed
-                self.ADAFRUIT_FEED_TWO = Feed(name=self.ADAFRUIT_FEED_TWO)
-                self.AIO.create_feed(self.ADAFRUIT_FEED_TWO)
+                try:
+                    self.ADAFRUIT_FEED_FOUR = Feed(name=self.ADAFRUIT_FEED_FOUR)
+                    self.AIO.create_feed(self.ADAFRUIT_FEED_FOUR)
+                except:
+                    print("AIO Feed FOUR probably doesn't exist")
+                    self.aio4Up = False
+                else:
+                    self.aio4Up = True
+            
+            try:
+                self.ADAFRUIT_FEED_FIVE = self.AIO.feeds(self.ADAFRUIT_FEED_FIVE)
+            except RequestError: # Doesn't exist, create a new feed
+                try:
+                    self.ADAFRUIT_FEED_FIVE = Feed(name=self.ADAFRUIT_FEED_FIVE)
+                    self.AIO.create_feed(self.ADAFRUIT_FEED_FIVE)
+                except:
+                    print("AIO Feed FIVE probably doesn't exist")
+                    self.aio5Up = False
+                else:
+                    self.aio5Up = True
+
+        # Pull the name of the value to send to AIO from the config.cfg file.
+        # Then fetch the value out of the Dataship.
+            tv_feed_one_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_ONE")
+            self.feed_one_str_exec = "self.tv_feed_one = self." + tv_feed_one_str
+            exec(self.feed_one_str_exec)  # Evaluate the string to get the value
+            print("tv_feed_one: ", self.tv_feed_one)
+            
+            tv_feed_two_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_TWO")
+            self.feed_two_str_exec = "self.tv_feed_two = self." + tv_feed_two_str
+            exec(self.feed_two_str_exec)  # Evaluate the string to get the value
+            print("tv_feed_two: ", self.tv_feed_two)
+
+            tv_feed_three_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_THREE")
+            self.feed_three_str_exec = "self.tv_feed_three = self." + tv_feed_three_str
+            exec(self.feed_three_str_exec)  # Evaluate the string to get the value
+            print("tv_feed_three: ", self.tv_feed_three)
+
+            tv_feed_four_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_FOUR")
+            self.feed_four_str_exec = "self.tv_feed_four = self." + tv_feed_four_str
+            exec(self.feed_four_str_exec)  # Evaluate the string to get the value
+            print("tv_feed_four: ", self.tv_feed_four)
+
+
+            tv_feed_five_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_FIVE")
+            self.feed_five_str_exec = "self.tv_feed_five = self." + tv_feed_five_str
+            exec(self.feed_five_str_exec)  # Evaluate the string to get the value
+            print("tv_feed_five: ", self.tv_feed_five)
 
     #############################################
-    ## Function: readMessage
+    ## Function: readMessage. Or in this case pull values from the Dataship and send
+    ## them to an AIO feed.
     def readMessage(self, dataship: Dataship):
         if self.shouldExit == True: dataship.errorFoundNeedToExit = True
         if dataship.errorFoundNeedToExit: return dataship
         if self.skipReadInput == True: return dataship
-        
-        # Hobbs Time:
-        if self.engineData.hobbs_time is None:
-            print("Hobbs time not available ...yet.")
-        else:
-            hobbsTime = self.engineData.hobbs_time 
-            if hobbsTime != self.old_hobbs_time:
-                print("hobbsTime: ", hobbsTime)
-                self.old_hobbs_time = hobbsTime
-                if self.isAdafruitIOReachable():
-                    self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(hobbsTime))
 
-        # Fuel Remaining:
-        if self.fuelData.FuelRemain is None:
-            print("Fuel data not available ...yet.")
+        # AIO Feed One from TronView Value One:
+        exec(self.feed_one_str_exec)  # Execute the string to get the value of self.tv_feed_one
+        if self.tv_feed_one is None:
+            print("TV Value One data not available ...yet.")
         else:
-            fuelRemain = self.fuelData.FuelRemain
-            if self.old_FuelRemain != fuelRemain:
-                self.old_FuelRemain = fuelRemain
-                print("fuelRemain: ", fuelRemain)
-                if fuelRemain > 0.1 and self.isAdafruitIOReachable():  # Only send if fuel remaining is greater than 0.1 gallons
-                    self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(fuelRemain))
+            if dataship.debug_mode>1: print("tv_feed_one: ", self.tv_feed_one)
+            if self.tv_feed_one_old != self.tv_feed_one:    # Check for a change in the value
+                self.tv_feed_one_old  = self.tv_feed_one
+                if dataship.debug_mode >=0: print("tv_feed_one: ", self.tv_feed_one)
+            # Only send if fuel remaining is a real number, otherwise AIO will error.
+                if self.tv_feed_one != None and self.isAdafruitIOReachable() and self.aio1Up:  
+                    self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(self.tv_feed_one))
+
+        # AIO Feed Two from TronView Value Two:
+        exec(self.feed_two_str_exec)  # Execute the string to get the value of self.tv_feed_two
+        if self.tv_feed_two is None:
+            print("TV Value Two data not available ...yet.")
+        else:
+            if dataship.debug_mode>1: print("tv_feed_two: ", self.tv_feed_two)
+            if self.tv_feed_two_old != self.tv_feed_two:
+                self.tv_feed_two_old  = self.tv_feed_two
+                if dataship.debug_mode >=0: print("tv_feed_two: ", self.tv_feed_two)
+                if self.tv_feed_two != None and self.isAdafruitIOReachable() and self.aio2Up:
+                    self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(self.tv_feed_two))
+
+        # AIO Feed Three from TronView Value Three:
+        exec(self.feed_three_str_exec)  # Execute the string to get the value of self.tv_feed_three
+        if self.tv_feed_three is None:
+            print("TV Value Three data not available ...yet.")
+        else:
+            if dataship.debug_mode>1: print("tv_feed_three: ", self.tv_feed_three)
+            if self.tv_feed_three_old != self.tv_feed_three:
+                self.tv_feed_three_old  = self.tv_feed_three
+                if dataship.debug_mode >=0: print("tv_feed_three ", self.tv_feed_three)
+                if self.tv_feed_three != None and self.isAdafruitIOReachable() and self.aio3Up:
+                    self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, str(self.tv_feed_three))
+
+        # AIO Feed Four from TronView Value Four:
+        exec(self.feed_four_str_exec)  # Execute the string to get the value of self.tv_feed_Four
+        if self.tv_feed_four is None:
+            print("TV Value Four data not available ...yet.")
+        else:
+            if dataship.debug_mode>1: print("tv_feed_four: ", self.tv_feed_four)
+            if self.tv_feed_four_old != self.tv_feed_four:
+                self.tv_feed_four_old  = self.tv_feed_four
+                if dataship.debug_mode >=0: print("tv_feed_four ", self.tv_feed_four)
+                if self.tv_feed_four != None and self.isAdafruitIOReachable() and self.aio4Up:
+                    self.AIO.send_data(self.ADAFRUIT_FEED_FOUR.key, str(self.tv_feed_four))
+
+        # AIO Feed Five from TronView Value Five:
+        exec(self.feed_five_str_exec)  # Execute the string to get the value of self.tv_feed_Five
+        if self.tv_feed_five is None:
+            print("TV Value five data not available ...yet.")
+        else:
+            if dataship.debug_mode>1: print("tv_feed_five: ", self.tv_feed_five)
+            if self.tv_feed_five_old != self.tv_feed_five:
+                self.tv_feed_five_old  = self.tv_feed_five
+                if dataship.debug_mode >=0: print("tv_feed_five ", self.tv_feed_five)
+                if self.tv_feed_five != None and self.isAdafruitIOReachable() and self.aio5Up:
+                    self.AIO.send_data(self.ADAFRUIT_FEED_FIVE.key, str(self.tv_feed_five))
+
         return dataship
     
     def isUrlReachable(self, url):
