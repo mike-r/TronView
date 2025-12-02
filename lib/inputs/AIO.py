@@ -4,6 +4,11 @@
 
 # Install Adafruit IO library:
 # sudo pip3 install adafruit-io --break-system-packages
+#
+#  How to setup AIO web based screens
+# https://learn.adafruit.com/welcome-to-adafruit-io
+
+#################################################
 
 
 import time
@@ -20,7 +25,7 @@ from lib.common.dataship.dataship_imu import IMUData
 from lib.common.dataship.dataship_engine_fuel import EngineData, FuelData
 from lib.common.dataship.dataship_air import AirData
 from lib.common.dataship.dataship_analog import AnalogData
-from Adafruit_IO import Client, Feed, RequestError  # import Adafruit IO REST client.
+from Adafruit_IO import Client, Feed, RequestError
 from lib.common import shared
 from urllib.request import urlopen
 
@@ -30,16 +35,6 @@ class AIO(Module):
         Module.__init__(self)
         self.name = "AIO"  # set name
         self.isPlaybackMode = False
-        self.tv_feed_one_old = 0.0
-        self.tv_feed_one = 0.0
-        self.tv_feed_two_old = 0.0
-        self.tv_feed_two = 0.0
-        self.tv_feed_three_old = 0.0
-        self.tv_feed_three = 0.0
-        self.tv_feed_four_old = 0.0
-        self.tv_feed_four = 0.0
-        self.tv_feed_five_old = 0.0
-        self.tv_feed_five = 0.0
         self.shouldExit = False
 
         # Add smoothing configuration
@@ -55,19 +50,37 @@ class AIO(Module):
         self.engineData = EngineData()
         self.fuelData = FuelData()
         self.airData = AirData()
-        self.aio1Up = True
-        self.aio2Up = True
-        self.aio3Up = True
-        self.aio4Up = True
-        self.aio5Up = True
-        self.ADAFRUIT_IO_USERNAME = None
-        self.ADAFRUIT_IO_KEY = None
-        self.ADAFRUIT_FEED_ONE = None
+
+        self.ADAFRUIT_IO_USERNAME = None        # Your Adafruit IO account UserName
+        self.ADAFRUIT_IO_KEY = None             #    and KEY
+
+    # Name of AIO Feeds from config.cfg
+        self.ADAFRUIT_FEED_ONE = None           
         self.ADAFRUIT_FEED_TWO = None
         self.ADAFRUIT_FEED_THREE = None
         self.ADAFRUIT_FEED_FOUR = None
         self.ADAFRUIT_FEED_FIVE = None
         self.AIO = None
+
+    # Values pulled out of the Dataship that match AIO feeds
+        self.tv_feed_one = 0.0                  
+        self.tv_feed_two = 0.0
+        self.tv_feed_three = 0.0
+        self.tv_feed_four = 0.0
+        self.tv_feed_five = 0.0
+
+        self.tv_feed_two_old = 0.0
+        self.tv_feed_one_old = 0.0
+        self.tv_feed_three_old = 0.0
+        self.tv_feed_four_old = 0.0
+        self.tv_feed_five_old = 0.0
+
+    # Status of the AIO feed.
+        self.aio1Up = True
+        self.aio2Up = True
+        self.aio3Up = True
+        self.aio4Up = True
+        self.aio5Up = True
            
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
@@ -161,6 +174,8 @@ class AIO(Module):
                 else:
                     self.aio5Up = True
 
+        # Pull the name of the value to send to AIO from the config.cfg file.
+        # Then fetch the value out of the Dataship.
             tv_feed_one_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_ONE")
             self.feed_one_str_exec = "self.tv_feed_one = self." + tv_feed_one_str
             exec(self.feed_one_str_exec)  # Evaluate the string to get the value
@@ -188,7 +203,8 @@ class AIO(Module):
             print("tv_feed_five: ", self.tv_feed_five)
 
     #############################################
-    ## Function: readMessage
+    ## Function: readMessage. Or in this case pull values from the Dataship and send
+    ## them to an AIO feed.
     def readMessage(self, dataship: Dataship):
         if self.shouldExit == True: dataship.errorFoundNeedToExit = True
         if dataship.errorFoundNeedToExit: return dataship
@@ -200,10 +216,11 @@ class AIO(Module):
             print("TV Value One data not available ...yet.")
         else:
             if dataship.debug_mode>1: print("tv_feed_one: ", self.tv_feed_one)
-            if self.tv_feed_one_old != self.tv_feed_one:
+            if self.tv_feed_one_old != self.tv_feed_one:    # Check for a change in the value
                 self.tv_feed_one_old  = self.tv_feed_one
-                if dataship.debug_mode>0: print("tv_feed_one: ", self.tv_feed_one)
-                if self.tv_feed_one > 0.1 and self.isAdafruitIOReachable() and self.aio1Up:  # Only send if fuel remaining is greater than 0.1
+                if dataship.debug_mode >=0: print("tv_feed_one: ", self.tv_feed_one)
+            # Only send if fuel remaining is a real number, otherwise AIO will error.
+                if self.tv_feed_one != None and self.isAdafruitIOReachable() and self.aio1Up:  
                     self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(self.tv_feed_one))
 
         # AIO Feed Two from TronView Value Two:
@@ -214,8 +231,8 @@ class AIO(Module):
             if dataship.debug_mode>1: print("tv_feed_two: ", self.tv_feed_two)
             if self.tv_feed_two_old != self.tv_feed_two:
                 self.tv_feed_two_old  = self.tv_feed_two
-                if dataship.debug_mode>0: print("tv_feed_two: ", self.tv_feed_two)
-                if self.tv_feed_two > 0.1 and self.isAdafruitIOReachable() and self.aio2Up:  # Only send if fuel remaining is greater than 0.1
+                if dataship.debug_mode >=0: print("tv_feed_two: ", self.tv_feed_two)
+                if self.tv_feed_two != None and self.isAdafruitIOReachable() and self.aio2Up:
                     self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(self.tv_feed_two))
 
         # AIO Feed Three from TronView Value Three:
@@ -226,8 +243,8 @@ class AIO(Module):
             if dataship.debug_mode>1: print("tv_feed_three: ", self.tv_feed_three)
             if self.tv_feed_three_old != self.tv_feed_three:
                 self.tv_feed_three_old  = self.tv_feed_three
-                if dataship.debug_mode>0: print("tv_feed_three ", self.tv_feed_three)
-                if self.tv_feed_three > 0.1 and self.isAdafruitIOReachable() and self.aio3Up:  # Only send if value is greater than 0.1
+                if dataship.debug_mode >=0: print("tv_feed_three ", self.tv_feed_three)
+                if self.tv_feed_three != None and self.isAdafruitIOReachable() and self.aio3Up:
                     self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, str(self.tv_feed_three))
 
         # AIO Feed Four from TronView Value Four:
@@ -238,8 +255,8 @@ class AIO(Module):
             if dataship.debug_mode>1: print("tv_feed_four: ", self.tv_feed_four)
             if self.tv_feed_four_old != self.tv_feed_four:
                 self.tv_feed_four_old  = self.tv_feed_four
-                if dataship.debug_mode>0: print("tv_feed_four ", self.tv_feed_four)
-                if self.tv_feed_four > 0.1 and self.isAdafruitIOReachable() and self.aio4Up:  # Only send if value greater than 0.1
+                if dataship.debug_mode >=0: print("tv_feed_four ", self.tv_feed_four)
+                if self.tv_feed_four != None and self.isAdafruitIOReachable() and self.aio4Up:
                     self.AIO.send_data(self.ADAFRUIT_FEED_FOUR.key, str(self.tv_feed_four))
 
         # AIO Feed Five from TronView Value Five:
@@ -250,8 +267,8 @@ class AIO(Module):
             if dataship.debug_mode>1: print("tv_feed_five: ", self.tv_feed_five)
             if self.tv_feed_five_old != self.tv_feed_five:
                 self.tv_feed_five_old  = self.tv_feed_five
-                if dataship.debug_mode>0: print("tv_feed_five ", self.tv_feed_five)
-                if self.tv_feed_five > 0.1 and self.isAdafruitIOReachable() and self.aio5Up:  # Only send if value greater than 0.1
+                if dataship.debug_mode >=0: print("tv_feed_five ", self.tv_feed_five)
+                if self.tv_feed_five != None and self.isAdafruitIOReachable() and self.aio5Up:
                     self.AIO.send_data(self.ADAFRUIT_FEED_FIVE.key, str(self.tv_feed_five))
 
         return dataship
