@@ -7,7 +7,15 @@
 #
 #  How to setup AIO web based screens
 # https://learn.adafruit.com/welcome-to-adafruit-io
-
+#
+# Free Adafruit IO subscription limits:
+#
+#  30 Data Pushes Per Min
+#  10 Feeds
+#  5 Groups
+#  5 Dashboards
+#  30 Days of data storage
+#
 #################################################
 
 
@@ -25,7 +33,7 @@ from lib.common.dataship.dataship_imu import IMUData
 from lib.common.dataship.dataship_engine_fuel import EngineData, FuelData
 from lib.common.dataship.dataship_air import AirData
 from lib.common.dataship.dataship_analog import AnalogData
-from Adafruit_IO import Client, Feed, RequestError
+from Adafruit_IO import Client, Feed, RequestError, ThrottlingError
 from lib.common import shared
 from urllib.request import urlopen
 
@@ -37,11 +45,12 @@ class AIO(Module):
         self.isPlaybackMode = False
         self.shouldExit = False
 
-        # Add smoothing configuration
         self.ApplySmoothing = 1
         self.SmoothingAVGMaxCount = 10
         self.smoothingA = []
         self.debug_mode = 0
+        self.aio_wait_time = 15  # seconds to wait between sending data to AIO
+        self.aio_last_sent_time = 0
         
         self.targetData = TargetData()
         self.gpsData = GPSData()
@@ -87,16 +96,27 @@ class AIO(Module):
         self.dataship = dataship
         self.initAIO(dataship)
         
-        if len(shared.Dataship.fuelData) > 0:
-            self.fuelData = shared.Dataship.fuelData[0]
+        if len(shared.Dataship.targetData) > 0:
+            self.targetData = shared.Dataship.targetData[0]
+        if len(shared.Dataship.gpsData) > 0:
+            self.gpsData = shared.Dataship.gpsData[0]
+        if len(shared.Dataship.imuData) > 0:
+            self.imuData = shared.Dataship.imuData[0]
+        if len(shared.Dataship.analogData) > 0:
+            self.analogData = shared.Dataship.analogData[0]
         if len(shared.Dataship.engineData) > 0:
             self.engineData = shared.Dataship.engineData[0]
+        if len(shared.Dataship.fuelData) > 0:
+            self.fuelData = shared.Dataship.fuelData[0]
+        if len(shared.Dataship.airData) >0:
+            self.airData = shared.Dataship.airData[0]
         
     def closeInput(self, dataShip:Dataship):
         pass
         
     def initAIO(self, dataship: Dataship):
         print("Initializing Adafruit IO...")
+        self.aio_last_sent_time = time.time()
         self.ADAFRUIT_IO_USERNAME = _input_file_utils.readConfig(self.name, "ADAFRUIT_IO_USERNAME")
         self.ADAFRUIT_IO_KEY = _input_file_utils.readConfig(self.name,   "ADAFRUIT_IO_KEY")
         self.ADAFRUIT_FEED_ONE = _input_file_utils.readConfig(self.name, "ADAFRUIT_FEED_ONE")
@@ -174,6 +194,7 @@ class AIO(Module):
                 else:
                     self.aio5Up = True
 
+
         # Pull the name of the value to send to AIO from the config.cfg file.
         # Then fetch the value out of the Dataship.
             tv_feed_one_str = _input_file_utils.readConfig("AIO", "TronView_AIO_FEED_ONE")
@@ -209,6 +230,10 @@ class AIO(Module):
         if self.shouldExit == True: dataship.errorFoundNeedToExit = True
         if dataship.errorFoundNeedToExit: return dataship
         if self.skipReadInput == True: return dataship
+        if time.time() - self.aio_last_sent_time < self.aio_wait_time:
+            return dataship # Only send AIO data every wait_time to keep under 30/min.
+        else:
+            self.aio_last_sent_time = time.time()
 
         # AIO Feed One from TronView Value One:
         exec(self.feed_one_str_exec)  # Execute the string to get the value of self.tv_feed_one
@@ -221,7 +246,10 @@ class AIO(Module):
                 if dataship.debug_mode >=0: print("tv_feed_one: ", self.tv_feed_one)
             # Only send if fuel remaining is a real number, otherwise AIO will error.
                 if self.tv_feed_one != None and self.isAdafruitIOReachable() and self.aio1Up:  
-                    self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(self.tv_feed_one))
+                    try:
+                        self.AIO.send_data(self.ADAFRUIT_FEED_ONE.key, str(self.tv_feed_one))
+                    except ThrottlingError:
+                        print("Sending too much data too fast to AIO")
 
         # AIO Feed Two from TronView Value Two:
         exec(self.feed_two_str_exec)  # Execute the string to get the value of self.tv_feed_two
@@ -233,7 +261,10 @@ class AIO(Module):
                 self.tv_feed_two_old  = self.tv_feed_two
                 if dataship.debug_mode >=0: print("tv_feed_two: ", self.tv_feed_two)
                 if self.tv_feed_two != None and self.isAdafruitIOReachable() and self.aio2Up:
-                    self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(self.tv_feed_two))
+                    try:
+                        self.AIO.send_data(self.ADAFRUIT_FEED_TWO.key, str(self.tv_feed_two))
+                    except ThrottlingError:
+                        print("Sending too much data too fast to AIO")
 
         # AIO Feed Three from TronView Value Three:
         exec(self.feed_three_str_exec)  # Execute the string to get the value of self.tv_feed_three
@@ -245,7 +276,10 @@ class AIO(Module):
                 self.tv_feed_three_old  = self.tv_feed_three
                 if dataship.debug_mode >=0: print("tv_feed_three ", self.tv_feed_three)
                 if self.tv_feed_three != None and self.isAdafruitIOReachable() and self.aio3Up:
-                    self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, str(self.tv_feed_three))
+                    try:
+                        self.AIO.send_data(self.ADAFRUIT_FEED_THREE.key, str(self.tv_feed_three))
+                    except ThrottlingError:
+                        print("Sending too much data too fast to AIO")
 
         # AIO Feed Four from TronView Value Four:
         exec(self.feed_four_str_exec)  # Execute the string to get the value of self.tv_feed_Four
@@ -257,7 +291,10 @@ class AIO(Module):
                 self.tv_feed_four_old  = self.tv_feed_four
                 if dataship.debug_mode >=0: print("tv_feed_four ", self.tv_feed_four)
                 if self.tv_feed_four != None and self.isAdafruitIOReachable() and self.aio4Up:
-                    self.AIO.send_data(self.ADAFRUIT_FEED_FOUR.key, str(self.tv_feed_four))
+                    try:
+                        self.AIO.send_data(self.ADAFRUIT_FEED_FOUR.key, str(self.tv_feed_four))
+                    except ThrottlingError:
+                        print("Sending too much data too fast to AIO")
 
         # AIO Feed Five from TronView Value Five:
         exec(self.feed_five_str_exec)  # Execute the string to get the value of self.tv_feed_Five
@@ -269,7 +306,10 @@ class AIO(Module):
                 self.tv_feed_five_old  = self.tv_feed_five
                 if dataship.debug_mode >=0: print("tv_feed_five ", self.tv_feed_five)
                 if self.tv_feed_five != None and self.isAdafruitIOReachable() and self.aio5Up:
-                    self.AIO.send_data(self.ADAFRUIT_FEED_FIVE.key, str(self.tv_feed_five))
+                    try:
+                        self.AIO.send_data(self.ADAFRUIT_FEED_FIVE.key, str(self.tv_feed_five))
+                    except ThrottlingError:
+                        print("Sending too much data too fast to AIO")
 
         return dataship
     
