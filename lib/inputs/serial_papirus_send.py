@@ -147,6 +147,7 @@ class serial_papirus_send(Module):
             if self.tv_data_two == None:
                 self.tv_data_two = 0
             self.tv_data_two_old = self.tv_data_two
+            print("self.tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
 
         self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "None")
         self.tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_3", "None")
@@ -160,6 +161,7 @@ class serial_papirus_send(Module):
             if self.tv_data_three == None:
                 self.tv_data_three = 0
             self.tv_data_three_old = self.tv_data_three
+            print("self.tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
 
     #############################################
     ## Function: readMessage
