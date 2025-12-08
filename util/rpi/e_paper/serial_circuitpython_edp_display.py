@@ -1,29 +1,28 @@
 #!/usr/bin/env python
-# Run on Pi-Zero with 2" ePaper display hat called "PaPiRus"
+# Run on Pi-Zero with 2.13" ePaper display
+# Connected to Adafruit's eInk Bonnet for Raspberry Pi
+# https://learn.adafruit.com/adafruit-e-ink-bonnet-for-raspberry-pi
 
-# /home/pi/1TM/serial-papirus.py
-
-#  Version 0.15 testing
-print("serial-papirus_display.py Version 0.15.Testing")
-#  Version 0.15 testing
-print("serial-papirus_display.py Version 0.15.Testing")
+#  Version 0.01 testing
+print("serial_circuitpython_edp_display.py Version 0.01.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
-# Modify /boot/cmdline.txt (or /boot/firmware/cmdline.txt for 64 bit OS)
-#    Add "modules-load=dw2" after "rootwait"
-# Modify /boot/config.txt (or /boot/firmware/config.txt for 64 bit OS)
-#    Add "dtoverlay=dwc2" at the end of the file
 # Run Raspi-Config to enable serial ports and disable login console over serial
 # The above will create a Serial instance on the USB cable via the "/dev/ttyGS0" driver
 # The host USB will see a serial-USB device (/dev/ttyACM0) on a Raspberry Pi.
 # Retrieve host IP address and gateway address and write to PaPiRus display
 
+# sudo pip3 install adafruit-circuitpython-epd
+# wget https://github.com/adafruit/Adafruit_CircuitPython_framebuf/raw/main/examples/font5x8.bin
+# sudo apt-get install fonts-dejavu
+# sudo apt-get install python3-pil
+#
 #   To setup micro-USB:
 #    sudo systemctl enable getty@ttyGS0.service
 #    sudo systemctl is-active getty@ttyGS0.service
 
-# Program will read from OTG serial port connected to Automationhat Pi
+# Program will read from OTG serial port connected to TronView Pi
 # Format of data stream is:
 # !41+ssssGhhhhhfffr
 # "+ssssG"   is the amount of smoke oil remaining in tenths of gallons
@@ -33,17 +32,8 @@ print("serial-papirus_display.py Version 0.15.Testing")
 # Example: !41+0005G00001f100r
 #          !51aaa.bbb.ccc.ddd   IP Address of Automationhat Pi
 
-# Run this line and PaPiRus will be setup and installed
-#   curl -sSL https://pisupp.ly/papiruscode | sudo bash
-#   Select "Python3"
-#   Set screen size to 2.0
-
-# To change screen size run:
-#   sudo papirus-set [1.44 | 1.9 | 2.0 | 2.6 | 2.7 ]   -or-
-#   sudo papirus-config
-
 # To run at boot must have entry in /etc/rc.local
-# sudo python3 /home/zap/Speedster/serial-papirus.py &
+# sudo python3 /home/zap/Speedster/serial_circuitpython_edp_display.py &
 
 import socket
 import os
@@ -54,7 +44,7 @@ from papirus import PapirusTextPos
 import RPi.GPIO as GPIO
 
 tronview_comms_ok = False
-tronview_ipaddr = "Wait for OTG"  # Default value if TronView not connected
+tronview_ipaddr = "Waiting On TV"  # Default value if TronView not connected
 registration = "Speedy"  # Default registration number
 last_registration = registration  # Last registration number
 last_hobbs = 0.0  # Last Hobbs time
@@ -84,32 +74,34 @@ GPIO.setup(SW2, GPIO.IN)
 GPIO.setup(SW3, GPIO.IN)
 GPIO.setup(SW4, GPIO.IN)
 GPIO.setup(SW5, GPIO.IN)
-
+GPIO.add_event_detect(SW1, GPIO.FALLING)
+GPIO.add_event_detect(SW2, GPIO.FALLING)
+GPIO.add_event_detect(SW3, GPIO.FALLING)
+GPIO.add_event_detect(SW4, GPIO.FALLING)
+GPIO.add_event_detect(SW5, GPIO.FALLING)
 
 def buttonEventHandlerSw1(SW1):
     print("SW1 pressed - Displaying IP addresses")
     displayAddreses()
     time.sleep(5) # Display for 5 seconds
     displayRegFuelSmoke()    
-GPIO.add_event_detect(SW1, GPIO.FALLING, buttonEventHandlerSw1, 100)
+GPIO.add_event_callback(SW1, buttonEventHandlerSw1, 100)
 
 def buttonEventHandlerSw2(SW2):
-    print("Button SW2 pressed - Do Nothing")
-GPIO.add_event_detect(SW2, GPIO.FALLING, buttonEventHandlerSw2, 100)
+    print("Button SW2 pressed")
+GPIO.add_event_callback(SW2, buttonEventHandlerSw2, 100)
 
 def buttonEventHandlerSw3(SW3):
-    print("Button SW3 pressed - Do Nothing")
-GPIO.add_event_detect(SW3, GPIO.FALLING, buttonEventHandlerSw3, 100)
+    print("Button SW3 pressed")
+GPIO.add_event_callback(SW3, buttonEventHandlerSw3, 100)
 
 def buttonEventHandlerSw4(SW4):
-    print("Button SW4 pressed - Do Nothing")
-GPIO.add_event_detect(SW4, GPIO.FALLING, buttonEventHandlerSw4, 100)
+    print("Button SW4 pressed")
+GPIO.add_event_callback(SW4, buttonEventHandlerSw4, 100)
 
 def buttonEventHandlerSw5(SW5):
-    print("Button SW5 pressed - Do Nothing")
-GPIO.add_event_detect(SW5, GPIO.FALLING, buttonEventHandlerSw5, 100)
-
-
+    print("Button SW5 pressed")
+GPIO.add_event_callback(SW5, buttonEventHandlerSw5, 100)
 
 def displayAddreses():
     text.Clear()
@@ -130,6 +122,9 @@ def displayRegFuelSmoke():
     text.AddText(f"{last_smoke} Smoke", 0, 66, 30, Id="Line-3")
     text.WriteAll()
     time.sleep(1.0)
+
+print("Waiting 15 seconds for PaPiRus display and USB OTG to be ready")
+time.sleep(15)
 
 #  2" PaPiRus Display size is:  200 X 96 pixels
 
@@ -152,11 +147,6 @@ try:
     print ("IP:", ePaper_ipaddr, " GW:", gateway, " Host:", host)
 except:
     print("Error: Unable to get IP address")
-    
-displayAddreses()  # Display IP addresses on PaPiRus
-
-print("Waiting 10 seconds for PaPiRus display and USB OTG to be ready")
-time.sleep(10)
 
 # Define serial link to TronView via USB OTG cable
 try:
@@ -180,6 +170,7 @@ except Exception as e:
     time.sleep(5.0)
     exit()
 
+displayAddreses()  # Display IP addresses on PaPiRus
 if tronview_serial.is_open:
     wait_time = time.time()
     while True:
@@ -248,7 +239,7 @@ time.sleep(1.0)
 text.WriteAll()
 
 while True:
-    tronview_serial.reset_input_buffer()
+    #tronview_serial.reset_input_buffer()
     tronview_bytes = tronview_serial.read_until(b'\r\n', None)
     if len(tronview_bytes) < 10:
         print("Received: ", len(tronview_bytes), " bytes from TronView, retrying...")
