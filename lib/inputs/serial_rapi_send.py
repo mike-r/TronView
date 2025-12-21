@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #################################################
-# Module: Serial to PaPiRus for Display 
+# Module: Serial to another Raspberry Pi for Display on e-paper
 # Zap 2025
 # 
 # Raspberry Pi 
@@ -11,7 +11,7 @@
 # To check serial ports use:   dmesg | grep tty
 # To check I2C devices:        sudo i2cdetect -y 0
 
-# Write Serial data to PaPiRus Pi Zero
+# Write Serial data to Pi
 # Format of data stream is:
 # !41+ssssGhhhhhfff
 # "+ssssG"   is the amount of smoke oil remaining in tenths of gallons
@@ -39,11 +39,11 @@ from lib.common.dataship.dataship_air import AirData
 from lib.common.dataship.dataship_analog import AnalogData
 from lib.common import shared
 
-class serial_papirus_send(Module):
+class serial_rapi_send(Module):
     # called only when object is first created.
     def __init__(self):
         Module.__init__(self)
-        self.name = "Serial_PaPiRus_Send"  # set name
+        self.name = "Serial_RaPiRmt_Send"  # set name
         self.update = True
         self.tx_count = 0
         self.isPlaybackMode = False
@@ -67,11 +67,11 @@ class serial_papirus_send(Module):
         self.fuelData = FuelData()
         self.airData = AirData()
         
-        print("Welcome to TronView serial sender to a PaPiRus e-paper display on another RaPi`", sep=' ', end='\n\n\n') 
+        print("Welcome to TronView serial sender to a remote Raspberry Pi for display`", sep=' ', end='\n\n\n') 
 
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
-        self.initPapirus(dataship)  # Initialize the PaPiRus display settings
+        self.initRaPiRmt(dataship)  # Initialize the remote RaPi  display settings
         if(self.PlayFile!=None and self.PlayFile!=False):
             pass
         else:
@@ -93,8 +93,8 @@ class serial_papirus_send(Module):
         if len(shared.Dataship.analogData) > 0:
             self.analogData = shared.Dataship.analogData[0]
 
-            # open serial connection to Pi Zero with PaPiRus display.
-            self.connectToPapirus()  # Try to connect to the PaPiRus display if not already connected
+            # open serial connection to Pi with display.
+            self.connectToRaPiRmt()  # Try to connect to the remote RaPi display if not already connected
 
 
         # Get the IP address of the TronView Pi
@@ -108,21 +108,21 @@ class serial_papirus_send(Module):
             print ("IP:", tv_ipaddr, " GW:", gateway, " Host:", host)
         except:
             print("Error: Unable to get IP address")
-        # Send TronView Pi's IP Address to PaPiRus display Pi:
+        # Send TronView Pi's IP Address to remote RaPi and display:
         tv_ipaddr_str = "!51" + tv_ipaddr + "\r\n"
         self.tv_ipaddr_bytes = tv_ipaddr_str.encode()
-        print("Sending PaPiRus message: ", tv_ipaddr_str)
-        if self.serialCommsOK and not self.comms_ok: self.sendIPaddrToPapirus(dataship)
+        print("Sending remote RaPi message: ", tv_ipaddr_str)
+        if self.serialCommsOK and not self.comms_ok: self.sendIPaddrToRaPiRmt(dataship)
 
-    def initPapirus(self, dataship: Dataship):
-        # Initialize the PaPiRus display settings
-        self.papirus_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyACM0")
-        self.papirus_data_baudrate = hud_utils.readConfigInt(self.name, "baudrate", 9600)
+    def initRaPiRmt(self, dataship: Dataship):
+        # Initialize the remote RaPi display settings
+        self.rapi_rmt_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyACM0")
+        self.rapi_rmt_data_baudrate = hud_utils.readConfigInt(self.name, "baudrate", 9600)
         self.registration = hud_utils.readConfig(self.name, "registration", "N12345")
 
 
-        self.tv_label1 = hud_utils.readConfig(self.name, "PaPirus_Label_1", "None")
-        self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_1", "None")
+        self.tv_label1 = hud_utils.readConfig(self.name, "RaPiRmt_Label_1", "None")
+        self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_RaPiRmt_1", "None")
         self.tv_data1_exec = "self.tv_data_one = self." + self.tv_data1_name
         print("tv_data_one_exec: ", self.tv_data1_exec)
         if self.tv_data1_name == "None":
@@ -135,12 +135,12 @@ class serial_papirus_send(Module):
             self.tv_data_one_old = self.tv_data_one
             print("self.tv_data_one: ", self.tv_data_one, " ", self.tv_label1)
 
-        self.tv_label2 = hud_utils.readConfig(self.name, "PaPirus_Label_2", "None")
-        self.tv_data2_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_2", "None")
+        self.tv_label2 = hud_utils.readConfig(self.name, "RaPiRmt_Label_2", "None")
+        self.tv_data2_name = hud_utils.readConfig(self.name, "TronView_RaPiRmt_2", "None")
         self.tv_data2_exec = "self.tv_data_two = self." + self.tv_data2_name
         print("tv_data_two_exec: ", self.tv_data2_exec)
         if self.tv_data2_name == "None":
-            print("No data source defined for tv_data_two.  Set TronView_PaPiRus_2 in config.cfg to dataship variable you want to display.")
+            print("No data source defined for tv_data_two.  Set TronView_RaPiRmt_2 in config.cfg to dataship variable you want to display.")
         else:
             exec(self.tv_data2_exec)  # Evaluate the string to get the value
             print("self.tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
@@ -149,8 +149,8 @@ class serial_papirus_send(Module):
             self.tv_data_two_old = self.tv_data_two
             print("self.tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
 
-        self.tv_label3 = hud_utils.readConfig(self.name, "PaPirus_Label_3", "None")
-        self.tv_data3_name = hud_utils.readConfig(self.name, "TronView_PaPiRus_3", "None")
+        self.tv_label3 = hud_utils.readConfig(self.name, "RaPiRmt_Label_3", "None")
+        self.tv_data3_name = hud_utils.readConfig(self.name, "TronView_RaPiRmt_3", "None")
         self.tv_data3_exec = "self.tv_data_three = self." + self.tv_data3_name
         print("tv_data_three_exec: ", self.tv_data3_exec)
         if self.tv_data3_name == "None":
@@ -168,13 +168,13 @@ class serial_papirus_send(Module):
     def readMessage(self, dataship: Dataship):        
         if dataship.errorFoundNeedToExit:
             return dataship
-            # Find the IP Address of the TronView Pi and send it to the PaPiRus display Pi.
-            # Then read data out of the Dataship and send it to the PaPiRus display.
+            # Find the IP Address of the TronView Pi and send it to the remote Raspberry Pi display Pi.
+            # Then read data out of the Dataship and send it to the remote Raspberry Pi display.
     
         self.updateEngineStatus(dataship)
         
         if not self.serialCommsOK:
-            self.connectToPapirus()  # Try to connect to the PaPiRus display if not already connected
+            self.connectToRaPiRmt()  # Try to connect to the remote Raspberry Pi display if not already connected
             return dataship  # If serial comms are not OK, return the dataship without sending data
 
         if self.tv_data1_name == "None" or self.tv_data_one == None:
@@ -207,50 +207,50 @@ class serial_papirus_send(Module):
                 self.update = True
                 self.tv_data_three_old = self.tv_data_three
         
-        papirus1_str = self.tv_label1 + "," + str(self.tv_data_one)
-        papirus2_str = self.tv_label2 + "," + str(self.tv_data_two)
-        papirus3_str = self.tv_label3 + "," + str(self.tv_data_three)
+        display1_str = self.tv_label1 + "," + str(self.tv_data_one)
+        display2_str = self.tv_label2 + "," + str(self.tv_data_two)
+        display3_str = self.tv_label3 + "," + str(self.tv_data_three)
         if dataship.debug_mode>0: 
             print()
-            print("papirus1_str = ", papirus1_str)
-            print("papirus2_str = ", papirus2_str)
-            print("papirus3_str = ", papirus3_str)
+            print("display1_str = ", display1_str)
+            print("display2_str = ", display2_str)
+            print("display3_str = ", display3_str)
             print("Analog Data[0] = ", self.analogData.Data[0])
             print("Analog Data[1] = ", self.analogData.Data[1])
             print()
         
         # Create the string to send to the PaPiRus display
-        papirus_str = '!4#,' + self.registration + "," + papirus1_str + "," + papirus2_str + "," + papirus3_str + "," + self.engine_status + '\r\n'
-        papirus_bytes = papirus_str.encode()
-        if dataship.debug_mode>0: print("PaPiRus Bytes = ", papirus_bytes)
+        display_str = '!4#,' + self.registration + "," + display1_str + "," + display2_str + "," + display3_str + "," + self.engine_status + '\r\n'
+        display_bytes = display_str.encode()
+        if dataship.debug_mode>0: print("PaPiRus Bytes = ", display_bytes)
         try:
             if self.update:
-                self.ser.write(papirus_bytes)         # Send data to PaPiRus
+                self.ser.write(display_bytes)         # Send data to PaPiRus
                 self.update = False
             if not self.comms_ok:
                 #sleep(.1)
-                self.sendIPaddrToPapirus(dataship)
+                self.sendIPaddrToRaPiRmt(dataship)
         except Exception as e:
-            if dataship.debug_mode>0: print("Unexpected error in write to PaPiRus: ", e)
+            if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
 
         if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
             self.ser.seek(0)
         return dataship
 
-    def sendIPaddrToPapirus(self, dataship: Dataship):
+    def sendIPaddrToRaPiRmt(self, dataship: Dataship):
         try:
-            self.ser.write(self.tv_ipaddr_bytes)         # Send data to PaPiRus
+            self.ser.write(self.tv_ipaddr_bytes)         # Send data to remote Pi
             #sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
         except Exception as e:
-            if dataship.debug_mode>0: print("Unexpected error in write to PaPiRus: ", e)
-        papirus_bytes = self.ser.read_until(b'\r\n', None)
-        if papirus_bytes == b'':
-            if dataship.debug_mode>0: print("No data received from PaPiRus...")
+            if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
+        display_bytes = self.ser.read_until(b'\r\n', None)
+        if display_bytes == b'':
+            if dataship.debug_mode>0: print("No data received from remote Pi...")
             self.comms_ok = False  # Assume comms are not OK if no data received
             return
         else:
-            papirus_str = papirus_bytes.decode().strip()
-            print("Received from PaPiRus: ", papirus_str)
+            display_str = display_bytes.decode().strip()
+            print("Received from remote Pi: ", display_str)
             self.comms_ok = True
         return
              
@@ -281,13 +281,13 @@ class serial_papirus_send(Module):
                 self.old_OilPress = self.new_OilPress
                 self.update = True
                 
-    def connectToPapirus(self):
-        # Try to connect to the PaPiRus display if not already connected
+    def connectToRaPiRmt(self):
+        # Try to connect to the remote RaPi display if not already connected
         if not self.serialCommsOK:
             try:
                 self.ser = serial.Serial(
-                port=self.papirus_data_port,
-                baudrate=self.papirus_data_baudrate,
+                port=self.rapi_rmt_data_port,
+                baudrate=self.rapi_rmt_data_baudrate,
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
                 bytesize=serial.EIGHTBITS,
@@ -295,12 +295,12 @@ class serial_papirus_send(Module):
                 write_timeout=0.1  # Set a timeout for writing
             )
                 self.serialCommsOK = True
-                print("Connected to PaPiRus display.")
-                print("Serial Port opened: ", self.papirus_data_port, " at baudrate: ", self.papirus_data_baudrate)
+                print("Connected to remote RaPi display.")
+                print("Serial Port opened: ", self.rapi_rmt_data_port, " at baudrate: ", self.rapi_rmt_data_baudrate)
 
             except serial.SerialException as e:
                 print("Error opening serial port: ", e)
-                print("Is the USB cable to the PaPiRus RaPi plugged in?")
+                print("Is the USB cable to the remote RaPi plugged in?")
                 self.serialCommsOK = False
                 self.comms_ok = False
                 time.sleep(2)  # Wait for 2 seconds before retrying
