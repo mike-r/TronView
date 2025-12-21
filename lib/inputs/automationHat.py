@@ -1,16 +1,47 @@
 #!/usr/bin/env python
 
 #################################################
-# IO to and from a Pimoroni AutomationHat which has three SPDT relays, three 12-bit ADC inputs
-# three sinking outputs and lots of cool status leds.  The hat is mounted on the Pi 5 via the
-# GPIO pins.  The Automation Hat is used to increase the number of analog and digital inputs 
-# when the EFIS is maxed out.  
-# It will be first used to read the airplane's smoke tank level.
+# IO to and from a Pimoroni Automation Hat which comes in three versions:
+# 
+# The "Automation Hat:
+# It has three 24V 2 ampSPDT relays.
+# GPIO #14 & #15 TX/RX UART
+# Inputs and Outputs that are 0-24 volt tolerant:
+#     Three sinking outputs
+#     Three buffered inputs
+#     Three 0-24V analog inputs
+# One 0-3.3V analog input
+# and lots of cool status leds.  
+#
+# The "Automation Mini":
+# It has one 24V 2 amp SPDT relay
+# Inputs and Outputs that are 0-24 volt tolerant:
+#     Three sinking outputs
+#     Three buffered inputs
+#     Three 0-24V analog inputs
+# One 0.96 inch 160x80 color LCD display
+#
+# The "Automation pHat":  Discontinued as of 2023
+# It has one 24V 2 amp SPDT relay
+# Inputs and Outputs that are 0-24 volt tolerant:
+#     Three sinking outputs
+#     Three buffered inputs
+#     Three 0-24V analog inputs
+# 
+# 
+# The hat is mounted on the Pi 5 via the GPIO pins.
+# it can be used to increase the number of analog and digital inputs 
+# when the EFIS is maxed out or to provide relay outputs to control.
+# If an Automation Mini is used, this code will also display the smoke oil level
+# on the LCD display as a default.  Use GIMP to edit the image files in docs/imgs
+# to create your own custom display.  Image /docs/imgs/mini_analog_smoke.bmp
+# is used to display smoke oil level and analog voltage. Image /docs/imgs/mini_analog.bmp
+# is used to display only analog voltage.
 # 
 # Zap 2025
 # 
 # To check I2C devices:        sudo i2cdetect -y 0
-
+#
 # To install AutomationHat code:
 # git clone https://github.com/pimoroni/automation-hat
 # cd automation-hat
@@ -31,7 +62,6 @@ from ._input import Input
 from lib.modules._module import Module
 from lib.common.dataship.dataship import Dataship
 from lib.common.dataship.dataship_analog import AnalogData
-import time
 from lib.common import shared
 from urllib.request import urlopen
 import automationhat
@@ -57,8 +87,8 @@ class automationHat(Module):
         self.a0 = 0                         # Analog input 0.  Read from Automation Hat.  
         self.a1 = 0                         # Analog input 1.
         self.a2 = 0                         # Analog input 2.
-        self.a3 = 0                         # Analog input 3.
-        self.di0 = 0                        # Digital input 0.  Set to 1 to indicate the Automation Hat is running.
+        self.a3 = 0                         # Analog input 3.  Only on full Automation Hat and only 0-3.3V toloerant.
+        self.di0 = 0                        # Digital input 0. Set to 1 to indicate the Automation Hat is running.
         self.di1 = 0                        # Digital input 1.
         self.di2 = 0                        # Digital input 2.
 
@@ -114,7 +144,7 @@ class automationHat(Module):
 
             self.display_is_off = False
             # Open our background image.
-            self.image = Image.open("docs/imgs/blank4.bmp")
+            self.image = Image.open("docs/imgs/mini_analog_smoke.bmp")
             self.draw = ImageDraw.Draw(self.image)
 
         try:
