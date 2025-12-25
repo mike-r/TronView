@@ -123,9 +123,9 @@ class automationHat(Module):
                 automationhat.light.power.write(0)
                 automationhat.light.comms.write(0)
                 automationhat.light.warn.write(0)
-            automationhat.digital.write(1, 0)  # Set output 1 to low
-            automationhat.digital.write(2, 0)  # Set output 2 to low
-            automationhat.digital.write(3, 0)  # Set output 3 to low
+            automationhat.output[0].write(0)  # Set output 1 to low
+            automationhat.output[1].write(0)  # Set output 2 to low
+            automationhat.output[2].write(0)  # Set output 3 to low
             self.a0 = automationhat.analog[0].read()      # Read from analog input 0
             self.a1 = automationhat.analog[1].read()      # Read from analog input 1
             self.a2 = automationhat.analog[2].read()      # Read from analog input 2
