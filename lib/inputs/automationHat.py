@@ -92,14 +92,17 @@ class automationHat(Module):
         # Create ST7735 LCD display class if mini-hat.
         # No test to confirm but the mini-hat is based on the phat
         if automationhat.is_automation_phat():
-            self.disp = st7735.ST7735(
-                port=0,
-                cs=st7735.BG_SPI_CS_FRONT,
-                dc=9,
-                backlight=25,
-                rotation=270,
-                spi_speed_hz=4000000
-            )
+            try:
+                self.disp = st7735.ST7735(
+                    port=0,
+                    cs=st7735.BG_SPI_CS_FRONT,
+                    dc=9,
+                    backlight=25,
+                    rotation=270,
+                    spi_speed_hz=4000000
+                )
+            except Exception as e:
+                print("Probably a phat Vs mini-hat. Error: ", e)            
             
             # Initialise display.
             self.disp.begin()
