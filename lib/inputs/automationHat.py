@@ -143,10 +143,10 @@ class automationHat(Module):
             #automationhat.input.two.resistor(automationhat.PULL_UP)
             #automationhat.input.three.resistor(automationhat.PULL_UP)
         # Startup with all relays turned off.
-            automationhat.relay.one.off()
+            automationhat.relay[0].write(0)
             if automationhat.is_automation_hat(): 
-                automationhat.relay.two.off()
-                automationhat.relay.three.off()
+                automationhat.relay[1].write(0)
+                automationhat.relay[2].write(0)
 
             print("Automation Hat initialized successfully.")
         except Exception as e:
