@@ -124,9 +124,9 @@ class serial_rapi_send(Module):
         self.tv_label1 = hud_utils.readConfig(self.name, "RaPiRmt_Label_1", "None")
         self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_RaPiRmt_1", "None")
         self.tv_data1_exec = "self.tv_data_one = self." + self.tv_data1_name
-        print("tv_data_one_exec: ", self.tv_data1_exec)
+        print("tv_data1_exec: ", self.tv_data1_exec)
         if self.tv_data1_name == "None":
-            print("No data source defined for tv_data_one.  Set TronView_PaPiRus_1 in config.cfg to dataship variable you want to display.")
+            print("No data source defined for tv_data_one.  Set TronView_RaPiRmt_1 in config.cfg to dataship variable you want to display.")
         else:
             exec(self.tv_data1_exec)  # Evaluate the string to get the value
             print("self.tv_data_one: ", self.tv_data_one, " ", self.tv_label1)
@@ -138,9 +138,9 @@ class serial_rapi_send(Module):
         self.tv_label2 = hud_utils.readConfig(self.name, "RaPiRmt_Label_2", "None")
         self.tv_data2_name = hud_utils.readConfig(self.name, "TronView_RaPiRmt_2", "None")
         self.tv_data2_exec = "self.tv_data_two = self." + self.tv_data2_name
-        print("tv_data_two_exec: ", self.tv_data2_exec)
+        print("tv_data2_exec: ", self.tv_data2_exec)
         if self.tv_data2_name == "None":
-            print("No data source defined for tv_data_two.  Set TronView_RaPiRmt_2 in config.cfg to dataship variable you want to display.")
+            print("No data source defined for tv_data2.  Set TronView_RaPiRmt_2 in config.cfg to dataship variable you want to display.")
         else:
             exec(self.tv_data2_exec)  # Evaluate the string to get the value
             print("self.tv_data_two: ", self.tv_data_two, " ", self.tv_label2)
@@ -151,10 +151,10 @@ class serial_rapi_send(Module):
 
         self.tv_label3 = hud_utils.readConfig(self.name, "RaPiRmt_Label_3", "None")
         self.tv_data3_name = hud_utils.readConfig(self.name, "TronView_RaPiRmt_3", "None")
-        self.tv_data3_exec = "self.tv_data_three = self." + self.tv_data3_name
-        print("tv_data_three_exec: ", self.tv_data3_exec)
+        self.tv_data3_exec = "self.tv_data3 = self." + self.tv_data3_name
+        print("tv_data3_exec: ", self.tv_data3_exec)
         if self.tv_data3_name == "None":
-            print("No data source defined for tv_data_three.  Set TronView_PaPiRus_3 in config.cfg to dataship variable you want to display.")
+            print("No data source defined for tv_data3.  Set TronView_RaPiRmt_3 in config.cfg to dataship variable you want to display.")
         else:
             exec(self.tv_data3_exec)  # Evaluate the string to get the value
             print("self.tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
