@@ -61,7 +61,7 @@ class automationHat(Module):
         self.di0 = 0                        # Digital input 0.  Set to 1 to indicate the Automation Hat is running.
         self.di1 = 0                        # Digital input 1.
         self.di2 = 0                        # Digital input 2.
-
+        self.loop_time = 0
         # Add smoothing configuration
         self.ApplySmoothing = 1
         self.SmoothingAVGMaxCount = 10
@@ -162,9 +162,9 @@ class automationHat(Module):
             print("Error found, exiting readMessage")
             return dataship
 
-        #if time.time() - self.loop_time < 3:   # no need to read data faster than once per every 3 seconds.
-            #return dataship
-        #self.loop_time = time.time()
+        if time.time() - self.loop_time < 0.5:   # no need to read data faster than once per every 3 seconds.
+            return dataship
+        self.loop_time = time.time()
 
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
@@ -201,22 +201,8 @@ class automationHat(Module):
         self.draw = ImageDraw.Draw(self.image)
         self.draw.text((self.text_x, self.text_y + self.offset), "{reading:.2f}".format(reading=self.a0), font=self.font, fill=self.colour)
         self.draw.text((self.text_x, self.text_y + self.offset + 40), "{reading:.2f}".format(reading=self.smokeLevel), font=self.font, fill=self.colour)
-        self.disp.display(self.image)
-    
-        if dataship.debug_mode >0: print("end of readMessage, loop_count: ", self.loop_count)
+        self.disp.display(self.image)    
         return dataship
-
-    def isAdafruitIOReachable(self):
-        url = "https://io.adafruit.com"
-        return self.isUrlReachable(url)
-    
-    def isUrlReachable(self, url):
-        try:
-            response = urlopen(url)
-            return response.status == 200
-        except Exception as e:
-            print(f"Error checking URL {url}: {e}")
-            return False
      
     # close this data input 
     def closeInput(self,dataship: Dataship):
