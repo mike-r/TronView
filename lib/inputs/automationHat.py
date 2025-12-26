@@ -97,6 +97,7 @@ class automationHat(Module):
         self.SmoothingAVGMaxCount = 10
         self.smoothingA = []
         self.debug_mode = 0
+        self.minihat = False
                 
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
@@ -131,9 +132,10 @@ class automationHat(Module):
                     rotation=270,
                     spi_speed_hz=4000000
                 )
+                self.minihat = True
             except Exception as e:
                 print("Probably a phat Vs mini-hat. Error: ", e)            
-            
+                self.minihat = False
             # Initialise display.
             self.disp.begin()
 
@@ -152,7 +154,7 @@ class automationHat(Module):
 
         try:
             # Set up Automation Hat inputs and outputs
-            if automationhat.is_automation_hat():
+            if automationhat.is_automation_hat():   # Only the big hat has LEDs
                 automationhat.light.power.write(0)
                 automationhat.light.comms.write(0)
                 automationhat.light.warn.write(0)
@@ -168,16 +170,20 @@ class automationHat(Module):
             self.di1 = automationhat.input[1].read()  # Read digital input 1
             self.di2 = automationhat.input[2].read()  # Read digital input 2
             print("Automation Hat initialized with analog input 0: ", self.a0)
+            print("Analog input 0: ", self.a0)
+            print("Analog input 1: ", self.a1)
+            print("Analog input 2: ", self.a2)
+            if automationhat.is_automation_hat(): print("Analog input 3: ", self.a3)
             print("Digital input 0: ", self.di0)
             print("Digital input 1: ", self.di1)
             print("Digital input 2: ", self.di2)
-        # Set Automation Hat inputs HIGH.
+        # Set Automation Hat inputs HIGH. Only works with custom --init--.py
             #automationhat.input.one.resistor(automationhat.PULL_UP)
             #automationhat.input.two.resistor(automationhat.PULL_UP)
             #automationhat.input.three.resistor(automationhat.PULL_UP)
         # Startup with all relays turned off.
             automationhat.relay[0].write(0)
-            if automationhat.is_automation_hat(): 
+            if automationhat.is_automation_hat():   # Only big hat has three relays.
                 automationhat.relay[1].write(0)
                 automationhat.relay[2].write(0)
 
@@ -198,7 +204,7 @@ class automationHat(Module):
 
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
-        self.a0 = automationhat.analog[0].read()  # Read from analog input 1
+        self.a0 = automationhat.analog[0].read()  # Read from analog input 0
         
         if(self.ApplySmoothing):
             self.smoothingA.append(self.a0)  # Append the current value to the smoothing list
@@ -222,12 +228,12 @@ class automationHat(Module):
         # Convert analog voltage to gallons:
         self.smokeLevel = 5 * self.a0 / 3.75
         self.smokeLevel = round(self.smokeLevel, 1)  # Round to 1 decimal place
-        if dataship.debug_mode>0: print("Smoke Oil Level: ", self.smokeLevel, " gallons")
+        if dataship.debug_mode>0: print("Smoke Oil Level: ", self.smokeLevel, " Gallons")
         self.analogData_smoke_remain_str = str(int(self.smokeLevel*10)).zfill(4)    # Format as 4 digits with leading zeros
-        if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " gallons")
+        if dataship.debug_mode>0: print("analogData_smoke_remain_str: ", self.analogData_smoke_remain_str, " Gallons")
         self.analogData.Data[1] = self.smokeLevel  # Store the smoke level in the analog data object
 
-        self.image = Image.open("docs/imgs/blank4.bmp")
+        self.image = Image.open("docs/imgs/mini_analog_smoke.bmp")
         self.draw = ImageDraw.Draw(self.image)
         self.draw.text((self.text_x, self.text_y + self.offset), "{reading:.2f}".format(reading=self.a0), font=self.font, fill=self.colour)
         self.draw.text((self.text_x, self.text_y + self.offset + 40), "{reading:.2f}".format(reading=self.smokeLevel), font=self.font, fill=self.colour)
