@@ -3,10 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.15 testing
-print("serial-papirus_display.py Version 0.15.Testing")
-#  Version 0.15 testing
-print("serial-papirus_display.py Version 0.15.Testing")
+#  Version 0.16 testing
+print("serial-papirus_display.py Version 0.16.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -33,9 +31,8 @@ print("serial-papirus_display.py Version 0.15.Testing")
 # Example: !41+0005G00001f100r
 #          !51aaa.bbb.ccc.ddd   IP Address of Automationhat Pi
 
-# Run this line and PaPiRus will be setup and installed
-#   curl -sSL https://pisupp.ly/papiruscode | sudo bash
-#   Select "Python3"
+# Run this line and PaPiRus setup form /PaPiRus directory
+
 #   Set screen size to 2.0
 
 # To change screen size run:

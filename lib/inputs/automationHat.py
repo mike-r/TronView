@@ -91,7 +91,7 @@ class automationHat(Module):
         self.di0 = 0                        # Digital input 0. Set to 1 to indicate the Automation Hat is running.
         self.di1 = 0                        # Digital input 1.
         self.di2 = 0                        # Digital input 2.
-
+        self.loop_time = 0
         # Add smoothing configuration
         self.ApplySmoothing = 1
         self.SmoothingAVGMaxCount = 10
@@ -122,14 +122,17 @@ class automationHat(Module):
         # Create ST7735 LCD display class if mini-hat.
         # No test to confirm but the mini-hat is based on the phat
         if automationhat.is_automation_phat():
-            self.disp = st7735.ST7735(
-                port=0,
-                cs=st7735.BG_SPI_CS_FRONT,
-                dc=9,
-                backlight=25,
-                rotation=270,
-                spi_speed_hz=4000000
-            )
+            try:
+                self.disp = st7735.ST7735(
+                    port=0,
+                    cs=st7735.BG_SPI_CS_FRONT,
+                    dc=9,
+                    backlight=25,
+                    rotation=270,
+                    spi_speed_hz=4000000
+                )
+            except Exception as e:
+                print("Probably a phat Vs mini-hat. Error: ", e)            
             
             # Initialise display.
             self.disp.begin()
@@ -153,9 +156,9 @@ class automationHat(Module):
                 automationhat.light.power.write(0)
                 automationhat.light.comms.write(0)
                 automationhat.light.warn.write(0)
-            automationhat.digital.write(1, 0)  # Set output 1 to low
-            automationhat.digital.write(2, 0)  # Set output 2 to low
-            automationhat.digital.write(3, 0)  # Set output 3 to low
+            automationhat.output[0].write(0)  # Set output 1 to low
+            automationhat.output[1].write(0)  # Set output 2 to low
+            automationhat.output[2].write(0)  # Set output 3 to low
             self.a0 = automationhat.analog[0].read()      # Read from analog input 0
             self.a1 = automationhat.analog[1].read()      # Read from analog input 1
             self.a2 = automationhat.analog[2].read()      # Read from analog input 2
@@ -173,10 +176,10 @@ class automationHat(Module):
             #automationhat.input.two.resistor(automationhat.PULL_UP)
             #automationhat.input.three.resistor(automationhat.PULL_UP)
         # Startup with all relays turned off.
-            automationhat.relay.one.off()
+            automationhat.relay[0].write(0)
             if automationhat.is_automation_hat(): 
-                automationhat.relay.two.off()
-                automationhat.relay.three.off()
+                automationhat.relay[1].write(0)
+                automationhat.relay[2].write(0)
 
             print("Automation Hat initialized successfully.")
         except Exception as e:
@@ -189,9 +192,9 @@ class automationHat(Module):
             print("Error found, exiting readMessage")
             return dataship
 
-        #if time.time() - self.loop_time < 3:   # no need to read data faster than once per every 3 seconds.
-            #return dataship
-        #self.loop_time = time.time()
+        if time.time() - self.loop_time < 0.5:   # no need to read data faster than once per every 3 seconds.
+            return dataship
+        self.loop_time = time.time()
 
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
@@ -228,22 +231,8 @@ class automationHat(Module):
         self.draw = ImageDraw.Draw(self.image)
         self.draw.text((self.text_x, self.text_y + self.offset), "{reading:.2f}".format(reading=self.a0), font=self.font, fill=self.colour)
         self.draw.text((self.text_x, self.text_y + self.offset + 40), "{reading:.2f}".format(reading=self.smokeLevel), font=self.font, fill=self.colour)
-        self.disp.display(self.image)
-    
-        if dataship.debug_mode >0: print("end of readMessage, loop_count: ", self.loop_count)
+        self.disp.display(self.image)    
         return dataship
-
-    def isAdafruitIOReachable(self):
-        url = "https://io.adafruit.com"
-        return self.isUrlReachable(url)
-    
-    def isUrlReachable(self, url):
-        try:
-            response = urlopen(url)
-            return response.status == 200
-        except Exception as e:
-            print(f"Error checking URL {url}: {e}")
-            return False
      
     # close this data input 
     def closeInput(self,dataship: Dataship):
