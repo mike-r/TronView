@@ -91,7 +91,7 @@ class automationHat(Module):
         self.di0 = 0                        # Digital input 0. Set to 1 to indicate the Automation Hat is running.
         self.di1 = 0                        # Digital input 1.
         self.di2 = 0                        # Digital input 2.
-        self.loop_time = 0
+        self.loop_time = 0.0
         # Add smoothing configuration
         self.ApplySmoothing = 1
         self.SmoothingAVGMaxCount = 10
@@ -198,9 +198,9 @@ class automationHat(Module):
             print("Error found, exiting readMessage")
             return dataship
 
-        if time.time() - self.loop_time < 0.5:   # no need to read data faster than once per every 3 seconds.
+        if time() - self.loop_time < 0.5:   # no need to read data faster than once per every 3 seconds.
             return dataship
-        self.loop_time = time.time()
+        self.loop_time = time()
 
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
