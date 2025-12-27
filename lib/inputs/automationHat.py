@@ -132,25 +132,24 @@ class automationHat(Module):
                     rotation=270,
                     spi_speed_hz=4000000
                 )
+                
+                # Initialise display.
+                self.disp.begin()
+                self.colour = (255, 181, 86)
+                self.font = ImageFont.truetype(UserFont, 12)
+
+                # Values to keep everything aligned nicely.
+                self.text_x = 110
+                self.text_y = 24
+                self.offset = 0
+
+                # Open our background image.
+                self.image = Image.open("docs/imgs/mini_analog_smoke.bmp")
+                self.draw = ImageDraw.Draw(self.image)
                 self.minihat = True
             except Exception as e:
                 print("Probably a phat Vs mini-hat. Error: ", e)            
                 self.minihat = False
-            # Initialise display.
-            self.disp.begin()
-
-            self.colour = (255, 181, 86)
-            self.font = ImageFont.truetype(UserFont, 12)
-
-            # Values to keep everything aligned nicely.
-            self.text_x = 110
-            self.text_y = 24
-            self.offset = 0
-
-            self.display_is_off = False
-            # Open our background image.
-            self.image = Image.open("docs/imgs/mini_analog_smoke.bmp")
-            self.draw = ImageDraw.Draw(self.image)
 
         try:
             # Set up Automation Hat inputs and outputs
