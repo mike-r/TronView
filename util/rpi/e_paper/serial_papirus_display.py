@@ -3,8 +3,7 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.17 testing
-print("serial-papirus_display.py Version 0.17.Testing")
+print("serial-papirus_display.py Version 0.18.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -360,8 +359,7 @@ while True:
             hobbsF = "{:.1f}".format(hobbs)
             hobbs_change = abs(hobbs - last_hobbs)
             if hobbs_change > 0:
-                if hobbs < 10000:  hobbsF = hobbsF + " TT"
-                print("hobbsF:", hobbsF)
+                print("New hobbsF:", hobbsF)
                 last_hobbs = hobbs
         except Exception as e:
             print("Error updating Hobbs:", e)
@@ -369,10 +367,10 @@ while True:
 
     if sw2_pressed: engine_status = "s"  # Debug to test engine status change
     if engine_status == "s" and engine_status_prev == "r":      # Engine stopped and was running
-        #text.UpdateText("Line-1", hobbsF)
-        ##hobbsF = "8234.5" + " TT"
+        if hobbs < 10000:  hobbsF = hobbsF + " TT"
         text.Clear()
         time.sleep(1)
+        #text.UpdateText("Line-1", hobbsF)
         text.AddText(hobbsF,                0,  0, 37, Id="Line-1")
         text.AddText(f"{last_fuel} Fuel",  20, 37, 30, Id="Line-2")
         text.AddText(f"{last_smoke} Smoke",20, 66, 30, Id="Line-3")
