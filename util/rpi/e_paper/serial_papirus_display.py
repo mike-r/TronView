@@ -326,7 +326,7 @@ while True:
         try:
             smoke_gal = float(tvValue3)
             smoke_change = abs(smoke_gal - last_smoke)
-            if smoke_change >= 0.06:  # Update if smoke changes by 0.06 gallons
+            if smoke_change >= 0.1:  # Update if smoke changes by more than 0.1 gallons
                 gallonsF = "{:.1f}".format(smoke_gal)
                 gallonsF = gallonsF + "  Smoke"
                 if smoke_gal < 0.25: 
