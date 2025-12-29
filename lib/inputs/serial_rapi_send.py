@@ -108,11 +108,12 @@ class serial_rapi_send(Module):
             print ("IP:", tv_ipaddr, " GW:", gateway, " Host:", host)
         except:
             print("Error: Unable to get IP address")
-        # Send TronView Pi's IP Address to remote RaPi and display:
-        tv_ipaddr_str = "!51" + tv_ipaddr + "\r\n"
-        self.tv_ipaddr_bytes = tv_ipaddr_str.encode()
-        print("Sending remote RaPi message: ", tv_ipaddr_str)
-        if self.serialCommsOK and not self.comms_ok: self.sendIPaddrToRaPiRmt(dataship)
+        else:
+            # Send TronView Pi's IP Address to remote RaPi and display:
+            tv_ipaddr_str = "!51" + tv_ipaddr + "\r\n"
+            self.tv_ipaddr_bytes = tv_ipaddr_str.encode()
+            print("Sending remote RaPi message: ", tv_ipaddr_str)
+            if self.serialCommsOK and not self.comms_ok: self.sendIPaddrToRaPiRmt(dataship)
 
     def initRaPiRmt(self, dataship: Dataship):
         # Initialize the remote RaPi display settings

@@ -3,8 +3,8 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.16 testing
-print("serial-papirus_display.py Version 0.16.Testing")
+#  Version 0.17 testing
+print("serial-papirus_display.py Version 0.17.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -82,12 +82,11 @@ GPIO.setup(SW3, GPIO.IN)
 GPIO.setup(SW4, GPIO.IN)
 GPIO.setup(SW5, GPIO.IN)
 
-
 def buttonEventHandlerSw1(SW1):
     print("SW1 pressed - Displaying IP addresses")
     displayAddreses()
     time.sleep(5) # Display for 5 seconds
-    displayRegFuelSmoke()    
+    displayRegFuelSmoke()
 GPIO.add_event_detect(SW1, GPIO.FALLING, buttonEventHandlerSw1, 100)
 
 def buttonEventHandlerSw2(SW2):
@@ -128,6 +127,27 @@ def displayRegFuelSmoke():
     text.WriteAll()
     time.sleep(1.0)
 
+def getIpAddress():
+    global ePaper_ipaddr
+    global gotIpAddress
+    try:
+        text.Clear()
+        time.sleep(1.0)
+        gw = os.popen("ip -4 route show default").read().split()
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((gw[2], 0))
+        ePaper_ipaddr = s.getsockname()[0]
+        gateway = gw[2]
+        host = socket.gethostname()
+        print ("IP:", ePaper_ipaddr, " GW:", gateway, " Host:", host)
+        gotIpAddress = True
+        return()
+    except:
+        print("Error: Unable to get IP address")
+        gotIpAddress = False
+        return(gotIpAddress)
+
+
 #  2" PaPiRus Display size is:  200 X 96 pixels
 
 try:
@@ -137,20 +157,11 @@ except:
     print("Error: Unable to initialize PapirusTextPos.  Display not attached?\r\n   Program will exit")
     exit()
 
-try:
-    text.Clear()
-    time.sleep(1.0)
-    gw = os.popen("ip -4 route show default").read().split()
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect((gw[2], 0))
-    ePaper_ipaddr = s.getsockname()[0]
-    gateway = gw[2]
-    host = socket.gethostname()
-    print ("IP:", ePaper_ipaddr, " GW:", gateway, " Host:", host)
-except:
-    print("Error: Unable to get IP address")
-    
-displayAddreses()  # Display IP addresses on PaPiRus
+getIpAddress()      # Get the IP address of the PaPiRus Pi
+if gotIpAddress:
+    displayAddreses()   # Display PaPiRus Pi IP addresses on PaPiRus
+else:
+    pass                # Display something, not sure what yet...
 
 print("Waiting 10 seconds for PaPiRus display and USB OTG to be ready")
 time.sleep(10)
