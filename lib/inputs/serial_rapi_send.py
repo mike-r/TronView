@@ -150,7 +150,7 @@ class serial_rapi_send(Module):
 
         self.tv_label3 = hud_utils.readConfig(self.name, "RaPiRmt_Label_3", "None")
         self.tv_data3_name = hud_utils.readConfig(self.name, "TronView_RaPiRmt_3", "None")
-        self.tv_data3_exec = "self.tv_data3 = self." + self.tv_data3_name
+        self.tv_data3_exec = "self.tv_data_three = self." + self.tv_data3_name
         print("tv_data3_exec: ", self.tv_data3_exec)
         if self.tv_data3_name == "None":
             print("No data source defined for tv_data3.  Set TronView_RaPiRmt_3 in config.cfg to dataship variable you want to display.")
