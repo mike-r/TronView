@@ -68,6 +68,7 @@ tvName3 = "TronView3"
 tvValue1 = 0.0
 tvValue2 = 0.0
 tvValue3 = 0.0
+sw2_pressed = False
 
 GPIO.setmode(GPIO.BCM)
 # Setup GPIO pins for PaPiRus buttons
