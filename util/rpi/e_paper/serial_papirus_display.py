@@ -90,7 +90,9 @@ def buttonEventHandlerSw1(SW1):
 GPIO.add_event_detect(SW1, GPIO.FALLING, buttonEventHandlerSw1, 100)
 
 def buttonEventHandlerSw2(SW2):
-    print("Button SW2 pressed - Do Nothing")
+    global sw2_pressed
+    print("Button SW2 pressed - Simulate Engine Shutdown")
+    sw2_pressed = True
 GPIO.add_event_detect(SW2, GPIO.FALLING, buttonEventHandlerSw2, 100)
 
 def buttonEventHandlerSw3(SW3):
@@ -104,8 +106,6 @@ GPIO.add_event_detect(SW4, GPIO.FALLING, buttonEventHandlerSw4, 100)
 def buttonEventHandlerSw5(SW5):
     print("Button SW5 pressed - Do Nothing")
 GPIO.add_event_detect(SW5, GPIO.FALLING, buttonEventHandlerSw5, 100)
-
-
 
 def displayAddreses():
     text.Clear()
@@ -366,7 +366,7 @@ while True:
             print("Error updating Hobbs:", e)
         #print("loop_count:", loop_count)
 
-    #if fuel < 15.5: engine_status = "s"  # Debug to test engine status change
+    if sw2_pressed: engine_status = "s"  # Debug to test engine status change
     if engine_status == "s" and engine_status_prev == "r":      # Engine stopped and was running
         #text.UpdateText("Line-1", hobbsF)
         ##hobbsF = "8234.5" + " TT"
@@ -397,6 +397,6 @@ while True:
         text.WriteAll()
         time.sleep(1.0)
     loop_count += 1
-    #print()
+
     
 

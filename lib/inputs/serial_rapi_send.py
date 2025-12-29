@@ -22,9 +22,7 @@
 #
 
 import serial
-from time import sleep
 import time
-import sys
 import os
 import socket
 from ._input import Input
@@ -164,6 +162,75 @@ class serial_rapi_send(Module):
             self.tv_data_three_old = self.tv_data_three
             print("self.tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
 
+    def sendIPaddrToRaPiRmt(self, dataship: Dataship):
+        try:
+            self.ser.write(self.tv_ipaddr_bytes)         # Send data to remote Pi
+            #sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
+        except Exception as e:
+            if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
+        display_bytes = self.ser.read_until(b'\r\n', None)
+        if display_bytes == b'':
+            if dataship.debug_mode>0: print("No data received from remote Pi...")
+            self.comms_ok = False  # Assume comms are not OK if no data received
+            return
+        else:
+            display_str = display_bytes.decode().strip()
+            print("Received from remote Pi: ", display_str)
+            self.comms_ok = True
+        return
+             
+    # close this data input 
+    def closeInput(self,dataship: Dataship):
+        if self.isPlaybackMode:
+            self.ser.close()
+        else:
+            self.ser.close()
+            
+    def updateEngineStatus(self, dataship: Dataship):
+        if not hasattr(self, 'engineData'):
+            self.engineData = dataship.engineData[0]
+#        if not hasattr(self, 'old_engine_status_str'):
+#            self.old_engine_status_str = ''
+        if not hasattr(self, 'old_OilPress'):
+            self.old_OilPress = 0
+
+        self.old_engine_status = self.engine_status  # Set old engine status to current status
+        if self.engineData.OilPress != None:
+            if self.engineData.OilPress > 15:     # If Oil Pressure is greater than 15 psi, engine is running
+                self.engine_status = "r"  # running
+                if dataship.debug_mode > 0: print("Engine is running, Oil Pressure: ", self.engineData.OilPress)
+            else:
+                self.engine_status = "s"  # stopped
+            self.new_OilPress = self.engineData.OilPress
+            if self.new_OilPress != self.old_OilPress:
+                self.old_OilPress = self.new_OilPress
+                self.update = True
+                
+    def connectToRaPiRmt(self):
+        # Try to connect to the remote RaPi display if not already connected
+        if not self.serialCommsOK:
+            try:
+                self.ser = serial.Serial(
+                port=self.rapi_rmt_data_port,
+                baudrate=self.rapi_rmt_data_baudrate,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE,
+                bytesize=serial.EIGHTBITS,
+                timeout=0.1,       # Set a timeout for reading
+                write_timeout=0.1  # Set a timeout for writing
+            )
+                self.serialCommsOK = True
+                print("Connected to remote RaPi display.")
+                print("Serial Port opened: ", self.rapi_rmt_data_port, " at baudrate: ", self.rapi_rmt_data_baudrate)
+
+            except serial.SerialException as e:
+                print("Error opening serial port: ", e)
+                print("Is the USB cable to the remote RaPi plugged in?")
+                self.serialCommsOK = False
+                self.comms_ok = False
+                time.sleep(2)  # Wait for 2 seconds before retrying
+        return
+
     #############################################
     ## Function: readMessage
     def readMessage(self, dataship: Dataship):        
@@ -238,72 +305,5 @@ class serial_rapi_send(Module):
             self.ser.seek(0)
         return dataship
 
-    def sendIPaddrToRaPiRmt(self, dataship: Dataship):
-        try:
-            self.ser.write(self.tv_ipaddr_bytes)         # Send data to remote Pi
-            #sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
-        except Exception as e:
-            if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
-        display_bytes = self.ser.read_until(b'\r\n', None)
-        if display_bytes == b'':
-            if dataship.debug_mode>0: print("No data received from remote Pi...")
-            self.comms_ok = False  # Assume comms are not OK if no data received
-            return
-        else:
-            display_str = display_bytes.decode().strip()
-            print("Received from remote Pi: ", display_str)
-            self.comms_ok = True
-        return
-             
-    # close this data input 
-    def closeInput(self,dataship: Dataship):
-        if self.isPlaybackMode:
-            self.ser.close()
-        else:
-            self.ser.close()
-            
-    def updateEngineStatus(self, dataship: Dataship):
-        if not hasattr(self, 'engineData'):
-            self.engineData = dataship.engineData[0]
-        if not hasattr(self, 'old_engine_status_str'):
-            self.old_engine_status_str = ''
-        if not hasattr(self, 'old_OilPress'):
-            self.old_OilPress = 0
 
-        self.old_engine_status = self.engine_status  # Set old engine status to current status
-        if self.engineData.OilPress != None:
-            if self.engineData.OilPress > 15:     # If Oil Pressure is greater than 15 psi, engine is running
-                self.engine_status = "r"  # running
-                if dataship.debug_mode > 0: print("Engine is running, Oil Pressure: ", self.engineData.OilPress)
-            else:
-                self.engine_status = "s"  # stopped
-            self.new_OilPress = self.engineData.OilPress
-            if self.new_OilPress != self.old_OilPress:
-                self.old_OilPress = self.new_OilPress
-                self.update = True
-                
-    def connectToRaPiRmt(self):
-        # Try to connect to the remote RaPi display if not already connected
-        if not self.serialCommsOK:
-            try:
-                self.ser = serial.Serial(
-                port=self.rapi_rmt_data_port,
-                baudrate=self.rapi_rmt_data_baudrate,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                bytesize=serial.EIGHTBITS,
-                timeout=0.1,       # Set a timeout for reading
-                write_timeout=0.1  # Set a timeout for writing
-            )
-                self.serialCommsOK = True
-                print("Connected to remote RaPi display.")
-                print("Serial Port opened: ", self.rapi_rmt_data_port, " at baudrate: ", self.rapi_rmt_data_baudrate)
-
-            except serial.SerialException as e:
-                print("Error opening serial port: ", e)
-                print("Is the USB cable to the remote RaPi plugged in?")
-                self.serialCommsOK = False
-                self.comms_ok = False
-                time.sleep(2)  # Wait for 2 seconds before retrying
-        return
                 
