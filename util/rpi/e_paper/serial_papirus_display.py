@@ -3,7 +3,7 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-print("serial-papirus_display.py Version 0.18.Testing")
+print("serial-papirus_display.py Version 0.19.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -50,7 +50,9 @@ from papirus import PapirusTextPos
 import RPi.GPIO as GPIO
 
 tronview_comms_ok = False
+gotIpAddress = False
 tronview_ipaddr = "Wait for OTG"  # Default value if TronView not connected
+ePaper_ipaddr = "No WiFi yet"
 registration = "Speedy"  # Default registration number
 last_registration = registration  # Last registration number
 last_hobbs = 0.0  # Last Hobbs time
@@ -110,6 +112,7 @@ GPIO.add_event_detect(SW5, GPIO.FALLING, buttonEventHandlerSw5, 100)
 def displayAddreses():
     text.Clear()
     time.sleep(1.0)
+    print(gotIpAddress)
     text.AddText("PaPiRus Display:", 35,  5, 15, Id="Line-1-Addr")
     text.AddText(ePaper_ipaddr,       0, 20, 25, Id="Line-2-Addr")
     text.AddText("TronView:",        60, 50, 15, Id="Line-3-Addr")
@@ -128,7 +131,8 @@ def displayRegFuelSmoke():
     time.sleep(1.0)
 
 def getIpAddress():
-    global ePaper_ipaddr
+    #global ePaper_ipaddr
+    print("ePaper_ipaddr in getIpAddress: ", ePaper_ipaddr)
     global gotIpAddress
     try:
         text.Clear()
@@ -145,7 +149,7 @@ def getIpAddress():
     except:
         print("Error: Unable to get IP address")
         gotIpAddress = False
-        return(gotIpAddress)
+        return()
 
 
 #  2" PaPiRus Display size is:  200 X 96 pixels
@@ -161,7 +165,8 @@ getIpAddress()      # Get the IP address of the PaPiRus Pi
 if gotIpAddress:
     displayAddreses()   # Display PaPiRus Pi IP addresses on PaPiRus
 else:
-    pass                # Display something, not sure what yet...
+    ePaper_ipaddr = "No WiFi!!"
+    displayAddreses()   # Display "No WiFi"
 
 print("Waiting 10 seconds for PaPiRus display and USB OTG to be ready")
 time.sleep(10)
@@ -215,6 +220,9 @@ if tronview_serial.is_open:
             tronview_comms_ok = True
             break
         time.sleep(0.5)
+else:                       # no link to TronView RaPi so wait until there is...
+    pass                    # ToDo Retry code
+
 
 text.UpdateText("Line-4-Addr", tronview_ipaddr)
 print("tronview_ipaddr:", tronview_ipaddr)
@@ -359,7 +367,7 @@ while True:
             hobbsF = "{:.1f}".format(hobbs)
             hobbs_change = abs(hobbs - last_hobbs)
             if hobbs_change > 0:
-                print("New hobbsF:", hobbsF)
+                # print("New hobbsF:", hobbsF)
                 last_hobbs = hobbs
         except Exception as e:
             print("Error updating Hobbs:", e)
