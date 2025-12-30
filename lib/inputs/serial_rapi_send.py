@@ -110,7 +110,7 @@ class serial_rapi_send(Module):
             # Send TronView Pi's IP Address to remote RaPi and display:
             tv_ipaddr_str = "!51" + tv_ipaddr + "\r\n"
             self.tv_ipaddr_bytes = tv_ipaddr_str.encode()
-            print("Sending remote RaPi message: ", tv_ipaddr_str)
+            print("Sending remote RaPi message (bytes): ", self.tv_ipaddr_bytes)
             if self.serialCommsOK and not self.comms_ok: self.sendIPaddrToRaPiRmt(dataship)
 
     def initRaPiRmt(self, dataship: Dataship):
@@ -167,7 +167,8 @@ class serial_rapi_send(Module):
             self.ser.write(self.tv_ipaddr_bytes)         # Send data to remote Pi
             #sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
         except Exception as e:
-            if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
+            #if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
+            print("Unexpected error in write to remote Pi: ", e)
         display_bytes = self.ser.read_until(b'\r\n', None)
         if display_bytes == b'':
             if dataship.debug_mode>0: print("No data received from remote Pi...")
@@ -217,7 +218,7 @@ class serial_rapi_send(Module):
                 stopbits=serial.STOPBITS_ONE,
                 bytesize=serial.EIGHTBITS,
                 timeout=0.1,       # Set a timeout for reading
-                #write_timeout=0.1  # Set a timeout for writing
+                write_timeout=0.1  # Set a timeout for writing
             )
                 self.serialCommsOK = True
                 print("Connected to remote RaPi display.")
