@@ -218,7 +218,7 @@ class serial_rapi_send(Module):
                 stopbits=serial.STOPBITS_ONE,
                 bytesize=serial.EIGHTBITS,
                 timeout=0.1,       # Set a timeout for reading
-                write_timeout=0.1  # Set a timeout for writing
+                #write_timeout=0.1  # Set a timeout for writing
             )
                 self.serialCommsOK = True
                 print("Connected to remote RaPi display.")
