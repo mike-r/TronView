@@ -232,7 +232,7 @@ class serial_rapi_send(Module):
         return
 
     #############################################
-    ## Function: readMessage
+    ## Method: readMessage
     def readMessage(self, dataship: Dataship):        
         if dataship.errorFoundNeedToExit:
             return dataship
@@ -287,16 +287,18 @@ class serial_rapi_send(Module):
             print("Analog Data[1] = ", self.analogData.Data[1])
             print()
         
-        # Create the string to send to the PaPiRus display
+        # Create the string to send to the remote RaPi display
         display_str = '!4#,' + self.registration + "," + display1_str + "," + display2_str + "," + display3_str + "," + self.engine_status + '\r\n'
         display_bytes = display_str.encode()
-        if dataship.debug_mode>0: print("PaPiRus Bytes = ", display_bytes)
+        if dataship.debug_mode>0: print("Remote RaPi Bytes = ", display_bytes)
         try:
             if self.update:
-                self.ser.write(display_bytes)         # Send data to PaPiRus
+                self.ser.write(display_bytes)         # Send data to Remote RaPi
                 self.update = False
+                print("write to RaPi OK")
             if not self.comms_ok:
                 #sleep(.1)
+                print("Comms Not OK")
                 self.sendIPaddrToRaPiRmt(dataship)
         except Exception as e:
             if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
