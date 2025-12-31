@@ -131,7 +131,7 @@ def displayRegFuelSmoke():
     time.sleep(1.0)
 
 def getIpAddress():
-    #global ePaper_ipaddr
+    global ePaper_ipaddr
     print("ePaper_ipaddr in getIpAddress: ", ePaper_ipaddr)
     global gotIpAddress
     try:
