@@ -299,7 +299,12 @@ class serial_rapi_send(Module):
         if dataship.debug_mode>0: print("Remote RaPi Bytes = ", display_bytes)
         try:
             if self.update:
-                self.ser.write(display_bytes)         # Send data to Remote RaPi
+                waiting_bytes = self.ser.in_waiting    # int: bytes in input buffer
+                out_bytes = self.ser.out_waiting       # int: bytes in output buffer (if supported)
+                print(f"Input buffer: {waiting_bytes} bytes")
+                if hasattr(self.ser, 'out_waiting'):
+                    print(f"Output buffer: {out_bytes} bytes")
+                    self.ser.write(display_bytes)         # Send data to Remote RaPi
                 self.update = False
                 print("write to RaPi OK")
             if not self.comms_ok:
