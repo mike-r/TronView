@@ -164,6 +164,11 @@ class serial_rapi_send(Module):
 
     def sendIPaddrToRaPiRmt(self, dataship: Dataship):
         try:
+            waiting_bytes = self.ser.in_waiting    # int: bytes in input buffer
+            out_bytes = self.ser.out_waiting       # int: bytes in output buffer (if supported)
+            print(f"Input buffer: {waiting_bytes} bytes")
+            if hasattr(self.ser, 'out_waiting'):
+                print(f"Output buffer: {out_bytes} bytes")
             self.ser.write(self.tv_ipaddr_bytes)         # Send data to remote Pi
             #sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
         except Exception as e:

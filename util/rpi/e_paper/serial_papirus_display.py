@@ -3,7 +3,7 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-print("serial-papirus_display.py Version 0.19.Testing")
+print("serial-papirus_display.py Version 0.20.Testing")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -112,7 +112,7 @@ GPIO.add_event_detect(SW5, GPIO.FALLING, buttonEventHandlerSw5, 100)
 def displayAddreses():
     text.Clear()
     time.sleep(1.0)
-    print(gotIpAddress)
+    print("in displayAddress, gotIpAddress: ",gotIpAddress)
     text.AddText("PaPiRus Display:", 35,  5, 15, Id="Line-1-Addr")
     text.AddText(ePaper_ipaddr,       0, 20, 25, Id="Line-2-Addr")
     text.AddText("TronView:",        60, 50, 15, Id="Line-3-Addr")
@@ -132,7 +132,6 @@ def displayRegFuelSmoke():
 
 def getIpAddress():
     global ePaper_ipaddr
-    print("ePaper_ipaddr in getIpAddress: ", ePaper_ipaddr)
     global gotIpAddress
     try:
         text.Clear()
