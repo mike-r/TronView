@@ -299,13 +299,13 @@ class serial_rapi_send(Module):
         if dataship.debug_mode>0: print("Remote RaPi Bytes = ", display_bytes)
         try:
             if self.update:
+                self.update = False
                 waiting_bytes = self.ser.in_waiting    # int: bytes in input buffer
                 out_bytes = self.ser.out_waiting       # int: bytes in output buffer (if supported)
                 print(f"Input buffer: {waiting_bytes} bytes")
                 if hasattr(self.ser, 'out_waiting'):
                     print(f"Output buffer: {out_bytes} bytes")
-                    self.ser.write(display_bytes)         # Send data to Remote RaPi
-                self.update = False
+                self.ser.write(display_bytes)         # Send data to Remote RaPi
                 print("write to RaPi OK")
             if not self.comms_ok:
                 #sleep(.1)
@@ -313,6 +313,7 @@ class serial_rapi_send(Module):
                 self.sendIPaddrToRaPiRmt(dataship)
         except Exception as e:
             if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
+            print("Unexpected error in write to remote Pi: ", e)
 
         if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
             self.ser.seek(0)
