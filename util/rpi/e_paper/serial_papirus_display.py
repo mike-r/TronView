@@ -49,7 +49,6 @@ import time
 from papirus import PapirusTextPos
 import RPi.GPIO as GPIO
 
-tronview_comms_ok = False
 gotIpAddress = False
 tronview_ipaddr = "Wait for OTG"  # Default value if TronView not connected
 ePaper_ipaddr = "No WiFi yet"
@@ -214,11 +213,10 @@ if tronview_serial.is_open:
             print("Sending back to TronView:", tronview_str)
             papirus_bytes = ePaper_ipaddr.encode()
             papirus_bytes += b'\r\n'
-            tronview_serial.flushOutput() # Clear any existing data in the serial buffer
+            tronview_serial.reset_output_buffer() # Clear any existing data in the serial buffer
             tronview_serial.write(papirus_bytes)
-            tronview_comms_ok = True
             break
-        time.sleep(0.5)
+        time.sleep(0.75)
 else:                       # no link to TronView RaPi so wait until there is...
     pass                    # ToDo Retry code
 
@@ -279,7 +277,8 @@ while True:
         tronview_str = tronview_bytes.decode()
         if tronview_str[0] != '!': continue  # Skip to next iteration if still invalid format
 
-    if tronview_str[1] == "5" and not tronview_comms_ok:
+    if tronview_str[1] == "5":
+        print("Recieved TV IP Address")
         try:
             tronview_ipaddr = tronview_str[3:18]
         except Exception as e:
@@ -290,12 +289,11 @@ while True:
         print("Sending PaPiRus IP Address back to TronView:", tronview_str)
         papirus_bytes = ePaper_ipaddr.encode()
         papirus_bytes += b'\r\n'
-        tronview_serial.flushOutput() # Clear any existing data in the serial buffer
+        tronview_serial.reset_output_buffer() # Clear any existing data in the serial buffer
         tronview_serial.write(papirus_bytes)
         displayAddreses()
         time.sleep(5)
         displayRegFuelSmoke()
-        tronview_comms_ok = True
         continue
 
     if tronview_str[1] == "4": 
