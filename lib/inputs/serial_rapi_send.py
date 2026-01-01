@@ -178,14 +178,14 @@ class serial_rapi_send(Module):
         else:
             self.comms_ok = True
             display_bytes = self.ser.read_until(b'\r\n', None)
-            if display_bytes == b'':
-                if dataship.debug_mode>0: print("No data received from remote Pi...")
-                self.comms_ok = False  # Assume comms are not OK if no data received
-                return
-            else:
-                display_str = display_bytes.decode().strip()
-                print("Received from remote Pi: ", display_str)
-                self.comms_ok = True
+            #if display_bytes == b'':
+                #if dataship.debug_mode>0: print("No data received from remote Pi...")
+                #self.comms_ok = False  # Assume comms are not OK if no data received
+                #return
+            #else:
+                #display_str = display_bytes.decode().strip()
+                #print("Received from remote Pi: ", display_str)
+                #self.comms_ok = True
         return
              
     # close this data input 
