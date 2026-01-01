@@ -214,6 +214,7 @@ if tronview_serial.is_open:
             papirus_bytes = ePaper_ipaddr.encode()
             papirus_bytes += b'\r\n'
             tronview_serial.reset_output_buffer() # Clear any existing data in the serial buffer
+            print("papirus_bytes to TV: ", papirus_bytes)
             tronview_serial.write(papirus_bytes)
             break
         time.sleep(0.75)
