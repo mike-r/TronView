@@ -170,6 +170,7 @@ class serial_rapi_send(Module):
             if hasattr(self.ser, 'out_waiting'):
                 print(f"Output buffer: {out_bytes} bytes")
             self.ser.write(self.tv_ipaddr_bytes)         # Send data to remote Pi
+            print("sent IP Address to remote pi")
             #sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
         except Exception as e:
             #if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
