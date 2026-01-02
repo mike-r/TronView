@@ -47,7 +47,6 @@ class serial_rapi_send(Module):
         self.isPlaybackMode = False
         self.tv_ipaddr_bytes = None
         self.retry_time = time.time()
-        self.comms_ok = False
         self.serialCommsOK = False
         self.engine_status = 's'  # Default engine status is stopped
         self.tv_data_one = 0
@@ -111,7 +110,7 @@ class serial_rapi_send(Module):
             tv_ipaddr_str = "!51" + tv_ipaddr + "\r\n"
             self.tv_ipaddr_bytes = tv_ipaddr_str.encode()
             print("Sending remote RaPi message (bytes): ", self.tv_ipaddr_bytes)
-            if self.serialCommsOK and not self.comms_ok: self.sendIPaddrToRaPiRmt(dataship)
+            self.sendIPaddrToRaPiRmt(dataship)
 
     def initRaPiRmt(self, dataship: Dataship):
         # Initialize the remote RaPi display settings
@@ -167,25 +166,29 @@ class serial_rapi_send(Module):
             waiting_bytes = self.ser.in_waiting    # int: bytes in input buffer
             out_bytes = self.ser.out_waiting       # int: bytes in output buffer (if supported)
             print(f"Input buffer: {waiting_bytes} bytes")
+            if waiting_bytes > 0:
+                rmt_rapi_bytes = self.ser.read_until(b'\r\n', None)
+                print("Received: ", len(rmt_rapi_bytes), " bytes from remote RaPi")
+                print("remote RaPi bytes: ", rmt_rapi_bytes)
+                rmt_rapi_str = rmt_rapi_bytes.decode()
+                rmt_rapi_str.strip()
+                rmt_rapi_str.split(",")
+                print("String from remote RaPi: ", rmt_rapi_str)
+                print()
             if hasattr(self.ser, 'out_waiting'):
-                print(f"Output buffer: {out_bytes} bytes")
+                if out_bytes > 0:
+                    print(f"Output buffer: {out_bytes} bytes")
+                    self.ser.reset_output_buffer()
+                    self.ser.flushOutput()
+                    time.sleep(.001)
+                    out_bytes = self.ser.out_waiting
+                    print(f"Output buffer after reset: {out_bytes} bytes")
             self.ser.write(self.tv_ipaddr_bytes)         # Send data to remote Pi
             print("sent IP Address to remote pi")
             #sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
         except Exception as e:
             #if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
             print("Unexpected error in write to remote Pi: ", e)
-        else:
-            self.comms_ok = True
-            #display_bytes = self.ser.read_until(b'\r\n', None)
-            #if display_bytes == b'':
-                #if dataship.debug_mode>0: print("No data received from remote Pi...")
-                #self.comms_ok = False  # Assume comms are not OK if no data received
-                #return
-            #else:
-                #display_str = display_bytes.decode().strip()
-                #print("Received from remote Pi: ", display_str)
-                #self.comms_ok = True
         return
              
     # close this data input 
@@ -236,7 +239,6 @@ class serial_rapi_send(Module):
                 print("Error opening serial port: ", e)
                 print("Is the USB cable to the remote RaPi plugged in?")
                 self.serialCommsOK = False
-                self.comms_ok = False
                 time.sleep(2)  # Wait for 2 seconds before retrying
         return
 
@@ -306,14 +308,26 @@ class serial_rapi_send(Module):
                 waiting_bytes = self.ser.in_waiting    # int: bytes in input buffer
                 out_bytes = self.ser.out_waiting       # int: bytes in output buffer (if supported)
                 print(f"Input buffer: {waiting_bytes} bytes")
+                if waiting_bytes > 0:
+                    self.sendIPaddrToRaPiRmt(dataship)
+                    rmt_rapi_bytes = self.ser.read_until(b'\r\n', None)
+                    print("Received: ", len(rmt_rapi_bytes), " bytes from remote RaPi")
+                    print("remote RaPi bytes: ", rmt_rapi_bytes)
+                    rmt_rapi_str = rmt_rapi_bytes.decode()
+                    rmt_rapi_str.strip()
+                    rmt_rapi_str.split(",")
+                    print("String from remote RaPi: ", rmt_rapi_str)
+                    print()
                 if hasattr(self.ser, 'out_waiting'):
-                    print(f"Output buffer: {out_bytes} bytes")
+                    if out_bytes > 0:
+                        print(f"Output buffer: {out_bytes} bytes")
+                        self.ser.reset_output_buffer()
+                        self.ser.flushOutput()
+                        time.sleep(.001)
+                        out_bytes = self.ser.out_waiting
+                        print(f"Output buffer after reset: {out_bytes} bytes")
                 self.ser.write(display_bytes)         # Send data to Remote RaPi
                 print("write to RaPi OK")
-            if not self.comms_ok:
-                #sleep(.1)
-                print("Comms Not OK")
-                self.sendIPaddrToRaPiRmt(dataship)
         except Exception as e:
             if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
             print("Unexpected error in write to remote Pi: ", e)
