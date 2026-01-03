@@ -83,7 +83,7 @@ GPIO.setup(SW3, GPIO.IN)
 GPIO.setup(SW4, GPIO.IN)
 GPIO.setup(SW5, GPIO.IN)
 
-def buttonEventHandlerSw1(x):
+def buttonEventHandlerSw1(channel):
     global gotIpAddress
     print("SW1 pressed - Getting and Displaying IP addresses")
     if not gotIpAddress: getIpAddress()
@@ -92,21 +92,21 @@ def buttonEventHandlerSw1(x):
     displayRegFuelSmoke()
 GPIO.add_event_detect(SW1, GPIO.FALLING, buttonEventHandlerSw1, 100)
 
-def buttonEventHandlerSw2(SW2):
+def buttonEventHandlerSw2(channel):
     global sw2_pressed
     print("Button SW2 pressed - Simulate Engine Shutdown")
     sw2_pressed = True
 GPIO.add_event_detect(SW2, GPIO.FALLING, buttonEventHandlerSw2, 100)
 
-def buttonEventHandlerSw3(SW3):
-    print("Button SW3 pressed - Do Nothing")
+def buttonEventHandlerSw3(channel):
+    print("Button SW3 pressed - Do Nothing, channel= ", channel)
 GPIO.add_event_detect(SW3, GPIO.FALLING, buttonEventHandlerSw3, 100)
 
-def buttonEventHandlerSw4(SW4):
+def buttonEventHandlerSw4(channel):
     print("Button SW4 pressed - Do Nothing")
 GPIO.add_event_detect(SW4, GPIO.FALLING, buttonEventHandlerSw4, 100)
 
-def buttonEventHandlerSw5(SW5):
+def buttonEventHandlerSw5(channel):
     print("Button SW5 pressed - Do Nothing")
 GPIO.add_event_detect(SW5, GPIO.FALLING, buttonEventHandlerSw5, 100)
 
@@ -393,6 +393,7 @@ while True:
         logfile.close()
         text.WriteAll()
         print("PaPiRus display updated with Hobbs time")
+        GPIO.cleanup()
         time.sleep(5.0)
         sys.exit(0)
     
