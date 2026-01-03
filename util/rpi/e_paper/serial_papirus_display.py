@@ -192,13 +192,20 @@ except Exception as e:
     exit()
 
 if tronview_serial.is_open:
+    rmt_rapi_bytes = ePaper_ipaddr.encode()
+    rmt_rapi_bytes += b'\r\n'
+    tronview_serial.reset_output_buffer() # Clear any existing data in the serial buffer
+    print("Sending rmt_rapi_bytes to TV: ", rmt_rapi_bytes)
+    tronview_serial.write(rmt_rapi_bytes)
     wait_time = time.time()
     while True:
+        tronview_serial.reset_input_buffer() # Clear any existing data in the serial buffer
+        time.sleep(.001)
         if time.time() - wait_time > 10: break
         tronview_bytes = tronview_serial.read_until(b'\r\n', None)
         if len(tronview_bytes) < 10:
             print("Received: ", len(tronview_bytes), " bytes from TronView, waiting and retry...")
-            time.sleep(0.5)
+            tronview_bytes = tronview_serial.read_until(b'\r\n', None)
             continue
 
         print("Received: ", len(tronview_bytes), " bytes from TronView")
@@ -210,12 +217,7 @@ if tronview_serial.is_open:
         if tronview_str[1] == "5":
             tronview_ipaddr = tronview_str[3:18]
             tronview_str = "Received TronView IP: " + tronview_ipaddr
-            print("Sending back to TronView:", tronview_str)
-            papirus_bytes = ePaper_ipaddr.encode()
-            papirus_bytes += b'\r\n'
-            tronview_serial.reset_output_buffer() # Clear any existing data in the serial buffer
-            print("papirus_bytes to TV: ", papirus_bytes)
-            tronview_serial.write(papirus_bytes)
+            print(tronview_str)
             break
         time.sleep(0.75)
 else:                       # no link to TronView RaPi so wait until there is...
