@@ -159,33 +159,34 @@ class serial_rapi_send(Module):
             if self.tv_data_three == None:
                 self.tv_data_three = 0
             self.tv_data_three_old = self.tv_data_three
-            print("self.tv_data_three: ", self.tv_data_three, " ", self.tv_label3)
+            print("self.tv_data_three: ", self.tv_data_three, " ", self.tv_label3)  
+    
+    def recvIPaddrFromRaPiRmt(self, datashjip: Dataship):
+        print(f"Input buffer: {self.ser.in_waiting} bytes")
+        if self.ser.in_waiting > 0:
+            rmt_rapi_bytes = self.ser.read_until(b'\r\n', None)
+            print("Received: ", len(rmt_rapi_bytes), " bytes from remote RaPi")
+            print("remote RaPi bytes: ", rmt_rapi_bytes)
+            rmt_rapi_str = rmt_rapi_bytes.decode()
+            #rmt_rapi_str.strip()
+            #rmt_rapi_str.split(",")
+            print("String from remote RaPi: ", rmt_rapi_str)
+            print()
 
     def sendIPaddrToRaPiRmt(self, dataship: Dataship):
+        print("Sending TV IP Address to remote RaPi")
         try:
-            waiting_bytes = self.ser.in_waiting    # int: bytes in input buffer
             out_bytes = self.ser.out_waiting       # int: bytes in output buffer (if supported)
-            print(f"Input buffer: {waiting_bytes} bytes")
-            if waiting_bytes > 0:
-                rmt_rapi_bytes = self.ser.read_until(b'\r\n', None)
-                print("Received: ", len(rmt_rapi_bytes), " bytes from remote RaPi")
-                print("remote RaPi bytes: ", rmt_rapi_bytes)
-                rmt_rapi_str = rmt_rapi_bytes.decode()
-                rmt_rapi_str.strip()
-                rmt_rapi_str.split(",")
-                print("String from remote RaPi: ", rmt_rapi_str)
-                print()
             if hasattr(self.ser, 'out_waiting'):
                 if out_bytes > 0:
                     print(f"Output buffer: {out_bytes} bytes")
                     self.ser.reset_output_buffer()
-                    self.ser.flushOutput()
+                    #self.ser.flushOutput()
                     time.sleep(.001)
                     out_bytes = self.ser.out_waiting
                     print(f"Output buffer after reset: {out_bytes} bytes")
             self.ser.write(self.tv_ipaddr_bytes)         # Send data to remote Pi
             print("sent IP Address to remote pi")
-            #sleep(0.5)  # Wait for 0.5 seconds before recieving reply message
         except Exception as e:
             #if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
             print("Unexpected error in write to remote Pi: ", e)
@@ -305,24 +306,15 @@ class serial_rapi_send(Module):
         try:
             if self.update:
                 self.update = False
-                waiting_bytes = self.ser.in_waiting    # int: bytes in input buffer
-                out_bytes = self.ser.out_waiting       # int: bytes in output buffer (if supported)
-                print(f"Input buffer: {waiting_bytes} bytes")
-                if waiting_bytes > 0:
+                if self.ser.in_waiting > 0:
+                    self.recvIPaddrFromRaPiRmt(dataship)
                     self.sendIPaddrToRaPiRmt(dataship)
-                    rmt_rapi_bytes = self.ser.read_until(b'\r\n', None)
-                    print("Received: ", len(rmt_rapi_bytes), " bytes from remote RaPi")
-                    print("remote RaPi bytes: ", rmt_rapi_bytes)
-                    rmt_rapi_str = rmt_rapi_bytes.decode()
-                    rmt_rapi_str.strip()
-                    rmt_rapi_str.split(",")
-                    print("String from remote RaPi: ", rmt_rapi_str)
-                    print()
+                out_bytes = self.ser.out_waiting       # int: bytes in output buffer (if supported)
                 if hasattr(self.ser, 'out_waiting'):
                     if out_bytes > 0:
                         print(f"Output buffer: {out_bytes} bytes")
                         self.ser.reset_output_buffer()
-                        self.ser.flushOutput()
+                        #self.ser.flushOutput()
                         time.sleep(.001)
                         out_bytes = self.ser.out_waiting
                         print(f"Output buffer after reset: {out_bytes} bytes")
