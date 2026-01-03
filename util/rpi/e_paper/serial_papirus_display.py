@@ -83,7 +83,7 @@ GPIO.setup(SW3, GPIO.IN)
 GPIO.setup(SW4, GPIO.IN)
 GPIO.setup(SW5, GPIO.IN)
 
-def buttonEventHandlerSw1():
+def buttonEventHandlerSw1(x):
     global gotIpAddress
     print("SW1 pressed - Getting and Displaying IP addresses")
     if not gotIpAddress: getIpAddress()
