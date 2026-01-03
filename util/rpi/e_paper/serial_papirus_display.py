@@ -3,7 +3,7 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-print("serial-papirus_display.py Version 0.20.Testing")
+print("serial-papirus_display.py Version 1.0")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -235,6 +235,7 @@ print("Displayed updated TronView IP Address on PaPiRus")
 
 logfile = open("/home/pi/1TM/serial-papirus.log", "r+")
 data=logfile.readlines()[-1]
+logfile.close()
 dataList = data.split(",")
 print("data:", data)
 print ("dataList:", dataList)
@@ -336,7 +337,7 @@ while True:
         try:
             smoke_gal = float(tvValue3)
             smoke_change = abs(smoke_gal - last_smoke)
-            if smoke_change >= 0.1:  # Update if smoke changes by more than 0.1 gallons
+            if smoke_change >= 0.1:  # Update if smoke changes by at least 0.1 gallons
                 gallonsF = "{:.1f}".format(smoke_gal)
                 gallonsF = gallonsF + "  Smoke"
                 if smoke_gal < 0.25: 
@@ -354,7 +355,7 @@ while True:
         try:
             fuel = float(tvValue1)
             fuel_change = abs(fuel - last_fuel)
-            if fuel_change > 0.09:  # Update if fuel changes by more than 0.09 gallons
+            if fuel_change >= 0.1:  # Update if fuel changes by at least 0.1 gallons
                 fuelF = "{:.1f}".format(fuel)
                 fuelF = fuelF + " Fuel"
                 #textPu.UpdateText("Line-2", fuelF)
@@ -369,8 +370,8 @@ while True:
             hobbs = float(tvValue2)
             hobbsF = "{:.1f}".format(hobbs)
             hobbs_change = abs(hobbs - last_hobbs)
-            if hobbs_change > 0:
-                # print("New hobbsF:", hobbsF)
+            if hobbs_change >= 0.1:
+                print("New hobbsF:", hobbsF)
                 last_hobbs = hobbs
         except Exception as e:
             print("Error updating Hobbs:", e)
@@ -387,6 +388,7 @@ while True:
         text.AddText(f"{last_smoke} Smoke",20, 66, 30, Id="Line-3")
 
         print("Engine stopped, updating Line-1 with Hobbs")
+        logfile = open("/home/pi/1TM/serial-papirus.log", "r+")
         logfile.write(f"{registration},{last_hobbs},{last_fuel},{last_smoke}\n")
         logfile.close()
         text.WriteAll()
