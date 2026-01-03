@@ -85,7 +85,7 @@ GPIO.setup(SW5, GPIO.IN)
 
 def buttonEventHandlerSw1(channel):
     global gotIpAddress
-    print("SW1 pressed - Getting and Displaying IP addresses")
+    print("SW1 (", channel, ") pressed - Getting and Displaying IP addresses")
     if not gotIpAddress: getIpAddress()
     displayAddreses()
     time.sleep(5) # Display for 5 seconds
@@ -94,20 +94,20 @@ GPIO.add_event_detect(SW1, GPIO.FALLING, buttonEventHandlerSw1, 100)
 
 def buttonEventHandlerSw2(channel):
     global sw2_pressed
-    print("Button SW2 pressed - Simulate Engine Shutdown")
+    print("Button SW2 (", channel, ") pressed - Simulate Engine Shutdown")
     sw2_pressed = True
 GPIO.add_event_detect(SW2, GPIO.FALLING, buttonEventHandlerSw2, 100)
 
 def buttonEventHandlerSw3(channel):
-    print("Button SW3 pressed - Do Nothing, channel= ", channel)
+    print("Button SW3 (", channel, ") pressed - Do Nothing")
 GPIO.add_event_detect(SW3, GPIO.FALLING, buttonEventHandlerSw3, 100)
 
 def buttonEventHandlerSw4(channel):
-    print("Button SW4 pressed - Do Nothing")
+    print("Button SW4 (", channel, ") pressed - Do Nothing")
 GPIO.add_event_detect(SW4, GPIO.FALLING, buttonEventHandlerSw4, 100)
 
 def buttonEventHandlerSw5(channel):
-    print("Button SW5 pressed - Do Nothing")
+    print("Button SW5 (", channel, ") pressed - Do Nothing")
 GPIO.add_event_detect(SW5, GPIO.FALLING, buttonEventHandlerSw5, 100)
 
 def displayAddreses():
