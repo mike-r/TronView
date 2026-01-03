@@ -84,7 +84,9 @@ GPIO.setup(SW4, GPIO.IN)
 GPIO.setup(SW5, GPIO.IN)
 
 def buttonEventHandlerSw1(SW1):
-    print("SW1 pressed - Displaying IP addresses")
+    global gotIpAddress
+    print("SW1 pressed - Getting and Displaying IP addresses")
+    if not gotIpAddress: getIpAddress()
     displayAddreses()
     time.sleep(5) # Display for 5 seconds
     displayRegFuelSmoke()
@@ -109,6 +111,7 @@ def buttonEventHandlerSw5(SW5):
 GPIO.add_event_detect(SW5, GPIO.FALLING, buttonEventHandlerSw5, 100)
 
 def displayAddreses():
+    global gotIpAddress
     text.Clear()
     time.sleep(1.0)
     print("in displayAddress, gotIpAddress: ",gotIpAddress)
