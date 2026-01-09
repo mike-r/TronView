@@ -162,15 +162,15 @@ except:
     print("Error: Unable to initialize PapirusTextPos.  Display not attached?\r\n   Program will exit")
     exit()
 
+print("Waiting 10 seconds for WiFi and USB OTG to be ready")
+time.sleep(10)
+
 getIpAddress()      # Get the IP address of the PaPiRus Pi
 if gotIpAddress:
     displayAddreses()   # Display PaPiRus Pi IP addresses on PaPiRus
 else:
     ePaper_ipaddr = "No WiFi!!"
     displayAddreses()   # Display "No WiFi"
-
-print("Waiting 10 seconds for PaPiRus display and USB OTG to be ready")
-time.sleep(10)
 
 # Define serial link to TronView via USB OTG cable
 try:
