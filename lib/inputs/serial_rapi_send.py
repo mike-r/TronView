@@ -91,7 +91,9 @@ class serial_rapi_send(Module):
             self.analogData = shared.Dataship.analogData[0]
 
             # open serial connection to Pi with display.
-            self.connectToRaPiRmt()  # Try to connect to the remote RaPi display if not already connected
+            while not self.serialCommsOK:
+                print("Initial connection to rapi")
+                self.connectToRaPiRmt()  # Try to connect to the remote RaPi display if not already connected
 
 
         # Get the IP address of the TronView Pi
@@ -253,9 +255,10 @@ class serial_rapi_send(Module):
     
         self.updateEngineStatus(dataship)
         
-        if not self.serialCommsOK:
+        while not self.serialCommsOK:
+            print("Lost comms with rapi, retyring")
             self.connectToRaPiRmt()  # Try to connect to the remote Raspberry Pi display if not already connected
-            return dataship  # If serial comms are not OK, return the dataship without sending data
+            #return dataship  # If serial comms are not OK, return the dataship without sending data
 
         if self.tv_data1_name == "None" or self.tv_data_one == None:
             self.tv_data_one = 0.00
