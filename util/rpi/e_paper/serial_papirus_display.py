@@ -3,8 +3,7 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-#  Version 0.16 testing
-print("serial-papirus_display.py Version 0.16.Testing")
+print("serial-papirus_display.py Version 1.0")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.
@@ -50,8 +49,9 @@ import time
 from papirus import PapirusTextPos
 import RPi.GPIO as GPIO
 
-tronview_comms_ok = False
+gotIpAddress = False
 tronview_ipaddr = "Wait for OTG"  # Default value if TronView not connected
+ePaper_ipaddr = "No WiFi yet"
 registration = "Speedy"  # Default registration number
 last_registration = registration  # Last registration number
 last_hobbs = 0.0  # Last Hobbs time
@@ -68,6 +68,7 @@ tvName3 = "TronView3"
 tvValue1 = 0.0
 tvValue2 = 0.0
 tvValue3 = 0.0
+sw2_pressed = False
 
 GPIO.setmode(GPIO.BCM)
 # Setup GPIO pins for PaPiRus buttons
@@ -82,35 +83,38 @@ GPIO.setup(SW3, GPIO.IN)
 GPIO.setup(SW4, GPIO.IN)
 GPIO.setup(SW5, GPIO.IN)
 
-
-def buttonEventHandlerSw1(SW1):
-    print("SW1 pressed - Displaying IP addresses")
+def buttonEventHandlerSw1(channel):
+    global gotIpAddress
+    print("SW1 (", channel, ") pressed - Getting and Displaying IP addresses")
+    if not gotIpAddress: getIpAddress()
     displayAddreses()
     time.sleep(5) # Display for 5 seconds
-    displayRegFuelSmoke()    
+    displayRegFuelSmoke()
 GPIO.add_event_detect(SW1, GPIO.FALLING, buttonEventHandlerSw1, 100)
 
-def buttonEventHandlerSw2(SW2):
-    print("Button SW2 pressed - Do Nothing")
+def buttonEventHandlerSw2(channel):
+    global sw2_pressed
+    print("Button SW2 (", channel, ") pressed - Simulate Engine Shutdown")
+    sw2_pressed = True
 GPIO.add_event_detect(SW2, GPIO.FALLING, buttonEventHandlerSw2, 100)
 
-def buttonEventHandlerSw3(SW3):
-    print("Button SW3 pressed - Do Nothing")
+def buttonEventHandlerSw3(channel):
+    print("Button SW3 (", channel, ") pressed - Do Nothing")
 GPIO.add_event_detect(SW3, GPIO.FALLING, buttonEventHandlerSw3, 100)
 
-def buttonEventHandlerSw4(SW4):
-    print("Button SW4 pressed - Do Nothing")
+def buttonEventHandlerSw4(channel):
+    print("Button SW4 (", channel, ") pressed - Do Nothing")
 GPIO.add_event_detect(SW4, GPIO.FALLING, buttonEventHandlerSw4, 100)
 
-def buttonEventHandlerSw5(SW5):
-    print("Button SW5 pressed - Do Nothing")
+def buttonEventHandlerSw5(channel):
+    print("Button SW5 (", channel, ") pressed - Do Nothing")
 GPIO.add_event_detect(SW5, GPIO.FALLING, buttonEventHandlerSw5, 100)
 
-
-
 def displayAddreses():
+    global gotIpAddress
     text.Clear()
     time.sleep(1.0)
+    print("in displayAddress, gotIpAddress: ",gotIpAddress)
     text.AddText("PaPiRus Display:", 35,  5, 15, Id="Line-1-Addr")
     text.AddText(ePaper_ipaddr,       0, 20, 25, Id="Line-2-Addr")
     text.AddText("TronView:",        60, 50, 15, Id="Line-3-Addr")
@@ -128,6 +132,27 @@ def displayRegFuelSmoke():
     text.WriteAll()
     time.sleep(1.0)
 
+def getIpAddress():
+    global ePaper_ipaddr
+    global gotIpAddress
+    try:
+        text.Clear()
+        time.sleep(1.0)
+        gw = os.popen("ip -4 route show default").read().split()
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((gw[2], 0))
+        ePaper_ipaddr = s.getsockname()[0]
+        gateway = gw[2]
+        host = socket.gethostname()
+        print ("IP:", ePaper_ipaddr, " GW:", gateway, " Host:", host)
+        gotIpAddress = True
+        return()
+    except:
+        print("Error: Unable to get IP address")
+        gotIpAddress = False
+        return()
+
+
 #  2" PaPiRus Display size is:  200 X 96 pixels
 
 try:
@@ -137,23 +162,15 @@ except:
     print("Error: Unable to initialize PapirusTextPos.  Display not attached?\r\n   Program will exit")
     exit()
 
-try:
-    text.Clear()
-    time.sleep(1.0)
-    gw = os.popen("ip -4 route show default").read().split()
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect((gw[2], 0))
-    ePaper_ipaddr = s.getsockname()[0]
-    gateway = gw[2]
-    host = socket.gethostname()
-    print ("IP:", ePaper_ipaddr, " GW:", gateway, " Host:", host)
-except:
-    print("Error: Unable to get IP address")
-    
-displayAddreses()  # Display IP addresses on PaPiRus
-
-print("Waiting 10 seconds for PaPiRus display and USB OTG to be ready")
+print("Waiting 10 seconds for WiFi and USB OTG to be ready")
 time.sleep(10)
+
+getIpAddress()      # Get the IP address of the PaPiRus Pi
+if gotIpAddress:
+    displayAddreses()   # Display PaPiRus Pi IP addresses on PaPiRus
+else:
+    ePaper_ipaddr = "No WiFi!!"
+    displayAddreses()   # Display "No WiFi"
 
 # Define serial link to TronView via USB OTG cable
 try:
@@ -178,13 +195,20 @@ except Exception as e:
     exit()
 
 if tronview_serial.is_open:
+    rmt_rapi_bytes = ePaper_ipaddr.encode()
+    rmt_rapi_bytes += b'\r\n'
+    tronview_serial.reset_output_buffer() # Clear any existing data in the serial buffer
+    print("Sending rmt_rapi_bytes to TV: ", rmt_rapi_bytes)
+    tronview_serial.write(rmt_rapi_bytes)
     wait_time = time.time()
     while True:
+        tronview_serial.reset_input_buffer() # Clear any existing data in the serial buffer
+        time.sleep(.001)
         if time.time() - wait_time > 10: break
         tronview_bytes = tronview_serial.read_until(b'\r\n', None)
         if len(tronview_bytes) < 10:
             print("Received: ", len(tronview_bytes), " bytes from TronView, waiting and retry...")
-            time.sleep(0.5)
+            tronview_bytes = tronview_serial.read_until(b'\r\n', None)
             continue
 
         print("Received: ", len(tronview_bytes), " bytes from TronView")
@@ -196,14 +220,12 @@ if tronview_serial.is_open:
         if tronview_str[1] == "5":
             tronview_ipaddr = tronview_str[3:18]
             tronview_str = "Received TronView IP: " + tronview_ipaddr
-            print("Sending back to TronView:", tronview_str)
-            papirus_bytes = ePaper_ipaddr.encode()
-            papirus_bytes += b'\r\n'
-            tronview_serial.flushOutput() # Clear any existing data in the serial buffer
-            tronview_serial.write(papirus_bytes)
-            tronview_comms_ok = True
+            print(tronview_str)
             break
-        time.sleep(0.5)
+        time.sleep(0.75)
+else:                       # no link to TronView RaPi so wait until there is...
+    pass                    # ToDo Retry code
+
 
 text.UpdateText("Line-4-Addr", tronview_ipaddr)
 print("tronview_ipaddr:", tronview_ipaddr)
@@ -213,6 +235,7 @@ print("Displayed updated TronView IP Address on PaPiRus")
 
 logfile = open("/home/pi/1TM/serial-papirus.log", "r+")
 data=logfile.readlines()[-1]
+logfile.close()
 dataList = data.split(",")
 print("data:", data)
 print ("dataList:", dataList)
@@ -261,7 +284,8 @@ while True:
         tronview_str = tronview_bytes.decode()
         if tronview_str[0] != '!': continue  # Skip to next iteration if still invalid format
 
-    if tronview_str[1] == "5" and not tronview_comms_ok:
+    if tronview_str[1] == "5":
+        print("Recieved TV IP Address")
         try:
             tronview_ipaddr = tronview_str[3:18]
         except Exception as e:
@@ -272,12 +296,11 @@ while True:
         print("Sending PaPiRus IP Address back to TronView:", tronview_str)
         papirus_bytes = ePaper_ipaddr.encode()
         papirus_bytes += b'\r\n'
-        tronview_serial.flushOutput() # Clear any existing data in the serial buffer
+        tronview_serial.reset_output_buffer() # Clear any existing data in the serial buffer
         tronview_serial.write(papirus_bytes)
         displayAddreses()
         time.sleep(5)
         displayRegFuelSmoke()
-        tronview_comms_ok = True
         continue
 
     if tronview_str[1] == "4": 
@@ -314,7 +337,7 @@ while True:
         try:
             smoke_gal = float(tvValue3)
             smoke_change = abs(smoke_gal - last_smoke)
-            if smoke_change >= 0.06:  # Update if smoke changes by 0.06 gallons
+            if smoke_change >= 0.1:  # Update if smoke changes by at least 0.1 gallons
                 gallonsF = "{:.1f}".format(smoke_gal)
                 gallonsF = gallonsF + "  Smoke"
                 if smoke_gal < 0.25: 
@@ -332,7 +355,7 @@ while True:
         try:
             fuel = float(tvValue1)
             fuel_change = abs(fuel - last_fuel)
-            if fuel_change > 0.09:  # Update if fuel changes by more than 0.09 gallons
+            if fuel_change >= 0.1:  # Update if fuel changes by at least 0.1 gallons
                 fuelF = "{:.1f}".format(fuel)
                 fuelF = fuelF + " Fuel"
                 #textPu.UpdateText("Line-2", fuelF)
@@ -347,29 +370,30 @@ while True:
             hobbs = float(tvValue2)
             hobbsF = "{:.1f}".format(hobbs)
             hobbs_change = abs(hobbs - last_hobbs)
-            if hobbs_change > 0:
-                if hobbs < 10000:  hobbsF = hobbsF + " TT"
-                print("hobbsF:", hobbsF)
+            if hobbs_change >= 0.1:
+                print("New hobbsF:", hobbsF)
                 last_hobbs = hobbs
         except Exception as e:
             print("Error updating Hobbs:", e)
         #print("loop_count:", loop_count)
 
-    #if fuel < 15.5: engine_status = "s"  # Debug to test engine status change
+    if sw2_pressed: engine_status = "s"  # Debug to test engine status change
     if engine_status == "s" and engine_status_prev == "r":      # Engine stopped and was running
-        #text.UpdateText("Line-1", hobbsF)
-        ##hobbsF = "8234.5" + " TT"
+        if hobbs < 10000:  hobbsF = hobbsF + " TT"
         text.Clear()
         time.sleep(1)
+        #text.UpdateText("Line-1", hobbsF)
         text.AddText(hobbsF,                0,  0, 37, Id="Line-1")
         text.AddText(f"{last_fuel} Fuel",  20, 37, 30, Id="Line-2")
         text.AddText(f"{last_smoke} Smoke",20, 66, 30, Id="Line-3")
 
         print("Engine stopped, updating Line-1 with Hobbs")
+        logfile = open("/home/pi/1TM/serial-papirus.log", "r+")
         logfile.write(f"{registration},{last_hobbs},{last_fuel},{last_smoke}\n")
         logfile.close()
         text.WriteAll()
         print("PaPiRus display updated with Hobbs time")
+        GPIO.cleanup()
         time.sleep(5.0)
         sys.exit(0)
     
@@ -386,6 +410,6 @@ while True:
         text.WriteAll()
         time.sleep(1.0)
     loop_count += 1
-    #print()
+
     
 
