@@ -45,6 +45,7 @@ class serial_rapi_send(Module):
         self.update = True
         self.tx_count = 0
         self.isPlaybackMode = False
+        self.tv_ipaddr = None
         self.tv_ipaddr_bytes = None
         self.retry_time = time.time()
         self.serialCommsOK = False
@@ -69,10 +70,6 @@ class serial_rapi_send(Module):
     def initInput(self,num,dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
         self.initRaPiRmt(dataship)  # Initialize the remote RaPi  display settings
-        if(self.PlayFile!=None and self.PlayFile!=False):
-            pass
-        else:
-            pass
 
         # set the data to the first item in the list.
         if len(shared.Dataship.targetData) > 0:
@@ -90,37 +87,40 @@ class serial_rapi_send(Module):
         if len(shared.Dataship.analogData) > 0:
             self.analogData = shared.Dataship.analogData[0]
 
-            # open serial connection to Pi with display.
-            while not self.serialCommsOK:
-                print("Initial connection to rapi")
-                self.connectToRaPiRmt()  # Try to connect to the remote RaPi display if not already connected
-
-
+    def get_ip_address(self, dataship: Dataship):
         # Get the IP address of the TronView Pi
         try:
             gw = os.popen("ip -4 route show default").read().split()
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect((gw[2], 0))
-            tv_ipaddr = s.getsockname()[0]
+            self.tv_ipaddr = s.getsockname()[0]
             gateway = gw[2]
             host = socket.gethostname()
-            print ("IP:", tv_ipaddr, " GW:", gateway, " Host:", host)
+            print ("IP:", self.tv_ipaddr, " GW:", gateway, " Host:", host)
         except:
             print("Error: Unable to get IP address")
         else:
+            self.send_ip_address(dataship)
+
+    def send_ip_address(self, dataship: Dataship):
             # Send TronView Pi's IP Address to remote RaPi and display:
-            tv_ipaddr_str = "!51" + tv_ipaddr + "\r\n"
+            tv_ipaddr_str = "!51" + self.tv_ipaddr + "\r\n"
             self.tv_ipaddr_bytes = tv_ipaddr_str.encode()
             print("Sending remote RaPi message (bytes): ", self.tv_ipaddr_bytes)
             self.sendIPaddrToRaPiRmt(dataship)
 
     def initRaPiRmt(self, dataship: Dataship):
+        # open serial connection to Pi with display.
+        while not self.serialCommsOK:
+            print("Initial connection to rapi")
+            self.connectToRaPiRmt(dataship)
+            if not self.serialCommsOK: time.sleep(2)        # wait 2 seconds and try to connect again
+        self.get_ip_address(dataship)
+
         # Initialize the remote RaPi display settings
         self.rapi_rmt_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyACM0")
         self.rapi_rmt_data_baudrate = hud_utils.readConfigInt(self.name, "baudrate", 9600)
         self.registration = hud_utils.readConfig(self.name, "registration", "N12345")
-
-
         self.tv_label1 = hud_utils.readConfig(self.name, "RaPiRmt_Label_1", "None")
         self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_RaPiRmt_1", "None")
         self.tv_data1_exec = "self.tv_data_one = self." + self.tv_data1_name
@@ -192,7 +192,7 @@ class serial_rapi_send(Module):
         except Exception as e:
             #if dataship.debug_mode>0: print("Unexpected error in write to remote Pi: ", e)
             print("Unexpected error in write to remote Pi: ", e)
-        return
+        return (dataship)
              
     # close this data input 
     def closeInput(self,dataship: Dataship):
@@ -221,7 +221,7 @@ class serial_rapi_send(Module):
                 self.old_OilPress = self.new_OilPress
                 self.update = True
                 
-    def connectToRaPiRmt(self):
+    def connectToRaPiRmt(self, dataship: Dataship):
         # Try to connect to the remote RaPi display if not already connected
         if not self.serialCommsOK:
             try:
@@ -242,8 +242,6 @@ class serial_rapi_send(Module):
                 print("Error opening serial port: ", e)
                 print("Is the USB cable to the remote RaPi plugged in?")
                 self.serialCommsOK = False
-                time.sleep(2)  # Wait for 2 seconds before retrying
-        return
 
     #############################################
     ## Method: readMessage
@@ -255,10 +253,10 @@ class serial_rapi_send(Module):
     
         self.updateEngineStatus(dataship)
         
-        while not self.serialCommsOK:
+        if not self.serialCommsOK:
             print("Lost comms with rapi, retyring")
-            self.connectToRaPiRmt()  # Try to connect to the remote Raspberry Pi display if not already connected
-            #return dataship  # If serial comms are not OK, return the dataship without sending data
+            self.connectToRaPiRmt(dataship)  # Try to connect to the remote Raspberry Pi display if not already connected
+            if not self.serialCommsOK: return dataship  # If serial comms are still not OK, return the dataship without sending data
 
         if self.tv_data1_name == "None" or self.tv_data_one == None:
             self.tv_data_one = 0.00
@@ -312,7 +310,7 @@ class serial_rapi_send(Module):
                 if self.ser.in_waiting > 0:
                     self.recvIPaddrFromRaPiRmt(dataship)
                     self.sendIPaddrToRaPiRmt(dataship)
-                out_bytes = self.ser.out_waiting       # int: bytes in output buffer (if supported)
+                out_bytes = self.ser.out_waiting       # int: number of bytes in output buffer (if supported)
                 if hasattr(self.ser, 'out_waiting'):
                     if out_bytes > 0:
                         print(f"Output buffer: {out_bytes} bytes")
@@ -329,7 +327,4 @@ class serial_rapi_send(Module):
 
         if self.isPlaybackMode:  # if no bytes read and in playback mode, reset file pointer
             self.ser.seek(0)
-        return dataship
-
-
-                
+        return dataship        
