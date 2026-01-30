@@ -317,6 +317,7 @@ while $RUN_MENU_AGAIN; do
                                 "serial_skyview" "Dynon Skyview Serial" OFF \
                                 "network_skyview" "Dynon Skyview Network" OFF \
                                 "automationHat" "Automation Hat I/O Board" OFF\
+                                "serial_papirus_send" "PaPiRus Serial" OFF \
                                 "meshtastic" "Meshtastic Serial" OFF \
                                 "gyro_i2c_bno055" "BNO055 IMU i2c (Pi only)" OFF \
                                 "gyro_i2c_bno055" "2nd BNO055 IMU i2c (Pi only)" OFF \
