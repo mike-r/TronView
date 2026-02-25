@@ -3,7 +3,7 @@
 
 # /home/pi/1TM/serial-papirus.py
 
-print("serial-papirus_display.py Version 1.0")
+print("serial-papirus_display.py Version 1.1")
 
 
 # Power Raspberry Pi Zero via Micro-USB in USB port.

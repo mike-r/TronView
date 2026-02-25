@@ -67,9 +67,9 @@ class serial_rapi_send(Module):
         
         print("Welcome to TronView serial sender to a remote Raspberry Pi for display`", sep=' ', end='\n\n\n') 
 
-    def initInput(self,num,dataship: Dataship):
-        Input.initInput( self,num, dataship )  # call parent init Input.
-        self.initRaPiRmt(dataship)  # Initialize the remote RaPi  display settings
+    def initInput(self, num, dataship: Dataship):
+        Input.initInput( self, num, dataship )  # call parent init Input.
+        self.initRaPiRmt(dataship)  # Initialize the remote RaPi display settings
 
         # set the data to the first item in the list.
         if len(shared.Dataship.targetData) > 0:
@@ -110,6 +110,9 @@ class serial_rapi_send(Module):
             self.sendIPaddrToRaPiRmt(dataship)
 
     def initRaPiRmt(self, dataship: Dataship):
+        # Initialize the remote RaPi display settings
+        self.rapi_rmt_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyACM0")
+        self.rapi_rmt_data_baudrate = hud_utils.readConfigInt(self.name, "baudrate", 9600)
         # open serial connection to Pi with display.
         while not self.serialCommsOK:
             print("Initial connection to rapi")
@@ -117,9 +120,6 @@ class serial_rapi_send(Module):
             if not self.serialCommsOK: time.sleep(2)        # wait 2 seconds and try to connect again
         self.get_ip_address(dataship)
 
-        # Initialize the remote RaPi display settings
-        self.rapi_rmt_data_port = hud_utils.readConfig(self.name, "port", "/dev/ttyACM0")
-        self.rapi_rmt_data_baudrate = hud_utils.readConfigInt(self.name, "baudrate", 9600)
         self.registration = hud_utils.readConfig(self.name, "registration", "N12345")
         self.tv_label1 = hud_utils.readConfig(self.name, "RaPiRmt_Label_1", "None")
         self.tv_data1_name = hud_utils.readConfig(self.name, "TronView_RaPiRmt_1", "None")
