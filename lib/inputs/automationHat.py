@@ -209,7 +209,7 @@ class automationHat(Module):
             print("Debug: Force Low Oil Pressure")
             self.analogData.Data[2] = 1
         else:
-            self.analogData(2) = 0
+            self.analogData[2] = 0
 
         if(self.ApplySmoothing):
             self.smoothingA.append(self.a0)  # Append the current value to the smoothing list
