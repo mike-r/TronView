@@ -84,13 +84,13 @@ class automationHat(Module):
         self.fuelData_FuelLevel_str = "000"
         self.engineData_OilPress_str = "000"
         self.analogData_smoke_remain_str = "0000"
-        self.a0 = 0                         # Analog input 0.  Read from Automation Hat.  
-        self.a1 = 0                         # Analog input 1.
-        self.a2 = 0                         # Analog input 2.
-        self.a3 = 0                         # Analog input 3.  Only on full Automation Hat and only 0-3.3V toloerant.
-        self.di0 = 0                        # Digital input 0. Set to 1 to indicate the Automation Hat is running.
-        self.di1 = 0                        # Digital input 1.
-        self.di2 = 0                        # Digital input 2.
+        self.a0 = 0                         # Analog input 0  Read from Automation Hat.  
+        self.a1 = 0                         # Analog input 1
+        self.a2 = 0                         # Analog input 2
+        self.a3 = 0                         # Analog input 3  Only on full Automation Hat and only 0-3.3V toloerant.
+        self.di0 = 0                        # Digital input 0 
+        self.di1 = 0                        # Digital input 1  Used to force oil pressure to zero 
+        self.di2 = 0                        # Digital input 2
         self.loop_time = 0.0
         # Add smoothing configuration
         self.ApplySmoothing = 1
@@ -204,7 +204,13 @@ class automationHat(Module):
         # Read the analog input value and convert to gallons
         # Convert the value to gallons (0.250 - 4.0 Volts corresponds to 0-5 gallons)
         self.a0 = automationhat.analog[0].read()  # Read from analog input 0
-        
+        self.d1 = automationhat.input[1].read()  # Read digital input 1 (debug to force shutdown)
+        if self.d1:
+            print("Debug: Force Low Oil Pressure")
+            self.analogData.Data[2] = 1
+        else:
+            self.analogData(2) = 0
+
         if(self.ApplySmoothing):
             self.smoothingA.append(self.a0)  # Append the current value to the smoothing list
             if(len(self.smoothingA)>self.SmoothingAVGMaxCount): self.smoothingA.pop(0)

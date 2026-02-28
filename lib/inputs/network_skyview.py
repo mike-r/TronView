@@ -20,6 +20,7 @@ from lib.common.dataship.dataship_engine_fuel import EngineData, FuelData
 from ..common.dataship.dataship_gps import GPSData
 from ..common.dataship.dataship_air import AirData
 from ..common.dataship.dataship_targets import TargetData, Target
+from ..common.dataship.dataship_analog import AnalogData
 from ._input import Input
 from . import _input_file_utils
 
@@ -39,6 +40,7 @@ class network_skyview(Input):
         self.airData = None
         self.targetData_index = 0
         self.targetData = None
+        self.analogData = None
 
     def initInput(self, num, dataship: Dataship):
         Input.initInput( self,num, dataship )  # call parent init Input.
@@ -134,6 +136,13 @@ class network_skyview(Input):
         dataship.targetData.append(self.targetData)
         if dataship.debug_mode>0:
             print("new skyview targets "+str(self.targetData_index)+": "+str(self.targetData))
+
+        # create a empty analog object.
+        self.analogData = AnalogData()
+        self.analogData.name = "skyview_analog"
+        self.analogData.index = len(dataship.analogData)  # Start at 0
+        self.analogData.id = "skyview_analog"+str(len(dataship.analogData))
+        dataship.analogData.append(self.analogData)
 
     def closeInput(self, dataShip:Dataship):
         if self.isPlaybackMode:
@@ -527,7 +536,11 @@ class network_skyview(Input):
                     #dataship.sys_time_string = "%d:%d:%d"%(int(HH),int(MM),int(SS))
                     #self.time_stamp_string = dataship.sys_time_string
 
-                    if OilPress != b'XXX': self.engineData.OilPress = Input.cleanInt(self,OilPress)
+                    if OilPress != b'XXX':
+                        if self.analogData.Data[2] != 0:    # Debug for engine shutdown (i.e. zero oil pressure)
+                            self.engineData.OilPress = 0
+                        else:
+                            self.engineData.OilPress = Input.cleanInt(self,OilPress)
                     if OilTemp != b'XXXX': self.engineData.OilTemp = Input.cleanInt(self,OilTemp)
                     self.engineData.RPM = max(Input.cleanInt(self,RPM_L), Input.cleanInt(self,RPM_R))
                     if MAP != b'XXX': self.engineData.ManPress = Input.cleanInt(self,MAP) / 10
