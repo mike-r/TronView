@@ -539,6 +539,7 @@ class network_skyview(Input):
                     if OilPress != b'XXX':
                         if self.analogData.Data[2] != 0:    # Debug for engine shutdown (i.e. zero oil pressure)
                             self.engineData.OilPress = 0
+                            print("Debug: Setting Oil Pressure to zero")
                         else:
                             self.engineData.OilPress = Input.cleanInt(self,OilPress)
                     if OilTemp != b'XXXX': self.engineData.OilTemp = Input.cleanInt(self,OilTemp)
