@@ -37,7 +37,7 @@ class AirData(object):
         self.Wind_dir_corr = None # corrected for aircraft heading for wind direction pointer
         self.Mag_decl = None #magnetic declination
 
-        self.data_format = 0 # 0 is ft/in, 1 is m/mm, 2 is km/km, 3 is nm/nm
+        self.data_format = 1 # 0 is ft/in, 1 is m/mm, 2 is km/km, 3 is nm/nm
         self.data_format_temp = 0 # 0 is F, 1 is C
 
         self.msg_count = 0
