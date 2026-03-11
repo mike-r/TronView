@@ -227,28 +227,25 @@ class serial_rapi_send(Module):
                 
     def connectToRaPiRmt(self, dataship: Dataship):
         # Try to connect to the remote RaPi display if not already connected
-        if not self.ser.isOpen():
-            try:
-                self.ser = serial.Serial(
-                port=self.rapi_rmt_data_port,
-                baudrate=self.rapi_rmt_data_baudrate,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                bytesize=serial.EIGHTBITS,
-                timeout=0.1,       # Set a timeout for reading
-                write_timeout=0.1  # Set a timeout for writing
+        try:
+            self.ser = serial.Serial(
+            port=self.rapi_rmt_data_port,
+            baudrate=self.rapi_rmt_data_baudrate,
+            parity=serial.PARITY_NONE,
+            stopbits=serial.STOPBITS_ONE,
+            bytesize=serial.EIGHTBITS,
+            timeout=0.1,       # Set a timeout for reading
+            write_timeout=0.1  # Set a timeout for writing
             )
-                self.serialCommsOK = True
-                print("Connected to remote RaPi display.")
-                print("Serial Port opened: ", self.rapi_rmt_data_port, " at baudrate: ", self.rapi_rmt_data_baudrate)
-
-            except serial.SerialException as e:
-                print("Error opening serial port: ", e)
-                print("Is the USB cable to the remote RaPi plugged in?")
-                self.serialCommsOK = False
-        else:
+            if self.ser.isOpen():
                 self.serialCommsOK = True
                 print("Serial Port is open: ", self.rapi_rmt_data_port, " at baudrate: ", self.rapi_rmt_data_baudrate)
+
+        except serial.SerialException as e:
+            print("Error opening serial port: ", e)
+            print("Is the USB cable to the remote RaPi plugged in?")
+            self.serialCommsOK = False
+
 
     #############################################
     ## Method: readMessage
