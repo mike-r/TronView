@@ -49,7 +49,7 @@ class AIO(Module):
         self.SmoothingAVGMaxCount = 10
         self.smoothingA = []
         self.debug_mode = 0
-        self.aio_wait_time = 15  # seconds to wait between sending data to AIO
+        self.aio_wait_time = 30  # seconds to wait between sending data to AIO
         self.aio_last_sent_time = 0
         
         self.targetData = TargetData()
