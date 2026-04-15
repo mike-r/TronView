@@ -487,7 +487,10 @@ class serial_skyview(Input):
             time.sleep(.05)
         else:
             #pass
-            self.ser.flushInput()  # flush the serial after every message else we see delays
+            try:
+                self.ser.flushInput()  # flush the serial after every message else we see delays
+            except:
+                print("Trouble flushing serial input from Dynon")
 
         return dataship
 
