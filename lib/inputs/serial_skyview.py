@@ -486,12 +486,14 @@ class serial_skyview(Input):
         if self.isPlaybackMode:  #if play back mode then add a delay.  Else reading a file is way to fast.
             time.sleep(.05)
         else:
-            #pass
             try:
                 self.ser.flushInput()  # flush the serial after every message else we see delays
-            except:
-                print("Trouble flushing serial input from Dynon")
-
+            except Exception as e: 
+                print(e)
+                print("Error createLogFile() %s"%(self.name))
+                # print full stack trace
+                import traceback
+                traceback.print_exc()
         return dataship
 
 # vi: modeline tabstop=8 expandtab shiftwidth=4 softtabstop=4 syntax=python
